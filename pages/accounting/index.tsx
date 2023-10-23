@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Entry } from '../../types/entry';
 
 export default function Accounting() {
-    const [entries, setEntries] = useState([]); 
+    const [entries, setEntries] = useState<Entry[]>([]);
 
     const handleNewEntry = (entry: Entry) => {
         setEntries([...entries, entry]);
