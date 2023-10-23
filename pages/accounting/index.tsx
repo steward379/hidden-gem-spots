@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Form from '../../components/Form'
 import EntryList from '../../components/EntryList'
+import Link from 'next/link';
 
 export default function Accounting() {
     const [entries, setEntries] = useState([]); 
@@ -27,7 +28,7 @@ export default function Accounting() {
                 小計: <span className={`font-bold text-2xl ${total < 0 ? 'text-red-500' : 'text-green-500'}`}>{total}</span>
             </div>
             <div className="mt-10">
-                <a href="/" className="bg-gray-500 text-white hover:bg-blue-500 px-4 py-3 rounded">返回首頁</a>
+                <Link href="/" className="bg-gray-500 text-white hover:bg-blue-500 px-4 py-3 rounded">返回首頁</Link>
             </div>
         </div>
     );
