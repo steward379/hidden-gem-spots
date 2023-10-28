@@ -1,0 +1,30 @@
+name: Deploy to Vercel
+
+on:
+  push:
+    branches:
+      - main  # 更改為你使用的主要分支名稱
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      
+      - name: Install Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'  # 選擇你需要的 Node.js 版本
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v20
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}  # 從 Vercel 網站取得並設置為 GitHub Secrets
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}  # 從 Vercel 網站取得並設置為 GitHub Secrets
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}  # 從 Vercel 網站取得並設置為 GitHub Secrets
+          github-token: ${{ secrets.GITHUB_TOKEN }}  # 預設的 GitHub Token
