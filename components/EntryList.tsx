@@ -17,7 +17,7 @@ export default function EntryList({ accountings, onDelete }: EntryListProps) {
                         {accounting.type === '支出' ? '-' : '+'}{accounting.amount}
                     </span>
                     <span className="mr-4 text-white">{accounting.description}</span>
-                    <button onClick={() => onDelete(accounting.id)} className="bg-red-400 text-white hover:bg-red-500 px-4 py-1.5 rounded">刪除</button>
+                    <button onClick={() => { if(accounting.id) onDelete(accounting.id); }} className="bg-red-400 text-white hover:bg-red-500 px-4 py-1.5 rounded">刪除</button>
                 </div>
             ))}
         </div>
