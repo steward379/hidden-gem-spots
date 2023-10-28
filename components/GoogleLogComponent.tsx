@@ -26,7 +26,7 @@ const GoogleLogComponent: React.FC<Props> = ({ user, setUser, setLoginMethod }) 
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [setUser]);
 
   const handleGoogleLogin = async () => {
     const provider = new GoogleAuthProvider();
