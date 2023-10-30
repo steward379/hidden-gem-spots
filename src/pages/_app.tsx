@@ -1,5 +1,8 @@
 import '../styles/globals.css';
+
+//map
 import 'leaflet/dist/leaflet.css';
+import dynamic from 'next/dynamic';
 
 import { AppProps } from 'next/app';
 import { useEffect } from 'react';
