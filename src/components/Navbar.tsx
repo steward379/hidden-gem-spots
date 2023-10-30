@@ -2,17 +2,12 @@
 import React, { useState, useEffect } from 'react';
 import EmailLogComponent from './EmailLogComponent';
 import GoogleLogComponent from './GoogleLogComponent';  
+import { LoginMethod } from '../LoginMethod';
 
 // firebase
 import { User, onAuthStateChanged, Auth } from 'firebase/auth';
 import firebase from '../utils/firebase';
-import { LoginMethod } from '../src/LoginMethod';
 
-// enum LoginMethod {
-//   None,
-//   Email,
-//   Google,
-// }
 
 const Navbar: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);

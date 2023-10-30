@@ -1,10 +1,12 @@
-import './globals.css';
+import '../styles/globals.css';
+import 'leaflet/dist/leaflet.css';
+
 import { AppProps } from 'next/app';
 import { useEffect } from 'react';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { useRouter } from 'next/router';
 
-import Navbar  from '@/components/Navbar';
+import Navbar  from '@/src/components/Navbar';
 
 
 const MyApp  = ({ Component, pageProps}: AppProps ) => {

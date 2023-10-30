@@ -2,15 +2,9 @@
 import React, { useState } from 'react';
 import { Auth, User, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import firebase from '../utils/firebase'; 
-import { LoginMethod } from '../src/LoginMethod';
+import { LoginMethod } from '../LoginMethod';
 // import { useDispatch } from 'react-redux';
 // import { setUser, setLoginMethod, LoginMethod } from '../src/slices/userSlice';
-
-// enum LoginMethod {
-//   None,
-//   Email,
-//   Google,
-// }
 
 interface Props {
   user: User | null;

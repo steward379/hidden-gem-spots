@@ -3,13 +3,7 @@ import { Dispatch, SetStateAction } from 'react';
 import { User, GoogleAuthProvider, Auth, signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
 import { Firestore, doc, setDoc } from "firebase/firestore";
 import firebase from "../utils/firebase";
-import { LoginMethod } from '../src/LoginMethod';
-
-// enum LoginMethod {
-//   None,
-//   Email,
-//   Google,
-// }
+import { LoginMethod } from '../LoginMethod';
 
 interface Props {
   user: User | null;
