@@ -11,16 +11,15 @@ import firebaseServices from '../../utils/firebase';
 const { db, auth } = firebaseServices;
 
 import { collection, getDocs, addDoc, deleteDoc, doc, query, where, onSnapshot } from 'firebase/firestore';
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
 
 export default function Accounting() {
     const [accountings, setAccountings] = useState<Entry[]>([]);
-    const [uid, setUid] =  useState<string | null>(null);
+    const [uid, setUid] = useState<string | null>(null);
 
     const router = useRouter();
 
     useEffect(() => {
-        const auth = getAuth();
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             if (user) {
                 setUid(user.uid);

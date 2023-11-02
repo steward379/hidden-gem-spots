@@ -46,7 +46,6 @@ const GoogleLogComponent: React.FC<Props> = ({ user, setUser, setLoginMethod }) 
 
   const handleGoogleLogout = async () => {
     try {
-      
       await signOut(firebase.auth as Auth);
       setLoginMethod(LoginMethod.None);
       setUser(null);

@@ -14,7 +14,7 @@ const Navbar: React.FC = () => {
   const [loginMethod, setLoginMethod] = useState<LoginMethod>(LoginMethod.None);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(firebase.auth as Auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(firebase.auth as Auth, (currentUser,) => {
       setUser(currentUser);
     });
 

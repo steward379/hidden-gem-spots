@@ -21,13 +21,16 @@ const MyApp  = ({ Component, pageProps}: AppProps ) => {
     const auth = getAuth();
 
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (!user && asPath.startsWith("/accounting")) {
-        console.log('No user login');
+      if (!user) {
 
-        router.push({
-          pathname: "/",
-          query: { message: "請先登入" },
-        })
+        if(asPath.startsWith("/accounting") || asPath.startsWith("/map")){
+          console.log('No user login');
+
+          router.push({
+            pathname: "/",
+            query: { message: "請先登入" },
+          })
+        }
       }
     });
 
