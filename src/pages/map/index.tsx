@@ -3,7 +3,11 @@ import dynamic from 'next/dynamic';
 import { onAuthStateChanged } from "firebase/auth";
 import firebaseServices from '../../utils/firebase'; 
 import { collection, query, onSnapshot, getDocs, addDoc, where, doc, setDoc, deleteDoc } from 'firebase/firestore';
-const { db, auth } = firebaseServices; 
+const { db, auth, storage } = firebaseServices; 
+import { ref, uploadBytes, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import Image from 'next/image';
+
+// const storage = getStorage();
 
 // import L from 'leaflet';
 // import MapComponent from '../../components/MapComponent';
@@ -17,6 +21,7 @@ const MapDemoPage: React.FC = () => {
   const [places, setPlaces] = useState([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [selectedPlace, setSelectedPlace] = useState(null);
+  const [images, setImages] = useState<File[]>([]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, user => {
@@ -72,9 +77,15 @@ const MapDemoPage: React.FC = () => {
     setNewMarker(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleImageChange = (event) => {
-    const files = event.target.files;
-    setNewMarker(prev => ({ ...prev, images: files }));
+  const handleImageChange = async (event) => {
+    // const files = event.target.files; 
+    // setNewMarker(prev => ({ ...prev, images: files }));
+    const files = Array.from(event.target.files);
+    setImages(files);
+
+    // const imageUrls = await Promise.all(files.map(file => uploadImage(file, userId)));
+    
+    // setNewMarker(prev => ({ ...prev, imageUrls }));
   };
 
   const handleSubmit = () => {
@@ -89,14 +100,39 @@ const MapDemoPage: React.FC = () => {
   const handleCancel = () => {
     setIsAddingMarker(false);
     setNewMarker(null);
+    // if (newMarker) {
+    //   newMarker.remove(); 
+    //   setNewMarker(null); 
+    // }
   };
+
+  async function uploadImage(file, userId, placeId) {
+    const storageRef = ref(storage, `places/${userId}/${placeId}/${file.name}`);
+    const uploadTask = uploadBytesResumable(storageRef, file);
+  
+    return new Promise((resolve, reject) => {
+      uploadTask.on('state_changed',
+        (snapshot) => {},
+        (error) => {
+          reject(error);
+        },
+        () => {
+          getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+            resolve(downloadURL);
+          });
+        }
+      );
+    });
+  } 
 
   // 儲存使用者的新地點
   const savePlace = async (place) => {
-    if(!userId) return;
+    if (!userId || !newMarker) return;
+    const imageUrls = await Promise.all(images.map(file => uploadImage(file, userId)));
 
     try {
       // const placesRef = doc(db, `users/${userId}/places`); 
+
       const placesRef = collection(db, `users/${userId}/places`); 
       const newPlace =  {
         name: newMarker.name,
@@ -107,7 +143,7 @@ const MapDemoPage: React.FC = () => {
           lat: newMarker.latlng.lat,
           lng: newMarker.latlng.lng
         },
-        // images: newMarker.images, // 上傳問題
+        images: imageUrls,
       };
 
       const docRef = await addDoc(placesRef, newPlace);
@@ -120,7 +156,7 @@ const MapDemoPage: React.FC = () => {
     }
   };
 
-  // 獲取該使用者的所有地點 
+  // users mapping
   useEffect(() => {
     if (!userId) return;
   
@@ -138,15 +174,14 @@ const MapDemoPage: React.FC = () => {
     return () => unsubscribe();
   }, [userId]);
 
-  // 取消新增
-  const cancelAdding = () => {
-    if (newMarker) {
-      newMarker.remove(); 
-      setNewMarker(null); 
-    }
-    setIsAddingMarker(false);
-    // 如果您在 MapComponent 中保存了 marker 的狀態，您也應該在這裡重置它
-  };
+
+  // function ImageUploader({ images, setImages }) {
+  //   const handleImageChange = (e) => {
+  //     const files = Array.from(e.target.files);
+  //     setImages(prevImages => [...prevImages, ...files]);
+  //   };
+  // }
+  
 
   return (
     <div className="flex flex-col md:flex-row h-screen">
@@ -172,6 +207,15 @@ const MapDemoPage: React.FC = () => {
           <>
             <button>編輯景點</button>
             <button onClick={handleDeletePlace}>刪除景點</button>
+            <div>
+              <h2>名稱：{selectedPlace.name}</h2>
+              <p>描述：{selectedPlace.description}</p>
+              <div className="images">
+                {selectedPlace.images.map((url, index) => (
+                  <Image key={index} src={url} alt={`${selectedPlace.name} image ${index}`} height={300} width={300} />
+                ))}
+              </div>
+            </div>
           </>
         )}
         {newMarker && (
@@ -206,12 +250,30 @@ const MapDemoPage: React.FC = () => {
               <option value="eat">吃的</option>
               <option value="play">玩的</option>
             </select>
-            <input 
-              type="file" 
-              multiple 
-              onChange={handleImageChange} 
-              className="p-2 w-full mb-2 border rounder"
-            />
+            <div className="image-uploader p-2 w-full mb-2 border rounder">
+              {images.map((image, index) => (
+                <div key={index} className="image-preview">
+               <Image 
+                  src={URL.createObjectURL(image)} 
+                  alt={`Uploaded preview ${index}`} 
+                  width={300} 
+                  height={300}
+              />
+                </div>
+              ))}
+              {images.length < 3 && (
+                <label className="image-input-label">
+                  <button className="image-input-button text-black"> 
+                  <input 
+                      type="file" 
+                      accept="image/*" 
+                      multiple 
+                      onChange={handleImageChange} 
+                  /> + 
+                  </button>
+                </label>
+              )}
+            </div>
             <button 
               onClick={handleSubmit} 
               className="p-2 w-full text-white bg-green-500 rounded hover:bg-green-600 "

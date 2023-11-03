@@ -52,7 +52,7 @@ useEffect(() => {
         const category = categoryMapping[place.category] || { color: 'bg-gray-200', text: '不明' }; 
 
         const popupContent = `
-        <div class="text-center" style="width:150px">
+        <div key=${place.id} class="text-center" style="width:150px">
         <b class="text-lg">${place.name}</b>
         <p>${place.description}</p>
         <p class="text-sm text-gray-500 ${category.color} p-1 rounded">${category.text}</p>
@@ -119,6 +119,6 @@ useEffect(() => {
   };
 }, [map, onMarkerPlaced, isAddingMarker, newMarker, onMapClick]);
 
-return <div ref={mapRef} style={{ height: '100%', width: '100%' }} />;
+return <div ref={mapRef} style={{ height: '100%', width: '100%', maxWidth: '2000px' }} />;
 };
 export default MapComponent;
