@@ -10,10 +10,11 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'images/marker-shadow.png',
 });
 
-const MapComponent = ({ places, onMarkerPlaced, isAddingMarker, onCancel }) => {
+const MapComponent = ({ places, onMarkerPlaced, isAddingMarker, onCancel, onMarkerClick, onMapClick }) => {
   const mapRef = useRef(null);
   const [map, setMap] = useState(null)
-  const [ newMarker, setNewMarker ] = useState(null)
+  const [newMarker, setNewMarker ] = useState(null)
+  const [markers, setMarkers] = useState([]);
 
   // Initialize
   useEffect(() => { 
@@ -29,15 +30,48 @@ const MapComponent = ({ places, onMarkerPlaced, isAddingMarker, onCancel }) => {
     }
 }, [map]);
 
+
 // database 'places' rendering
 useEffect(() => {
   if (map && places) {
-    places.forEach(place => {
-      L.marker(place.coordinates).addTo(map)
-        .bindPopup(`<b>${place.name}</b><br>${place.description}`);
+
+    markers.forEach(marker => {
+      marker.remove();
     });
+
+    setMarkers([]); 
+
+    const newMarkers = places.map(place => {
+      if (place.coordinates) { 
+
+        const categoryMapping = {
+          eat: { color: 'bg-yellow-200', text: '吃的' },
+          play: { color: 'bg-green-200', text: '玩的' },
+        };
+
+        const category = categoryMapping[place.category] || { color: 'bg-gray-200', text: '不明' }; 
+
+        const popupContent = `
+        <div class="text-center" style="width:150px">
+        <b class="text-lg">${place.name}</b>
+        <p>${place.description}</p>
+        <p class="text-sm text-gray-500 ${category.color} p-1 rounded">${category.text}</p>
+        <div class="flex flex-wrap gap-2 mt-2">
+          ${place.tags.map(tag => `<span class="text-xs bg-blue-200 px-2 py-1 rounded-full">${tag}</span>`).join(' ')}
+        </div>
+      </div>
+      `;
+
+        return L.marker(place.coordinates).addTo(map)
+                .bindPopup(popupContent)
+                .on('click', () => onMarkerClick(place));
+      }
+      return null;
+    }).filter(marker => marker !== null);
+
+    setMarkers(newMarkers); 
   }
-}, [map, places]);
+}, [map, places, onMarkerClick]);
 
 // when users hit cancel button
 useEffect(() => {
@@ -52,6 +86,8 @@ useEffect(() => {
   if (!map) return;
 
   const onClick = (e) => {
+    onMapClick();
+
     if (isAddingMarker) {
       if (newMarker) {
         newMarker.setLatLng(e.latlng); // 改變位置
@@ -81,7 +117,7 @@ useEffect(() => {
   return () => {
     map.off('click', onClick);
   };
-}, [map, onMarkerPlaced, isAddingMarker, newMarker]);
+}, [map, onMarkerPlaced, isAddingMarker, newMarker, onMapClick]);
 
 return <div ref={mapRef} style={{ height: '100%', width: '100%' }} />;
 };

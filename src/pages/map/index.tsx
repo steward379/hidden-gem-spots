@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { onAuthStateChanged } from "firebase/auth";
 import firebaseServices from '../../utils/firebase'; 
-import { collection, query, onSnapshot, getDocs, addDoc, where } from 'firebase/firestore';
+import { collection, query, onSnapshot, getDocs, addDoc, where, doc, setDoc, deleteDoc } from 'firebase/firestore';
 const { db, auth } = firebaseServices; 
 
 // import L from 'leaflet';
@@ -16,6 +16,7 @@ const MapComponentWithNoSSR = dynamic(
 const MapDemoPage: React.FC = () => {
   const [places, setPlaces] = useState([]);
   const [userId, setUserId] = useState<string | null>(null);
+  const [selectedPlace, setSelectedPlace] = useState(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, user => {
@@ -27,18 +28,22 @@ const MapDemoPage: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
+  // 更新 places 資料
   useEffect(() => {
-    const q = query(collection(db, 'your_collection'));
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const places = [];
-      querySnapshot.forEach((doc) => {
-        places.push(doc.data());
-      });
-      setPlaces(places); // 假設您有一個 setPlaces 函數來更新狀態
-    });  
-
-    return () => unsubscribe();
-  }, []);
+    if (userId) {
+      const fetchPlaces = async () => {
+        // const userRef = doc(db, 'users', userId);
+        const placesQuery = query(collection(db, `users/${userId}/places`));
+        // const placesRef = collection(userRef, 'places');
+        // const places = placeSnapshots.docs.map(doc => doc.data());
+        // setPlaces(places);
+        const querySnapshot = await getDocs(placesQuery);
+        setPlaces(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      };
+  
+      fetchPlaces();
+    }
+  }, [userId]);
 
   const [isAddingMarker, setIsAddingMarker] = useState(false); 
   const [newMarker, setNewMarker] = useState(null); 
@@ -50,8 +55,17 @@ const MapDemoPage: React.FC = () => {
   // const [overallDescription, setOverallDescription] = useState('');
   const [image, setImage] = useState(null);
 
-  const handleMarkerPlaced = (latlng, newPolyline) => {
+  const handleMarkerPlaced = (latlng) => {
     setNewMarker({ latlng, name: '', description: '', tags: '', category: '', images: [] });
+  };
+
+  const handleDeletePlace = async () => {
+    if (window.confirm('您確定要刪除此景點嗎？') && selectedPlace) {
+      const placeRef = doc(db, `users/${userId}/places`, selectedPlace.id);
+      await deleteDoc(placeRef);
+      setSelectedPlace(null);
+      setPlaces(prevPlaces => prevPlaces.filter(place => place.id !== selectedPlace.id));
+    }
   };
 
   const handleInputChange = (field, value) => {
@@ -65,6 +79,7 @@ const MapDemoPage: React.FC = () => {
 
   const handleSubmit = () => {
     console.log('提交景點信息：', newMarker);
+    savePlace();
     setMarkers(prev => [...prev, newMarker]);
     setNewMarker(null);
     setIsAddingMarker(false);
@@ -76,19 +91,27 @@ const MapDemoPage: React.FC = () => {
     setNewMarker(null);
   };
 
-  const savePlace = async () => {
+  // 儲存使用者的新地點
+  const savePlace = async (place) => {
+    if(!userId) return;
+
     try {
-      const placesCol = collection(db, 'places'); 
-  
-      await addDoc(placesCol, {
-        userId, 
+      // const placesRef = doc(db, `users/${userId}/places`); 
+      const placesRef = collection(db, `users/${userId}/places`); 
+      const newPlace =  {
         name: newMarker.name,
         description: newMarker.description,
         tags: newMarker.tags.split(','), 
         category: newMarker.category,
-        coordinates: newMarker.latlng,
+        coordinates: {
+          lat: newMarker.latlng.lat,
+          lng: newMarker.latlng.lng
+        },
         // images: newMarker.images, // 上傳問題
-      });
+      };
+
+      const docRef = await addDoc(placesRef, newPlace);
+      setPlaces(prev => [...prev, { id: docRef.id, ...newPlace }]);
   
       setNewMarker(null);
       setIsAddingMarker(false);
@@ -97,6 +120,7 @@ const MapDemoPage: React.FC = () => {
     }
   };
 
+  // 獲取該使用者的所有地點 
   useEffect(() => {
     if (!userId) return;
   
@@ -114,6 +138,7 @@ const MapDemoPage: React.FC = () => {
     return () => unsubscribe();
   }, [userId]);
 
+  // 取消新增
   const cancelAdding = () => {
     if (newMarker) {
       newMarker.remove(); 
@@ -131,8 +156,11 @@ const MapDemoPage: React.FC = () => {
           isAddingMarker={isAddingMarker} 
           places={places} 
           onCancel={handleCancel}
+          onMarkerClick={setSelectedPlace}
+          onMapClick={() => setSelectedPlace(null)}
         />
       </div>
+      
       <div className="md:w-1/3 flex flex-col p-4 space-y-4 overflow-auto">
         <button 
           onClick={() => setIsAddingMarker(!isAddingMarker)} // 切換 isAddingMarker 的值
@@ -140,6 +168,12 @@ const MapDemoPage: React.FC = () => {
         >
           {isAddingMarker ? '取消新增景點' : '新增景點'}
         </button>
+        {selectedPlace && (
+          <>
+            <button>編輯景點</button>
+            <button onClick={handleDeletePlace}>刪除景點</button>
+          </>
+        )}
         {newMarker && (
           <div className="p-4 bg-white rounded shadow-md">
             <h3 className="text-lg font-semibold mb-2">新增景點</h3>
@@ -148,20 +182,20 @@ const MapDemoPage: React.FC = () => {
               placeholder="名稱" 
               value={newMarker.name} 
               onChange={(e) => handleInputChange('name', e.target.value)} 
-              className="p-2 w-full mb-2 border rounded"
+              className="p-2 w-full mb-2 border rounded text-black"
             />
             <textarea 
               placeholder="描述" 
               value={newMarker.description} 
               onChange={(e) => handleInputChange('description', e.target.value)} 
-              className="p-2 w-full mb-2 border rounded"
+              className="p-2 w-full mb-2 border rounded text-black"
             ></textarea>
             <input 
               type="text" 
               placeholder="標籤 (用逗號分隔)" 
               value={newMarker.tags} 
               onChange={(e) => handleInputChange('tags', e.target.value)} 
-              className="p-2 w-full mb-2 border rounded"
+              className="p-2 w-full mb-2 border rounded text-black"
             />
             <select 
               value={newMarker.category} 
@@ -176,11 +210,11 @@ const MapDemoPage: React.FC = () => {
               type="file" 
               multiple 
               onChange={handleImageChange} 
-              className="p-2 w-full mb-2 border rounded"
+              className="p-2 w-full mb-2 border rounder"
             />
             <button 
               onClick={handleSubmit} 
-              className="p-2 w-full text-white bg-green-500 rounded hover:bg-green-600"
+              className="p-2 w-full text-white bg-green-500 rounded hover:bg-green-600 "
             >
               提交
             </button>
