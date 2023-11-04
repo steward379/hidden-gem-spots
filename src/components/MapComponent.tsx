@@ -10,7 +10,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'images/marker-shadow.png',
 });
 
-const MapComponent = ({ places, onMarkerPlaced, isAddingMarker, onCancel, onMarkerClick, onMapClick }) => {
+const MapComponent = ({ places, onMarkerPlaced, isAddingMarker, onCancel, onMarkerClick, onMapClick, isEditing }) => {
   const mapRef = useRef(null);
   const [map, setMap] = useState(null)
   const [newMarker, setNewMarker ] = useState(null)
@@ -83,9 +83,39 @@ useEffect(() => {
 }, [isAddingMarker, newMarker, onCancel]);
 
 useEffect(() => {
+  if(map){
+  if (isEditing) {
+    // 禁用地圖的所有交互功能
+    map.dragging.disable();
+    map.touchZoom.disable();
+    map.doubleClickZoom.disable();
+    map.scrollWheelZoom.disable();
+    map.boxZoom.disable();
+    map.keyboard.disable();
+    if (newMarker) {
+      newMarker.dragging.disable(); // 確保新標記也不可拖動
+    }
+  } else {
+    // 啟用地圖的所有交互功能
+    map.dragging.enable();
+    map.touchZoom.enable();
+    map.doubleClickZoom.enable();
+    map.scrollWheelZoom.enable();
+    map.boxZoom.enable();
+    map.keyboard.enable();
+    if (newMarker) {
+      newMarker.dragging.enable(); // 確保新標記可拖動
+    }
+  }
+}
+}, [isEditing, map, newMarker]);
+
+useEffect(() => {
   if (!map) return;
 
   const onClick = (e) => {
+    if (isEditing) return;
+
     onMapClick();
 
     if (isAddingMarker) {
@@ -117,7 +147,7 @@ useEffect(() => {
   return () => {
     map.off('click', onClick);
   };
-}, [map, onMarkerPlaced, isAddingMarker, newMarker, onMapClick]);
+}, [map, onMarkerPlaced, isAddingMarker, newMarker, onMapClick, isEditing]);
 
 return <div ref={mapRef} style={{ height: '100%', width: '100%', maxWidth: '2000px' }} />;
 };
