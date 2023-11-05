@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@firebase/firestore": "^4.3.0",
+    "@googlemaps/google-maps-services-js": "^3.3.41",
     "@reduxjs/toolkit": "^1.9.7",
     "@types/node": "20.8.7",
     "@types/react": "18.2.31",
