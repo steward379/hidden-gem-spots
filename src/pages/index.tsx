@@ -13,7 +13,7 @@ export default function Home() {
     return (
             <div className="container max-w-xl mx-auto border p-10 mt-10 items-center justify-center">
                 <div className="flex flex-col items-center bg-gray-300 p-10 rounded-lg">
-                    <h1 className="text-4xl mb-4 text-gray-800">Hidden Gem Hunt</h1>
+                    <h1 className="text-4xl mb-4 text-gray-800">Hidden Gem Spots</h1>
                     <p className="text-xl mb-6 text-gray-500">找尋你的秘密景點</p>
                     {message && <p className="text-red-500 p-2">{message}</p>}
                     <Link href="/map">

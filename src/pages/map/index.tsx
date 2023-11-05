@@ -144,29 +144,35 @@ const MapDemoPage: React.FC = () => {
 
   const handleRemoveImage = async (index: number, imageSrc: string) => {
 
-    if (imageSrc.startsWith('https')) {
+    // if (imageSrc.startsWith('https')) {
+    //   try {
+    //     const imageRef = ref(storage, imageSrc);
+    //     await deleteObject(imageRef);
+    //     console.log('圖片已從 Storage 刪除:', imageSrc);
+    //     // 從 Firestore 中移除舊圖片 URL
+    //     const newImageUrls = originalImageUrls.filter(url => url !== imageSrc);
+    //     setOriginalImageUrls(newImageUrls);
+    //     // 如果是編輯狀態，更新 Firestore 文檔
+    //     if (isEditing && selectedPlace) {
+    //       const placeRef = doc(db, `users/${userId}/places`, selectedPlace.id);
+    //       await setDoc(placeRef, { images: newImageUrls }, { merge: true });
+    //     }
+    //   } catch (error) {
+    //     console.error('刪除圖片時出錯:', error);
+    //   }
+    // }
+
+    if (originalImageUrls.includes(imageSrc)) {
       try {
         const imageRef = ref(storage, imageSrc);
         await deleteObject(imageRef);
         console.log('圖片已從 Storage 刪除:', imageSrc);
-        // 從 Firestore 中移除舊圖片 URL
-        const newImageUrls = originalImageUrls.filter(url => url !== imageSrc);
-        setOriginalImageUrls(newImageUrls);
-        // 如果是編輯狀態，更新 Firestore 文檔
-        if (isEditing && selectedPlace) {
-          const placeRef = doc(db, `users/${userId}/places`, selectedPlace.id);
-          await setDoc(placeRef, { images: newImageUrls }, { merge: true });
-        }
+  
+        // 更新原始圖片 URL 陣列
+        setOriginalImageUrls(prevUrls => prevUrls.filter(url => url !== imageSrc));
       } catch (error) {
         console.error('刪除圖片時出錯:', error);
       }
-    }
-
-    if (originalImageUrls.includes(imageSrc)) {
-      const imageRef = ref(storage, imageSrc);
-      await deleteObject(imageRef).catch((error) => {
-        console.error('刪除圖片時出錯:', error);
-      });
     }
     // 從預覽列表中移除
     setPreviewImages(prev => prev.filter((_, i) => i !== index));
@@ -323,14 +329,14 @@ const MapDemoPage: React.FC = () => {
       </div>
       
       <div className="md:w-1/3 flex flex-col p-4 space-y-4 overflow-auto">
-      {!isEditing && (
-        <button 
-          onClick={() => setIsAddingMarker(!isAddingMarker)} // 切換 isAddingMarker 的值
-          className="p-2 bg-blue-500 text-white rounded"
-        >
-          {isAddingMarker ? '取消新增景點' : '新增景點'}
-        </button>
-      )}
+        {!isEditing && (
+          <button 
+            onClick={() => setIsAddingMarker(!isAddingMarker)} // 切換 isAddingMarker 的值
+            className="p-2 bg-blue-500 text-white rounded"
+          >
+            {isAddingMarker ? '取消新增景點' : '新增景點'}
+          </button>
+        )}
         {selectedPlace && !isEditing && (
           <>
             <button onClick={() => handleEditClick(selectedPlace)}>編輯景點</button>
@@ -360,7 +366,7 @@ const MapDemoPage: React.FC = () => {
         )}
         {newMarker && (
           <div className="p-4 bg-white rounded shadow-md">
-            <h3 className="text-lg font-semibold mb-2">{isEditing ? '編輯景點' : '新增景點'}</h3>
+            <h3 className="text-lg font-semibold mb-2 text-black">{isEditing ? '編輯景點' : '新增景點'}</h3>
             <input 
               type="text" 
               placeholder="名稱" 

@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
-import L from 'leaflet';
 
+import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-(L.Icon.Default.prototype as any)._getIconUrl = undefined;
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'images/marker-icon-2x.png',
   iconUrl: 'images/marker-icon.png',
@@ -149,6 +150,6 @@ useEffect(() => {
   };
 }, [map, onMarkerPlaced, isAddingMarker, newMarker, onMapClick, isEditing]);
 
-return <div ref={mapRef} style={{ height: '100%', width: '100%', maxWidth: '2000px' }} />;
+return <div ref={mapRef} style={{ height: '100%', width: '100%', minHeight: '600px', flex: '1 0 auto' }} />;
 };
 export default MapComponent;

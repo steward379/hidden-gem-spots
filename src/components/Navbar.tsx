@@ -1,4 +1,5 @@
 // Navbar.tsx
+import Link from 'next/link';
 import React, { useState, useEffect } from 'react';
 import EmailLogComponent from './EmailLogComponent';
 import GoogleLogComponent from './GoogleLogComponent';  
@@ -23,9 +24,11 @@ const Navbar: React.FC = () => {
 
 
   return (
-    <div className="navbar-container bg-green-500 text-white p-4">
+    <div className="navbar-container bg-red-400 text-white p-4">
       <div className="flex items-center space-x-4">
-      <h1 className="text-2xl font-bold mb-2">Accounting Wizard</h1>
+      <Link href="/">
+        <h1 className="text-2xl font-bold mb-2 cursor-pointer">Hidden Gem Spots</h1>
+      </Link>
 
       {loginMethod === LoginMethod.None && (
           <>

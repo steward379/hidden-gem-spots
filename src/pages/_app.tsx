@@ -35,7 +35,7 @@ const MyApp  = ({ Component, pageProps}: AppProps ) => {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [ asPath, router]);
 
   return (
     <>
