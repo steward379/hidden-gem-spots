@@ -15,6 +15,8 @@ export default function Home() {
         <>
             <div className="container max-w-xl mx-auto border p-10 mt-10 items-center justify-center">
                 <div className="flex flex-col items-center bg-gray-300 p-10 rounded-lg">
+                <Image src="/images/ballon.png" alt="Scene Image" width="300" height="300" 
+                objectFit='cover' />
                     <h1 className="text-4xl mb-4 text-gray-800">Hidden Gem Spots</h1>
                     <p className="text-xl mb-6 text-gray-500">找尋你的秘密景點</p>
                     {message && <p className="text-red-500 p-2">{message}</p>}

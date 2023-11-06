@@ -7,10 +7,12 @@ const LandingPage = () => {
   return (
     <div className="flex flex-col">
       <div className="bg-cover bg-no-repeat bg-center h-screen flex items-center justify-center" style={{ backgroundImage: "url('/images/pexels-tyler-lastovic.jpg')" }}>
-        <div className="absolute inset-0 bg-black opacity-30 mt-16"></div>
+        <div className="absolute inset-20 bg-black opacity-20 rounded mt-20 "></div>
         <div className="text-center text-white z-10">
+            <Image src="/images/ballon.png" alt="Scene Image" width="500" height="300" 
+                objectFit='cover' />
             <h1 className="text-6xl font-bold mb-4">Hidden Gem Spot 旅圓</h1>
-            <p className="text-xl mb-8">發現您的下一個冒險之旅。</p>
+            <p className="text-3xl mb-8">紀錄自己的下一趟生活冒險。</p>
             <Link href="/home">
               <button className="bg-red-400 text-red text-xl font-semibold py-3 px-5 rounded hover:bg-red-500 transition duration-300">開始探索</button>
             </Link>
