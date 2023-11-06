@@ -47,7 +47,7 @@ const Navbar: React.FC = () => {
           /* 顯示登入用戶狀態和個人資料的按鈕，通常用於顯示個人資料和登出選項 */
           <> 
             <UserButton />  
-            <div>歡迎，{clerkUser.firstName} </div> 
+            <div>歡迎，{clerkUser.username} </div> 
           </>
       )}
 

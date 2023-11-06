@@ -1,8 +1,8 @@
 // clerk sign-in (and up)
-import { SignIn } from '@clerk/clerk-react';
+import { SignIn } from '@clerk/nextjs';
 
 const SignInPage = () => {
   return <SignIn />;
 };
 
-export default SignInPage;
+export default SignInPage; 

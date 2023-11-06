@@ -26,7 +26,7 @@ export default function Home() {
                     {!isSignedIn ? (
                     // 如果用戶未登入，顯示登入或註冊的連結
                         <Link href="/sign-in">
-                            <div className="cursor-pointer text-lg bg-gray-800 px-8 py-2 hover:bg-gray-700 rounded shadow text-white">
+                            <div className="cursor-pointer text-lg bg-gray-800 px-8 py-2 hover:bg-gray-700 rounded shadow text-white mb-4">
                             登入 / 註冊
                             </div>
                         </Link>
@@ -34,7 +34,7 @@ export default function Home() {
                         // 如果用戶已登入，顯示個人資料或登出的連結
                         <>
                             <UserButton afterSignOutUrl="/"/>
-                            <div>歡迎，{user.username}</div>
+                            <div className="text-black mt-2 mb-2 ">歡迎，{user.username}</div>
                         </>
                     )}
                     <Link href="/map">
