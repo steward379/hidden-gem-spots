@@ -23,6 +23,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 // const analytics = getAnalytics(app);
 
+
+
 const db: Firestore = getFirestore(app);
 const auth: Auth = getAuth(app);
 const storage = getStorage(app);

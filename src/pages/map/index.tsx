@@ -1,43 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { onAuthStateChanged } from "firebase/auth";
-import firebaseServices from '../../utils/firebase'; 
 import { collection, query, onSnapshot, getDocs, addDoc, where, doc, setDoc, deleteDoc } from 'firebase/firestore';
-const { db, auth, storage } = firebaseServices; 
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
+import firebaseServices from '../../utils/firebase'; 
+const { db, auth, storage } = firebaseServices; 
 import Image from 'next/image';
+import { Place } from '../../types/Place';
+import { NewMarkerData } from '../../types/NewMarkerData';
 
 // const storage = getStorage();
 
 // import L from 'leaflet';
 // import MapComponent from '../../components/MapComponent';
-interface Place {
-  id: string;
-  name: string;
-  description: string;
-  tags: string[];
-  category: string;
-  coordinates: {
-    lat: number;
-    lng: number;
-  };
-  images: string[];
-}
-
-// 新增或修改地點時需要的資料結構
-interface NewMarkerData {
-  latlng: {
-    lat: number;
-    lng: number;
-  };
-  name: string;
-  description: string;
-  tags: string;
-  category: string;
-  images?: File[];
-  imageUrls?: string[];
-}
-
 
 const MapComponentWithNoSSR = dynamic(
   () => import('../../components/MapComponent'),
@@ -144,84 +119,102 @@ const MapDemoPage: React.FC = () => {
 
   const handleRemoveImage = async (index: number, imageSrc: string) => {
 
-    // if (imageSrc.startsWith('https')) {
-    //   try {
-    //     const imageRef = ref(storage, imageSrc);
-    //     await deleteObject(imageRef);
-    //     console.log('圖片已從 Storage 刪除:', imageSrc);
-    //     // 從 Firestore 中移除舊圖片 URL
-    //     const newImageUrls = originalImageUrls.filter(url => url !== imageSrc);
-    //     setOriginalImageUrls(newImageUrls);
-    //     // 如果是編輯狀態，更新 Firestore 文檔
-    //     if (isEditing && selectedPlace) {
-    //       const placeRef = doc(db, `users/${userId}/places`, selectedPlace.id);
-    //       await setDoc(placeRef, { images: newImageUrls }, { merge: true });
-    //     }
-    //   } catch (error) {
-    //     console.error('刪除圖片時出錯:', error);
-    //   }
-    // }
-
-    if (originalImageUrls.includes(imageSrc)) {
-      try {
-        const imageRef = ref(storage, imageSrc);
-        await deleteObject(imageRef);
-        console.log('圖片已從 Storage 刪除:', imageSrc);
-  
-        // 更新原始圖片 URL 陣列
-        setOriginalImageUrls(prevUrls => prevUrls.filter(url => url !== imageSrc));
-      } catch (error) {
-        console.error('刪除圖片時出錯:', error);
+    if (typeof previewImages[index] === 'string') {
+      const imageUrl = previewImages[index];
+      if (imageUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(imageUrl); // 釋放 Blob URL
       }
+      // 移除對應的檔案物件
+      setImages(images.filter((_, i) => i !== index));
+      // 移除對應的預覽圖片
+      setPreviewImages(previewImages.filter((_, i) => i !== index));
     }
-    // 從預覽列表中移除
-    setPreviewImages(prev => prev.filter((_, i) => i !== index));
-    setImages(prev => prev.filter((_, i) => i !== index));
 
+    // 移除對應的檔案物件
+    const newImages = [...images];
+    newImages.splice(index, 1);
+    setImages(newImages);
   };
+
   const handleEditClick = (place: Place) => {
-
-    setOriginalImageUrls(place.images); 
-    setPreviewImages(place.images); 
-
     setNewMarker({
       latlng: place.coordinates,
       name: place.name,
       description: place.description,
       tags: place.tags.join(', '), 
       category: place.category,
-      imageUrls: place.images,
+      images: place.images,
     });
 
+    setOriginalImageUrls(place.images); 
+    // setPreviewImages(place.images); 
     setPreviewImages(place.images);
     setIsEditing(true);
-    setSelectedPlace(place); 
+    setSelectedPlace(place);  // 設置當前選中地點
   };
 
   const handleCancelEdit = () => {
-    setPreviewImages(originalImageUrls);
-    setImages([]);
+    // setPreviewImages(originalImageUrls);
+    setPreviewImages([]);
+    // setImages([]);
     setNewMarker(null);
     setIsEditing(false);
-    setSelectedPlace(null); 
+
+    // setSelectedPlace(null); 
   };
 
   const updatePlace = async (placeId: string) => {
+
+
     if (!newMarker || !userId || !selectedPlace) return;
 
-     // 從 Storage 刪除原有圖片
-     const imagesToDelete = originalImageUrls.filter(url => !previewImages.includes(url));
-     await Promise.all(imagesToDelete.map(url => {
-        const imageRef = ref(storage, url);
-        return deleteObject(imageRef);
-    }));  
+    //  刪除原有圖片，包含 Storage 和 Firestore
+    // const imagesToDelete = originalImageUrls.filter(originalUrl => !newMarker.imageUrls.includes(originalUrl));
 
-     const imageUrls = newMarker.images
-    ? await Promise.all(newMarker.images.map(file => uploadImage(file, userId, placeId)))
-    : [];
+  
+    const imagesToDelete = originalImageUrls.filter(url => !previewImages.includes(url));
 
+    function extractStoragePathFromUrl(downloadUrl: string): string {
+      const url = new URL(downloadUrl);
+      const path = url.pathname;
+    
+      // Remove the "/o/" prefix and decode the URI component
+      const decodedPath = decodeURIComponent(path).split('/o/')[1];
+    
+      // Return the path without the token query parameter
+      return decodedPath.split('?')[0];
+    }
+  
+    const deletePromises = imagesToDelete.map(url => {
+
+      const storagePath = extractStoragePathFromUrl(url);
+      // const fullPath = `places/${userId}/${placeName}/${fileName}`;
+      const imageRef = ref(storage, storagePath);
+    
+      return deleteObject(imageRef)
+        .then(() => console.log(`Deleted image: ${storagePath}`))
+        .catch(error => {
+          if (error.code === 'storage/object-not-found') {
+            // 如果文件已經不存在，則可能之前已經被刪除了
+            console.warn(`Image not found in storage, might be already deleted: ${storagePath }`);
+          } else {
+            // 如果是其他錯誤，則進行錯誤處理
+            console.error(`Error deleting image from storage: ${error}`);
+          }
+        });
+    });
+    
+    await Promise.all(deletePromises);
+
+    // 上傳新圖片並取得URLs
+    const newImageUrls = await Promise.all(
+      images.map(file => uploadImage(file, userId, placeId))
+    );
+
+        
     // const updatedImages = [...previewImages.filter(url => !url.startsWith('blob')), ...imageUrls];
-    const updatedImages = [...(newMarker.imageUrls || []), ...imageUrls];
+    // const updatedImages = [...(newMarker.imageUrls || []), ...imageUrls];
+    const updatedImages = [...(newMarker.images), ...newImageUrls];
 
     const updatedPlaceData = {
       ...newMarker,
@@ -233,13 +226,15 @@ const MapDemoPage: React.FC = () => {
     await setDoc(placeRef, updatedPlaceData, { merge: true });
 
     setPlaces(prevPlaces => prevPlaces.map(place => 
-      place.id === selectedPlace.id ? { ...place, ...updatedPlaceData } : place
-    ));
-    setNewMarker(null);
+      // place.id === selectedPlace.id ? { ...place, ...updatedPlaceData } : place
+      place.id === placeId ? { ...place, ...updatedPlaceData } : place
+    )); 
+
+    setIsEditing(false);
     setSelectedPlace(null);
+    setNewMarker(null);
     setImages([]);
     setPreviewImages([]);
-    setIsEditing(false);
   };
 
 
@@ -316,7 +311,7 @@ const MapDemoPage: React.FC = () => {
 
   return (
     <div className="flex flex-col md:flex-row h-screen">
-      <div className="md:w-2/3 flex justify-center items-center">
+      <div className="w-full md:w-2/3 flex justify-center items-center">
         <MapComponentWithNoSSR 
           onMarkerPlaced={handleMarkerPlaced}
           isAddingMarker={isAddingMarker} 
@@ -328,7 +323,7 @@ const MapDemoPage: React.FC = () => {
         />
       </div>
       
-      <div className="md:w-1/3 flex flex-col p-4 space-y-4 overflow-auto">
+      <div className="w-full md:w-1/3 flex flex-col p-4 space-y-4 overflow-auto">
         {!isEditing && (
           <button 
             onClick={() => setIsAddingMarker(!isAddingMarker)} // 切換 isAddingMarker 的值
@@ -401,21 +396,22 @@ const MapDemoPage: React.FC = () => {
              {/* {newMarker?.imageUrls?.map((url, index) => (  */}
               {/* { images.map((image, index) => ( */}
               {previewImages.map((src, index) => (
-                <div key={index} className="image-preview relative" style={{ width: 300, height: 300 }}  >
-               <Image 
-                  // src={URL.createObjectURL(image)} 
-                  src={src}
-                  alt={`Uploaded preview ${index}`} 
-                  layout="fill"  //objectFit
-                  className ="object-cover"
-              />
-                <button 
-                    className="absolute top-0 right-0 bg-red-500 text-white p-1"
-                    onClick={() => handleRemoveImage(index, src)}
-                  >
-                    刪除
-                  </button>
-                </div>
+                src ? (
+                  <div key={index} className="image-preview relative" style={{ width: 300, height: 300 }}  >
+                    <Image 
+                      src={src}
+                      alt={`Uploaded preview ${index}`} 
+                      layout="fill"  //objectFit
+                      className ="object-cover"
+                    />
+                    <button 
+                      className="absolute top-0 right-0 bg-red-500 text-white p-1"
+                      onClick={() => handleRemoveImage(index, src)}
+                    >
+                      刪除
+                    </button>
+                  </div>
+                ) : null
               ))}
               {images.length < 3 && (
                 <label className="image-input-label">
