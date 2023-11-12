@@ -94,7 +94,7 @@ const MapComponent = ({ places, onMarkerPlaced, isAddingMarker, onCancel, onMark
       map.addControl(searchControl);
 
       // 初始化迷你地圖
-      const miniMap = new L.Control.MiniMap(
+      const miniMap = new (L as any).Control.MiniMap(
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'), 
         {
           toggleDisplay: true,
