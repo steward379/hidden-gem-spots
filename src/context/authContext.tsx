@@ -82,7 +82,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // 清理監聽器
     return () => unsubscribe();
-  }, [auth, router]);
+  }, [router]);
 
   const loginWithEmail = async (email: string, password: string) => {
     try {
