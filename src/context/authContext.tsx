@@ -5,7 +5,7 @@ import { useRouter }  from 'next/router';
 import { getDoc, doc, setDoc } from 'firebase/firestore';
 import firebaseServices from '../utils/firebase';
 const { db, auth, storage } = firebaseServices;
-// import { IUser } from '@/src/types/user';
+// import { IUser } from '../types/IUser';
 import { LoginMethod } from '../LoginMethod';
 
 interface IUser {
