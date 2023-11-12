@@ -71,6 +71,7 @@ const MapComponent = ({ places, onMarkerPlaced, isAddingMarker, onCancel, onMark
   useEffect(() => {
     if (map && !isEditing) {
       const provider = new OpenStreetMapProvider();
+      // @ts-ignore
       const searchControl = new GeoSearchControl({
         provider: provider,
         style: 'bar',

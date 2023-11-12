@@ -18,29 +18,6 @@ import { getDoc, doc, setDoc} from 'firebase/firestore';
 
 
 const MyApp = ({ Component, pageProps}: AppProps ) => {
-  // const [userId, setUserId] = useState(null);
-
-  // const router = useRouter();
-  // const { asPath } = router;
-
-  // useEffect(() => {
-
-  //   const auth = getAuth();
-
-  //   const unsubscribe = onAuthStateChanged(auth, async (user) => {
-  //       if (asPath.startsWith("/accounting") || asPath.startsWith("/map")) {
-  //         console.log('No user login');
-  //         router.push({
-  //           pathname: "/",
-  //           query: { message: "請先登入" },
-  //         });
-  //       }
-
-  //   });
-
-  //   return () => unsubscribe();
-  // }, [ asPath, router]);
-
   return (
     <AuthProvider>
       <Navbar />
