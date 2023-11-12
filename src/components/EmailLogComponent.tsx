@@ -3,20 +3,13 @@ import React, { useState } from 'react';
 import { Auth, User, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import firebase from '../utils/firebase'; 
 import { LoginMethod } from '../LoginMethod';
+import { useAuth } from '../context/authContext';
 // import { useDispatch } from 'react-redux';
 // import { setUser, setLoginMethod, LoginMethod } from '../src/slices/userSlice';
 
-interface Props {
-  user: User | null;
-  setUser: React.Dispatch<React.SetStateAction<User | null>>;
-  setLoginMethod: React.Dispatch<React.SetStateAction<LoginMethod>>;
-  LoginMethod: typeof LoginMethod;
-}
+const EmailLogComponent  = () => {
 
-const EmailLogComponent: React.FC<Props> = ({ user, setUser, setLoginMethod, LoginMethod }) => {
-
-  // const dispatch = useDispatch();
-
+  const { user, loginWithEmail, signUpWithEmail, logout, setLoginMethod } = useAuth();
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [showModal, setShowModal] = useState<boolean>(false);
@@ -28,37 +21,25 @@ const EmailLogComponent: React.FC<Props> = ({ user, setUser, setLoginMethod, Log
 
   const handleSignUp = async () => {
     try {
-      const userCredential = await createUserWithEmailAndPassword(firebase.auth as Auth, email, password);
-      const newUser = userCredential.user as User;
-
-      setUser(newUser);
+      await signUpWithEmail(email, password);
       setShowModal(false);
       setLoginMethod(LoginMethod.Email);
-      setErrorMsg("");
-
-      // dispatch(setUser(user));
-      // dispatch(setLoginMethod(LoginMethod.Email));
+      setErrorMsg('');
       
-      console.log("註冊成功，使用者 ID 是：", newUser.uid);
-
+      console.log("註冊成功，使用者 ID 是：",user.uid);
     } catch (error) {
-      
       console.log("註冊失敗", error);
-
     }
   };
 
   const handleSignIn = async () => {
     try {
-      const userCredential = await signInWithEmailAndPassword(firebase.auth as Auth, email, password);
-      const newUser = userCredential.user as User;
-
-      setUser(newUser);
+      await loginWithEmail(email, password);
       setShowModal(false)
       setLoginMethod(LoginMethod.Email);
       setErrorMsg("");
 
-      console.log("登入成功，使用者 ID 是：", newUser.uid);
+      console.log("登入成功，使用者 ID 是：", user.uid);
     } catch (error) {
 
       setErrorMsg("帳號或密碼錯誤，或帳號存在其他登入方式");
@@ -69,13 +50,8 @@ const EmailLogComponent: React.FC<Props> = ({ user, setUser, setLoginMethod, Log
   const handleSignOut = async () => {
     try {
 
-      await signOut(firebase.auth as Auth);
-      
-      setLoginMethod(LoginMethod.None);
-      
-      setUser(null);
-      
-      console.log("登出成功");
+      await logout();
+      console.log("登出成功", user.uid);
     } catch (error) {
       console.log("登出失敗", error);
     }

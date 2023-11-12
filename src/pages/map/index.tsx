@@ -1,13 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
+
 import { onAuthStateChanged } from "firebase/auth";
-import { collection, query, onSnapshot, getDocs, addDoc, where, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { collection, query, onSnapshot, getDocs, updateDoc, getDoc, addDoc, where, doc, setDoc, deleteDoc, arrayRemove } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
 import firebaseServices from '../../utils/firebase'; 
 const { db, auth, storage } = firebaseServices; 
+
 import Image from 'next/image';
-import { Place } from '../../types/Place';
+// import { Place } from '../../types/Place';
 import { NewMarkerData } from '../../types/NewMarkerData';
+
+export interface Place {
+  id: string;
+  name: string;
+  description: string;
+  tags: string[];
+  category: string;
+  coordinates: {
+    lat: number;
+    lng: number;
+  };
+  images: string[];
+}
 
 // const storage = getStorage();
 
@@ -27,12 +42,17 @@ const MapDemoPage: React.FC = () => {
   const [isAddingMarker, setIsAddingMarker] = useState(false); 
   const [newMarker, setNewMarker] = useState(null); 
 
-  const [markers, setMarkers] = useState([]);
-  const [image, setImage] = useState(null);
+  // const [markers, setMarkers] = useState([]);
+  // const [image, setImage] = useState(null);
   const [previewImages, setPreviewImages] = useState<string[]>([]);
   const [originalImageUrls, setOriginalImageUrls] =  useState<string[]>([]);
+  const [showPlacesList, setShowPlacesList] = useState(false);
 
   const [isEditing, setIsEditing] = useState(false);
+
+  const handlePlaceSelect = (place: Place) => {
+    setSelectedPlace(place);
+  };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, user => {
@@ -171,9 +191,6 @@ const MapDemoPage: React.FC = () => {
     //  刪除原有圖片，包含 Storage 和 Firestore
     // const imagesToDelete = originalImageUrls.filter(originalUrl => !newMarker.imageUrls.includes(originalUrl));
 
-  
-    const imagesToDelete = originalImageUrls.filter(url => !previewImages.includes(url));
-
     function extractStoragePathFromUrl(downloadUrl: string): string {
       const url = new URL(downloadUrl);
       const path = url.pathname;
@@ -184,28 +201,49 @@ const MapDemoPage: React.FC = () => {
       // Return the path without the token query parameter
       return decodedPath.split('?')[0];
     }
-  
-    const deletePromises = imagesToDelete.map(url => {
 
-      const storagePath = extractStoragePathFromUrl(url);
-      // const fullPath = `places/${userId}/${placeName}/${fileName}`;
-      const imageRef = ref(storage, storagePath);
-    
-      return deleteObject(imageRef)
-        .then(() => console.log(`Deleted image: ${storagePath}`))
-        .catch(error => {
-          if (error.code === 'storage/object-not-found') {
-            // 如果文件已經不存在，則可能之前已經被刪除了
-            console.warn(`Image not found in storage, might be already deleted: ${storagePath }`);
-          } else {
-            // 如果是其他錯誤，則進行錯誤處理
-            console.error(`Error deleting image from storage: ${error}`);
-          }
-        });
-    });
-    
-    await Promise.all(deletePromises);
+    // async function removeImageFromFirestore(placeId, imageUrl, userId) {
+    //   const placeRef = doc(db, `users/${userId}/places`, placeId);
+    //   const placeSnap = await getDoc(placeRef);
+    //   if (placeSnap.exists()) {
+    //     const placeData = placeSnap.data();
+    //     const imageUrls = placeData.images || [];
+    //     const updatedImageUrls = imageUrls.filter(url => url !== imageUrl);
+    //     await updateDoc(placeRef, { images: updatedImageUrls });
+    //   }
+    // }
 
+    //firestore 刪除圖片
+    async function removeImageFromFirestore(placeId, imageUrl, userId) {
+      console.log(`Removing image URL from Firestore: ${imageUrl}`);
+    
+      const placeRef = doc(db, `users/${userId}/places`, placeId);
+    
+      // Get the document data before updating
+      const placeSnap = await getDoc(placeRef);
+      if (placeSnap.exists()) {
+        const placeData = placeSnap.data();
+        const imageUrls = placeData.images || [];
+        console.log(`Original image URLs: ${imageUrls}`);
+        console.log(`Image URL is in original image URLs: ${imageUrls.includes(imageUrl)}`);
+    
+        // Create a new images array that does not include the image URL
+        const newImages = imageUrls.filter((url) => url !== imageUrl);
+    
+        await updateDoc(placeRef, { images: newImages });
+    
+        // Add a delay before fetching the updated document
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+    
+        // Fetch the document again and log the entire document
+        const updatedPlaceSnap = await getDoc(placeRef);
+        if (updatedPlaceSnap.exists()) {
+          const updatedPlaceData = updatedPlaceSnap.data();
+          console.log(`Updated document data: `, updatedPlaceData);
+        }
+      }
+    }
+    
     // 上傳新圖片並取得URLs
     const newImageUrls = await Promise.all(
       images.map(file => uploadImage(file, userId, placeId))
@@ -230,13 +268,37 @@ const MapDemoPage: React.FC = () => {
       place.id === placeId ? { ...place, ...updatedPlaceData } : place
     )); 
 
+    const imagesToDelete = originalImageUrls.filter(url => !previewImages.includes(url));
+
+    const deletePromises = imagesToDelete.map(async(url) => {
+
+      const storagePath = extractStoragePathFromUrl(url);
+      // const fullPath = `places/${userId}/${placeName}/${fileName}`;
+      const imageRef = ref(storage, storagePath);
+
+      try {
+        await deleteObject(imageRef);
+        console.log(`Deleted image: ${storagePath}`);
+        // 刪除成功後，移除Firestore中的URL
+        await removeImageFromFirestore(placeId, url, userId);
+      } catch (error) {
+        if (error.code === 'storage/object-not-found') {
+          console.warn(`Image not found in storage, might be already deleted: ${storagePath}`);
+        } else {
+          console.error(`Error deleting image from storage: ${error}`);
+        }
+      }
+      
+    });
+    
+    await Promise.all(deletePromises);
+
     setIsEditing(false);
     setSelectedPlace(null);
     setNewMarker(null);
     setImages([]);
     setPreviewImages([]);
   };
-
 
   // 儲存使用者的新地點
   const createNewPlace = async ()=> {
@@ -268,6 +330,9 @@ const MapDemoPage: React.FC = () => {
     } catch (e) {
       console.error("Error adding document: ", e);
     }
+
+    setPreviewImages([]);
+    setImages([]);
   };
 
   const handleSubmit = async() => {
@@ -278,8 +343,6 @@ const MapDemoPage: React.FC = () => {
     } else {
       await createNewPlace();
     }
-    setPreviewImages([]);
-    setImages([]);
   };
 
   // users mapping
@@ -307,10 +370,9 @@ const MapDemoPage: React.FC = () => {
   //     setImages(prevImages => [...prevImages, ...files]);
   //   };
   // }
-  
 
   return (
-    <div className="flex flex-col md:flex-row h-screen">
+    <div className="flex flex-col md:flex-row h-screen" style={{ paddingTop: "-50px" }}>
       <div className="w-full md:w-2/3 flex justify-center items-center">
         <MapComponentWithNoSSR 
           onMarkerPlaced={handleMarkerPlaced}
@@ -320,18 +382,37 @@ const MapDemoPage: React.FC = () => {
           onCancel={handleCancel}
           onMarkerClick={setSelectedPlace}
           onMapClick={() => setSelectedPlace(null)}
+          selectedPlace={selectedPlace}
         />
       </div>
       
       <div className="w-full md:w-1/3 flex flex-col p-4 space-y-4 overflow-auto">
         {!isEditing && (
-          <button 
+          <>
+          <button
             onClick={() => setIsAddingMarker(!isAddingMarker)} // 切換 isAddingMarker 的值
             className="p-2 bg-blue-500 text-white rounded"
           >
             {isAddingMarker ? '取消新增景點' : '新增景點'}
           </button>
+          <button 
+            className="mb-4 p-2 bg-blue-500 text-white rounded"
+            onClick={() => setShowPlacesList(!showPlacesList)} // 切換景點列表的顯示
+          >
+            景點列表
+          </button>
+          {showPlacesList && (
+            <div className="places-list">
+              {places.map((place) => (
+                <div key={place.id} className="place-item" onClick={() => handlePlaceSelect(place)}>
+                  {place.name}
+                </div>
+              ))}
+            </div>
+          )}
+          </>
         )}
+
         {selectedPlace && !isEditing && (
           <>
             <button onClick={() => handleEditClick(selectedPlace)}>編輯景點</button>
