@@ -34,7 +34,7 @@ export default function Accounting() {
         });
         
         return () => unsubscribe();;
-    }, []);
+    }, [router]);
 
     useEffect(() => {
         if(!uid) return;
