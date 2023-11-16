@@ -12,9 +12,9 @@ import 'leaflet-minimap';
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'images/marker-icon-2x.png', 
-  iconUrl: 'images/marker-icon.png',
-  shadowUrl: 'images/marker-shadow.png',
+  iconRetinaUrl: '/images/marker-icon-2x.png', 
+  iconUrl: '/images/marker-icon.png',
+  shadowUrl: '/images/marker-shadow.png',
 });
 
 
@@ -26,49 +26,73 @@ L.Icon.Default.mergeOptions({
 // }
 
 // const MapComponent: React.FC<MapComponentProps> = ({ 
-const MapComponent = ({ places, onMarkerPlaced, isAddingMarker, onCancel, onMarkerClick, onMapClick, isEditing, selectedPlace }) => {
+const MapComponent = ({ 
+  places, 
+  onMarkerPlaced, 
+  isAddingMarker, 
+  onCancel, 
+  onMarkerClick, 
+  onMapClick, 
+  isEditing, 
+  selectedPlace,
+  isPublishing = false,
+  onAddToPublish = undefined,
+  onRemoveFromPublish = undefined,
+  publishedPlaces = [],
+}) => {
   const mapRef = useRef(null);
   const [map, setMap] = useState(null)
   const [newMarker, setNewMarker ] = useState(null)
   const [markers, setMarkers] = useState([]);
   const [isLoading, setLoading] = useState(true);
+  const [userPosition, setUserPosition] = useState(null);
+  const defaultLat = 25.0330;
+  const defaultLng = 121.5654;
 
-  // Initialize
+  // location
   useEffect(() => {
-    if (typeof window !== "undefined" && mapRef.current && !map) {
-
-      const initializeMap = (lat, lng) => {
-        const initializedMap = L.map(mapRef.current).setView([lat, lng], 13);
-        
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(initializedMap);
-  
-        setMap(initializedMap);
-      };
-      
-      // 嘗試獲取使用者當前位置
+    // 僅在組件掛載時執行一次
+    if (userPosition === null) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          const { latitude, longitude } = position.coords;
-          initializeMap(latitude, longitude); // 使用使用者位置
+          setUserPosition([position.coords.latitude, position.coords.longitude]);
           setLoading(false);
         },
         (error) => {
           console.error(error);
-          initializeMap(25.0330, 121.5654); // 使用默認位置
+          setUserPosition([defaultLat, defaultLng]);
           setLoading(false);
         },
-        {
-          enableHighAccuracy: true
-        }
+        { enableHighAccuracy: true }
       );
-
     }
-  }, [map]);
+  }, [userPosition]); // []
+
+  // Initialize
+  useEffect(()  => {
+    let newMap = null;
+
+    if (map || !mapRef.current) return;
+    if (typeof window !== "undefined" && mapRef.current && !map) {
+
+      const newMap = L.map(mapRef.current).setView(userPosition || [defaultLat, defaultLng], 13);
+      
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(newMap);
+
+      setMap(newMap);
+    }
+    return () => {
+      if (newMap) {
+        newMap.remove();
+      }
+    };
+  }, [mapRef, map, userPosition]);
 
   //search bar
   useEffect(() => {
+    if(!map)  return;
     if (map && !isEditing) {
       const provider = new OpenStreetMapProvider();
       // @ts-ignore
@@ -94,14 +118,14 @@ const MapComponent = ({ places, onMarkerPlaced, isAddingMarker, onCancel, onMark
       map.addControl(searchControl);
 
       // 初始化迷你地圖
-      const miniMap = new (L as any).Control.MiniMap(
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'), 
-        {
-          toggleDisplay: true,
-          minimized: false,
-          position: 'bottomright'
-        }
-      ).addTo(map);
+        const miniMap = new (L as any).Control.MiniMap(
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'), 
+          {
+            toggleDisplay: true,
+            minimized: false,
+            position: 'bottomright'
+          }
+        ).addTo(map);
 
       return () => {
         map.removeControl(searchControl);
@@ -112,16 +136,15 @@ const MapComponent = ({ places, onMarkerPlaced, isAddingMarker, onCancel, onMark
 
   // database 'places' rendering
   useEffect(() => {
-    if (map && places) {
+    if (!map || !places) return;
+    // if (map && places) {
 
-      markers.forEach(marker => {
-        marker.remove();
-      });
-
-      setMarkers([]); 
+    //   markers.forEach(marker => {
+    //     marker.remove();
+    //   });
 
       const newMarkers = places.map(place => {
-        if (place.coordinates) { 
+        if (!place.coordinates) return null;
 
           const categoryMapping = {
             eat: { color: 'bg-yellow-200', text: '吃的' },
@@ -141,16 +164,32 @@ const MapComponent = ({ places, onMarkerPlaced, isAddingMarker, onCancel, onMark
         </div>
         `;
 
-          return L.marker(place.coordinates).addTo(map)
+          const markerElement = L.marker(place.coordinates, {
+                    draggable: isPublishing, // 如果在發佈模式，標記可拖動
+                }).addTo(map)
                   .bindPopup(popupContent)
-                  .on('click', () => onMarkerClick(place));
-        }
-        return null;
-      }).filter(marker => marker !== null);
+
+            if (isPublishing) {
+              // 如果處於發佈模式，則設置拖放事件監聽
+              markerElement.on('dragend', (event) => {
+                const marker = event.target;
+                const position = marker.getLatLng();
+                onAddToPublish({ ...place, coordinates: position });
+              });
+            } else {
+              // 如果不是發佈模式，綁定點擊事件或其他事件
+              markerElement.on('click', () => onMarkerClick(place));
+            }
+      
+            return markerElement;
+          }).filter(marker => marker !== null);
 
       setMarkers(newMarkers); 
-    }
-  }, [map, places, onMarkerClick]);
+
+      return () => {
+        newMarkers.forEach(marker => marker.remove());
+      };
+  }, [map, places, onMarkerClick, isPublishing, onAddToPublish]);
 
 
 
@@ -200,7 +239,9 @@ const MapComponent = ({ places, onMarkerPlaced, isAddingMarker, onCancel, onMark
     const onClick = (e) => {
       if (isEditing) return;
 
-      onMapClick();
+      if (onMapClick && typeof onMapClick === 'function') {
+        onMapClick(); // 確保 onMapClick 存在且是一個函數
+      }
 
       if (isAddingMarker) {
         if (newMarker) {
@@ -247,6 +288,9 @@ const MapComponent = ({ places, onMarkerPlaced, isAddingMarker, onCancel, onMark
 
   return (
     <div className="relative text-black" style={{ height: '100%', width: '100%', minHeight: '600px' }}>
+      {/* {isPublishing && publishedPlaces.map(place => ( */}
+        {/* // 渲染發布區的地點... */}
+        {/* ))} */}
       {isLoading && (
         <div className="absolute top-0 left-0 right-0 bottom-0 flex justify-center items-center text-white bg-blue-500 bg-opacity-75 z-10">
           Loading...

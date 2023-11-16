@@ -1,5 +1,9 @@
+// map/index.tsx
 import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
+import Router from 'next/router';
+
+import DropzoneImage from '../../components/DropzoneImage';
 
 import { onAuthStateChanged } from "firebase/auth";
 import { collection, query, onSnapshot, getDocs, updateDoc, getDoc, addDoc, where, doc, setDoc, deleteDoc, arrayRemove } from 'firebase/firestore';
@@ -137,6 +141,13 @@ const MapDemoPage: React.FC = () => {
     });
   } 
 
+  const handleFileUpload = (file) => {
+    // 這裡的邏輯應該和 handleImageChange 相似
+    const newImageUrls = [...previewImages, URL.createObjectURL(file)];
+    setPreviewImages(newImageUrls);
+    setImages([...images, file]);
+  };
+
   const handleRemoveImage = async (index: number, imageSrc: string) => {
 
     if (typeof previewImages[index] === 'string') {
@@ -179,7 +190,6 @@ const MapDemoPage: React.FC = () => {
     // setImages([]);
     setNewMarker(null);
     setIsEditing(false);
-
     // setSelectedPlace(null); 
   };
 
@@ -336,6 +346,25 @@ const MapDemoPage: React.FC = () => {
   };
 
   const handleSubmit = async() => {
+    if (!newMarker || !userId) return;
+
+    // 檢查文字欄位是否有效（不僅僅是空格）
+    const isFieldValid = (field) => field && field.trim().length > 0;
+
+    if (!isFieldValid(newMarker.name)){
+      alert('請填寫標題');
+      return;
+    } else if (!isFieldValid(newMarker.description)) {
+      alert('請填寫內容');
+      return;
+    } else if (!isFieldValid(newMarker.category)) {
+      alert('請選擇類別');
+      return;
+    } else if (!newMarker.latlng) {
+      alert('確定有在地圖上標記位置嗎？');
+      return;
+    }
+
     console.log('提交景點信息：', newMarker);
 
     if (isEditing && selectedPlace) {
@@ -389,27 +418,33 @@ const MapDemoPage: React.FC = () => {
       <div className="w-full md:w-1/3 flex flex-col p-4 space-y-4 overflow-auto">
         {!isEditing && (
           <>
-          <button
-            onClick={() => setIsAddingMarker(!isAddingMarker)} // 切換 isAddingMarker 的值
-            className="p-2 bg-blue-500 text-white rounded"
-          >
-            {isAddingMarker ? '取消新增景點' : '新增景點'}
-          </button>
-          <button 
-            className="mb-4 p-2 bg-blue-500 text-white rounded"
-            onClick={() => setShowPlacesList(!showPlacesList)} // 切換景點列表的顯示
-          >
-            景點列表
-          </button>
-          {showPlacesList && (
-            <div className="places-list">
-              {places.map((place) => (
-                <div key={place.id} className="place-item" onClick={() => handlePlaceSelect(place)}>
-                  {place.name}
-                </div>
-              ))}
-            </div>
-          )}
+            <button
+              onClick={() => setIsAddingMarker(!isAddingMarker)} // 切換 isAddingMarker 的值
+              className="p-2 bg-blue-500 text-white rounded"
+            >
+              {isAddingMarker ? '取消新增景點' : '新增景點'}
+            </button>
+            <button 
+              className="mb-4 p-2 bg-blue-500 text-white rounded"
+              onClick={() => setShowPlacesList(!showPlacesList)} // 切換景點列表的顯示
+            >
+              景點列表
+            </button>
+            {showPlacesList && (
+              <div className="places-list">
+                {places.map((place) => (
+                  <div key={place.id} className="place-item" onClick={() => handlePlaceSelect(place)}>
+                    {place.name}
+                  </div>
+                ))}
+              </div>
+            )}
+            <button
+              onClick={() => Router.push('/publish-map')}
+              className="p-2 bg-blue-500 text-white rounded"
+            >
+              發佈地圖
+            </button>
           </>
         )}
 
@@ -473,6 +508,7 @@ const MapDemoPage: React.FC = () => {
               <option value="play">玩的</option>
             </select>
             <div className="image-uploader p-2 w-full mb-2 border rounder">
+            <DropzoneImage onFileUploaded={handleFileUpload} />
 
              {/* {newMarker?.imageUrls?.map((url, index) => (  */}
               {/* { images.map((image, index) => ( */}
