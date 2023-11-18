@@ -3,7 +3,11 @@ import React from 'react';
 import { useDrop } from 'react-dnd';
 import { Place } from '../types/Place';
 
-const PublishArea = ({ publishedPlaces, onAddToPublish, onRemoveFromPublish }) => {
+const PublishArea = ({ 
+  publishedPlaces, 
+  onAddToPublish = undefined, 
+  onRemoveFromPublish 
+}) => {
     
     const [, drop] = useDrop({
       accept: 'place',
