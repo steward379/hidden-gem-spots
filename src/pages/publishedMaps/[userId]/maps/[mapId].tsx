@@ -33,7 +33,7 @@ const PublishedMapDetail = () => {
 
   useEffect(() => {
     const fetchMapData = async () => {
-      if (mapId && typeof mapId === 'string' && userId) {
+      if (typeof mapId === 'string' && typeof userId === 'string') {
         const mapRef = doc(db, `publishedMaps/${userId}/maps`, mapId);
         const docSnap = await getDoc(mapRef);
 
@@ -58,7 +58,7 @@ const PublishedMapDetail = () => {
   }, [mapId, userId]);
 
   const handleLikeClick = async () => {
-    if (!user || !mapData) return;
+    if (!user || !mapData || typeof mapId !== 'string' || typeof user.uid !== 'string') return;
 
     const mapRef = doc(db, `publishedMaps/${mapData.userId}/maps`, mapId);
     const userLikedMapsRef = doc(db, `users/${user.uid}/likedMaps`, mapId);
