@@ -36,7 +36,11 @@ const UserMapsPage = () => {
         const likedMapsSnapshot = await getDocs(likedMapsQuery);
         setLikedMaps(likedMapsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
-        const likedMapsData = likedMapsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const likedMapsData = likedMapsSnapshot.docs.map(doc => ({ 
+            id: doc.id,
+            authorId: doc.data().authorId,
+            authorName: doc.data().authorName,
+            ...doc.data() }));
 
           // 對每個喜愛的地圖獲取作者名稱
         for (let map of likedMapsData) {

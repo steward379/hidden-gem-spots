@@ -85,7 +85,8 @@ const PublishedMapDetail = () => {
           transaction.set(userLikedMapsRef, {
             mapId: mapId,
             title: mapData.title,
-            authorId: mapData.userId
+            authorId: mapData.userId,
+            authorName: undefined
           });
         } else {
           // 減少喜愛次數
@@ -129,7 +130,7 @@ const PublishedMapDetail = () => {
         <strong className="font-semibold">發佈時間：</strong>{new Date(mapData.publishDate).toLocaleDateString()}
       </p>
       <div className="flex items-center mb-4">
-        <button className="mr-2" onClick={handleLikeClick}>
+        <button title="favorite-button" className="mr-2" onClick={handleLikeClick}>
           <Image src="/images/heart.png" alt="Like" width="20" height="20" />
         </button>
         <span>{mapData.likes} 個喜愛</span>
