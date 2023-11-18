@@ -37,7 +37,7 @@ const Navbar: React.FC = () => {
             <Link href={`/member/${user.uid}`}>
               <div>會員中心</div>
             </Link>
-            <Link href={`/map`}>
+            <Link href={`/user-maps/${user.uid}`}>
               <div>我的地圖</div>
             </Link>
             <button onClick={logout}>登出</button>
