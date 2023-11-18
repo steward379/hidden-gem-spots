@@ -28,7 +28,10 @@ const Navbar: React.FC = () => {
     <nav className="navbar-container bg-red-400 text-white p-4">
       <div className="flex items-center space-x-4">
         <Link href="/">
-          <h1 className="text-2xl font-bold mb-2 cursor-pointer">Hidden Gem Spots</h1>
+          <h1 className="flex text-2xl font-bold mb-2 cursor-pointer">
+            <Image src="/images/ballon.png" alt="logo" width="50" height="50" />
+            <span>Hidden Gem</span>
+          </h1>
         </Link>
         {user && (
           <>
