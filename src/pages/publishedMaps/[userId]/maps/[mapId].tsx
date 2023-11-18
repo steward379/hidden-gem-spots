@@ -86,7 +86,7 @@ const PublishedMapDetail = () => {
             mapId: mapId,
             title: mapData.title,
             authorId: mapData.userId,
-            authorName: undefined
+            authorName: "等待填入"
           });
         } else {
           // 減少喜愛次數
