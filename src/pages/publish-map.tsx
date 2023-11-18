@@ -29,7 +29,7 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import { useDrag } from 'react-dnd';
 import { useRouter } from 'next/router';
 
-import { Place } from '../../types/Place';
+import { Place } from '../types/Place';
 
 const MapComponentWithNoSSR = dynamic(
     () => import('../components/MapComponent'),
