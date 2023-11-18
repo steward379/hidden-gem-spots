@@ -288,8 +288,9 @@ const PublishMapPage = () => {
             <div className='bg-white text-black'>
               <ReactQuill theme="snow" value={content} onChange={handleContentChange} />
             </div>
-              <label for="cover-image"> 代表圖片 </label>
-              <input
+              <label> 代表圖片 </label>
+              <input 
+                title="trip-avatar"
                 id="cover-image" 
                 type="file" 
                 accept="image/*" 

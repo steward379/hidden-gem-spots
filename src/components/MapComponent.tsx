@@ -27,14 +27,14 @@ L.Icon.Default.mergeOptions({
 
 // const MapComponent: React.FC<MapComponentProps> = ({ 
 const MapComponent = ({ 
-  places, 
-  onMarkerPlaced, 
-  isAddingMarker, 
-  onCancel, 
-  onMarkerClick, 
-  onMapClick, 
-  isEditing, 
-  selectedPlace,
+  places = [], 
+  onMarkerPlaced  = undefined, 
+  isAddingMarker = false, 
+  onCancel = undefined, 
+  onMarkerClick = undefined, 
+  onMapClick = undefined, 
+  isEditing = false, 
+  selectedPlace = null,
   isPublishing = false,
   onAddToPublish = undefined,
   onRemoveFromPublish = undefined,

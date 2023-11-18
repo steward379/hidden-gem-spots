@@ -493,7 +493,8 @@ const MapDemoPage: React.FC = () => {
           onChange={(e) => handleInputChange('tags', e.target.value)} 
           className="p-2 w-full mb-2 border rounded text-black"
         />
-        <select 
+        <select
+          title="choose-category" 
           value={newMarker.category} 
           onChange={(e) => handleInputChange('category', e.target.value)} 
           className="p-2 w-full mb-2 border rounded text-black"
