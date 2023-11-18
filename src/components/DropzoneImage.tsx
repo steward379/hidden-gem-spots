@@ -2,7 +2,8 @@ import { useDropzone } from 'react-dropzone';
 
 const DropzoneImage = ({ onFileUploaded }) => {
   const { getRootProps, getInputProps } = useDropzone({
-    accept: 'image/*',
+    //@ts-ignore
+    accept: ['image/*'],
     onDrop: acceptedFiles => {
       onFileUploaded(acceptedFiles[0]);
     }

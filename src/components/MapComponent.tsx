@@ -153,10 +153,13 @@ const MapComponent = ({
 
           const category = categoryMapping[place.category] || { color: 'bg-gray-200', text: '不明' }; 
 
+          const imageElements = place.images.map(image => `<Image src=${image} alt="${place.name}" width="100" height="100" />`).join('');
+
           const popupContent = `
           <div key=${place.id} class="text-center" style="width:150px">
           <b class="text-lg">${place.name}</b>
           <p>${place.description}</p>
+          ${imageElements}
           <p class="text-sm text-gray-500 ${category.color} p-1 rounded">${category.text}</p>
           <div class="flex flex-wrap gap-2 mt-2">
             ${place.tags.map(tag => `<span class="text-xs bg-blue-200 px-2 py-1 rounded-full">${tag}</span>`).join(' ')}
@@ -190,7 +193,6 @@ const MapComponent = ({
         newMarkers.forEach(marker => marker.remove());
       };
   }, [map, places, onMarkerClick, isPublishing, onAddToPublish]);
-
 
 
   // when users hit cancel button

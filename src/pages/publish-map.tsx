@@ -125,9 +125,14 @@ const PublishMapPage = () => {
       title: title.trim(),
       content: content.trim(),
       coverImage: uploadedImageUrl,
-      publishedPlaces,
+      publishedPlaces: publishedPlaces.map(place => ({
+        ...place,
+        tags: place.tags || [], // 如果 tags 為 undefined，則使用空數組
+      })),
       publishDate: new Date().toISOString(),
       userId: user.uid || 'anonymous',
+      likes: 0,
+      likedBy: []
     };
 
     try {
@@ -274,6 +279,7 @@ const PublishMapPage = () => {
             </button>
             {showSourceCode && (
               <textarea
+                title="地圖內容原始碼"
                 value={content}
                 // readOnly // 如果不希望用戶在這裡編輯，可以設為只讀
                 className="mb-2 p-2 w-full border rounded text-black"
