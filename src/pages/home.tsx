@@ -2,17 +2,47 @@ import Link from 'next/link';
 import LoginComponent from '../components/EmailLogComponent';
 import GoogleLogComponent from '../components/GoogleLogComponent';
 import Image from 'next/image';
-
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 // import { useLocation } from 'react-router-dom'; //Router Context but don't use it in Next.js
 import { useRouter } from 'next/router';
 
+const AlertModal = ({ isOpen, onClose, message }) => {
+    if (!isOpen) return null;
+  
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-30 z-50 flex justify-center items-center" >
+        <div className="bg-white p-6 rounded-lg shadow-xl z-10">
+          <p className="text-black">{message}</p>
+          <button onClick={onClose} className="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">
+            確定
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+
 export default function Home() {
     const router = useRouter();
-    const message = router.query.message;
+    const message = router.query.message || '';
 
+    const [isAlertOpen, setIsAlertOpen] = useState(false);
+    const [alertMessage, setAlertMessage] = useState('錯誤');
+  
+    const showAlert = (message) => {
+      setAlertMessage(message);
+      setIsAlertOpen(true);
+    };
+
+    useEffect(() => {
+        if(router.query.message) {
+            console.log("標題")
+            showAlert('請填寫標題');
+        }
+    }, [message, alertMessage, isAlertOpen, router.query.message]);
+  
     return (
-        <>
+        <div>
             <div className="container max-w-xl mx-auto border p-10 mt-10 items-center justify-center">
                 <div className="flex flex-col items-center bg-gray-300 p-10 rounded-lg">
                 <Image src="/images/ballon.png" alt="Scene Image" width="300" height="300" 
@@ -35,6 +65,7 @@ export default function Home() {
                 <Image src="/images/future-01.png" alt="Scene Image" width="1000" height="1000" 
                     objectFit='cover' />
             </div>
-        </>
+            <AlertModal isOpen={isAlertOpen} onClose={() => setIsAlertOpen(false)} message={alertMessage} />
+        </div>
     )
 }

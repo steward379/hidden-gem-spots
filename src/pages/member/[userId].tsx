@@ -61,15 +61,19 @@ const MemberPage = () => {
     setName(newName);
   };
 
-  const handleAvatarChange = async (e) => {
-    const file = e.target.files[0];
-    const avatarRef = ref(storage, `avatars/${userId}`);
-    await uploadBytes(avatarRef, file);
-    const avatarURL = await getDownloadURL(avatarRef);
-    const userRef = doc(db, 'users', userId as string);
-    await updateDoc(userRef, { avatar: avatarURL });
-    updateProfile(getAuth().currentUser, { photoURL: avatarURL });
-    setAvatar(avatarURL);
+  const handleAvatarChange = async (files) => {
+    if (files.length > 0) {
+      const file = files[0];
+      const avatarRef = ref(storage, `avatars/${userId}`);
+      await uploadBytes(avatarRef, file);
+      const avatarURL = await getDownloadURL(avatarRef);
+
+      const userRef = doc(db, 'users', userId as string);
+      await updateDoc(userRef, { avatar: avatarURL });
+
+      updateProfile(getAuth().currentUser, { photoURL: avatarURL });
+      setAvatar(avatarURL);
+    }
   };
 
   if (loading) return <p>Loading...</p>;

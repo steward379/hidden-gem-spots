@@ -28,6 +28,28 @@ export interface Place {
   images: string[];
 }
 
+const AlertModal = ({ isOpen, onClose, onConfirm, message, showConfirmButton = false }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-30 z-50 flex justify-center items-center">
+      <div className="bg-white p-6 rounded-lg shadow-xl">
+        <p className="text-black">{message}</p>
+        <div className="flex justify-end space-x-4">
+          {showConfirmButton && (
+            <button onClick={onConfirm} className="mt-4 bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600">
+              確認刪除
+            </button>
+          )}
+          <button onClick={onClose} className="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">
+            {showConfirmButton ? '取消' : '確定'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // const storage = getStorage();
 
 // import L from 'leaflet';
@@ -53,6 +75,16 @@ const MapDemoPage: React.FC = () => {
   const [showPlacesList, setShowPlacesList] = useState(false);
 
   const [isEditing, setIsEditing] = useState(false);
+
+  // alert&confirm
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const showAlert = (message) => {
+    setAlertMessage(message);
+    setIsAlertOpen(true);
+  };
 
   const handlePlaceSelect = (place: Place) => {
     setSelectedPlace(place);
@@ -90,12 +122,19 @@ const MapDemoPage: React.FC = () => {
   };
 
   const handleDeletePlace = async () => {
-    if (window.confirm('您確定要刪除此景點嗎？') && selectedPlace) {
+    if (selectedPlace) {
+      setShowDeleteConfirm(true);
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (selectedPlace) {
       const placeRef = doc(db, `users/${userId}/places`, selectedPlace.id);
       await deleteDoc(placeRef);
       setSelectedPlace(null);
       setPlaces(prevPlaces => prevPlaces.filter(place => place.id !== selectedPlace.id));
     }
+    setShowDeleteConfirm(false);
   };
 
   const handleInputChange = (field, value) => {
@@ -352,16 +391,16 @@ const MapDemoPage: React.FC = () => {
     const isFieldValid = (field) => field && field.trim().length > 0;
 
     if (!isFieldValid(newMarker.name)){
-      alert('請填寫標題');
+      showAlert('請填寫標題');
       return;
     } else if (!isFieldValid(newMarker.description)) {
-      alert('請填寫內容');
+      showAlert('請填寫內容');
       return;
     } else if (!isFieldValid(newMarker.category)) {
-      alert('請選擇類別');
+      showAlert('請選擇類別');
       return;
     } else if (!newMarker.latlng) {
-      alert('確定有在地圖上標記位置嗎？');
+      showAlert('確定有在地圖上標記位置嗎？');
       return;
     }
 
@@ -555,6 +594,13 @@ const MapDemoPage: React.FC = () => {
       </div>
     )}
   </div>
+  <AlertModal 
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={confirmDelete}
+        message="您確定要刪除此景點嗎？"
+        showConfirmButton={true}
+      />
 </div>
   );
 };

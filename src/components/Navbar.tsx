@@ -46,18 +46,6 @@ const Navbar: React.FC = () => {
             <button onClick={logout}>登出</button>
           </>
         )} 
-        {/* {loginMethod === LoginMethod.None && (
-          <>
-            <EmailLogComponent user={user} setUser={setUser} setLoginMethod={setLoginMethod}  LoginMethod={LoginMethod} />
-            <GoogleLogComponent user={user} setUser={setUser} setLoginMethod={setLoginMethod} LoginMethod={LoginMethod}  />
-          </>
-        )}
-        {loginMethod === LoginMethod.Email && (
-          <EmailLogComponent user={user} setUser={setUser} setLoginMethod={setLoginMethod}  LoginMethod={LoginMethod} />
-        )}
-        {loginMethod === LoginMethod.Google && (
-          <GoogleLogComponent user={user} setUser={setUser} setLoginMethod={setLoginMethod}  LoginMethod={LoginMethod}  />
-        )} */}
         {!user && (
           <>
             <EmailLogComponent  />

@@ -41,6 +41,28 @@ const ReactQuill = dynamic(() => import('react-quill'), {
     loading: () => <p>Loading...</p>,
 });
 
+const AlertModal = ({ isOpen, onClose, onConfirm, message, showConfirmButton = false }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-30 z-50 flex justify-center items-center">
+      <div className="bg-white p-6 rounded-lg shadow-xl">
+        <p className="text-black">{message}</p>
+        <div className="flex justify-end space-x-4">
+          {showConfirmButton && (
+            <button onClick={onConfirm} className="mt-4 bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600">
+              確認發佈？
+            </button>
+          )}
+          <button onClick={onClose} className="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">
+            {showConfirmButton ? '取消' : '確定'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const PublishMapPage = () => {
   const [places, setPlaces] = useState([]);
   const [isPublishing, setIsPublishing] = useState(true);
@@ -65,6 +87,16 @@ const PublishMapPage = () => {
 
   const router = useRouter();
 
+  // alert&confirm
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
+  const [showPublishConfirm, setShowPublishConfirm] = useState(false);
+
+  const showAlert = (message) => {
+    setAlertMessage(message);
+    setIsAlertOpen(true);
+  };
+  
   // useEffect(() => {
   //   const unsubscribe = onAuthStateChanged(auth, user => {
   //     if (user) {
@@ -110,43 +142,55 @@ const PublishMapPage = () => {
   const handleConfirmPublish = async () => {
 
     if (!title.trim() || !content.trim() || publishedPlaces.length === 0 ) {
-      alert('請確保所有欄位都已正確填寫。');
+      showAlert('請確保已正確填寫標題跟內容，並且至少有一個發佈景點加入發佈區。');
       return;
     }
+   
+    try {
+      // const userId = user.uid;
+      // const mapsRef = collection(db, `publishedMaps/${userId}/maps`);
+      // const docRef = await addDoc(mapsRef, mapToPublish);
+      // alert('地圖已成功發布！');
+
+      // showAlert('地圖已成功發布！');
+      setShowPublishConfirm(true);
+    } catch (error) {
+      console.error('發布地圖出錯：', error);
+      // alert('發布地圖時發生錯誤。');
+      showAlert('發布地圖時發生錯誤。');
+    }
+    
+  };
+
+  const confirmPublish = async () => {
 
     let uploadedImageUrl = coverImage;
     if (coverImageFile) {
       uploadedImageUrl = await handleUploadCoverImage();
       setCoverImage(uploadedImageUrl);
     }
-   
-    // 創建要發布的地圖對象
-    const mapToPublish = {
-      title: title.trim(),
-      content: content.trim(),
-      coverImage: uploadedImageUrl,
-      publishedPlaces: publishedPlaces.map(place => ({
-        ...place,
-        tags: place.tags || [], // 如果 tags 為 undefined，則使用空數組
-      })),
-      publishDate: new Date().toISOString(),
-      userId: user.uid || 'anonymous',
-      likes: 0,
-      likedBy: []
-    };
 
-    try {
-      const userId = user.uid;
-      const mapsRef = collection(db, `publishedMaps/${userId}/maps`);
-      const docRef = await addDoc(mapsRef, mapToPublish);
-      alert('地圖已成功發布！');
-      Router.push(`/published-maps/${docRef.id}`);
-      setIsPublishing(false);
-    } catch (error) {
-      console.error('發布地圖出錯：', error);
-      alert('發布地圖時發生錯誤。');
-    }
-    
+     // 創建要發布的地圖對象
+        const mapToPublish = {
+          title: title.trim(),
+          content: content.trim(),
+          coverImage: uploadedImageUrl,
+          publishedPlaces: publishedPlaces.map(place => ({
+            ...place,
+            tags: place.tags || [], // 如果 tags 為 undefined，則使用空數組
+          })),
+          publishDate: new Date().toISOString(),
+          userId: user.uid || 'anonymous',
+          likes: 0,
+          likedBy: []
+        };
+
+    const userId = user.uid;
+    const mapsRef = collection(db, `publishedMaps/${userId}/maps`);
+    const docRef = await addDoc(mapsRef, mapToPublish);
+    setIsPublishing(false);
+
+    Router.push(`/publishedMaps/${userId}/maps/${docRef.id}`);
   };
 
   const handleCancelPublish = (place) => {
@@ -313,6 +357,13 @@ const PublishMapPage = () => {
           </div>
         </div>
       </div>
+      <AlertModal 
+        isOpen={showPublishConfirm}
+        onClose={() => setShowPublishConfirm(false)}
+        onConfirm={confirmPublish}
+        message="您確定要發佈此地圖嗎？"
+        showConfirmButton={true}
+      />
      </DndProvider>
   );
 };

@@ -12,7 +12,7 @@ const DropzoneImage = ({ onFileUploaded }) => {
   return (
     <div {...getRootProps()} className="dropzone">
       <input {...getInputProps()} />
-      <p>Drag 'n' drop some files here, or click to select files</p>
+      <p>請拖曳檔案到此，或直接點擊</p>
     </div>
   );
 };
