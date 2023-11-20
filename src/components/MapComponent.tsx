@@ -49,6 +49,12 @@ const MapComponent = ({
   const defaultLat = 25.0330;
   const defaultLng = 121.5654;
 
+  const [alertMessage, setAlertMessage] = useState('');
+
+  const showAlert = (message) => {
+    setAlertMessage(message);
+  };
+
   // location
   useEffect(() => {
     // 僅在組件掛載時執行一次
@@ -288,18 +294,35 @@ const MapComponent = ({
     }
   }, [map, selectedPlace, markers]);
 
+  useEffect(() => {
+    if(isLoading) {
+      showAlert('Loading');
+    }
+  }, [isLoading]); 
+
   return (
     <div className="relative text-black" style={{ height: '100%', width: '100%', minHeight: '600px' }}>
       {/* {isPublishing && publishedPlaces.map(place => ( */}
         {/* // 渲染發布區的地點... */}
         {/* ))} */}
       {isLoading && (
-        <div className="absolute top-0 left-0 right-0 bottom-0 flex justify-center items-center text-white bg-blue-500 bg-opacity-75 z-10">
-          Loading...
-        </div>
+        // <button className="absolute top-0 left-0 right-0 bottom-0 flex justify-center items-center mt-4 bg-blue-500 text-white py-2 px-4 rounded opacity-75 z-10">
+        //   Loading...
+        // </button>
+        <AlertModal message={alertMessage} />
       )}
-      <div ref={mapRef} style={{ height: '100%', width: '100%', minHeight: '600px', flex: '1 0 auto' }} />
+      <div ref={mapRef} style={{ height: '100%', width: '100%', minHeight: '600px', flex: '1 0 auto', zIndex: '1' }} />
   </div>
+  );
+};
+
+const AlertModal = ({ message }) => {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-30 z-50 flex justify-center items-center">
+      <div className="bg-white p-6 rounded-lg shadow-xl">
+        <p className="text-black">{message}</p>
+      </div>
+    </div>
   );
 };
 

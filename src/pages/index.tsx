@@ -2,18 +2,23 @@
 import Link from 'next/link';
 import React from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/router';
 
 const LandingPage = () => {
+  const router = useRouter();
+  const message = router.query.message;
+
   return (
     <div className="flex flex-col">
       <div className="bg-cover bg-no-repeat bg-center h-screen flex items-center justify-center" style={{ backgroundImage: "url('/images/pexels-tyler-lastovic.jpg')" }}>
-        <div className="absolute inset-20 bg-black opacity-20 rounded mt-20 "></div>
-        <div className="text-center text-white z-10">
+        <div className="bg-black opacity-20 rounded mt-20"></div>
+        <div className="text-center text-white">
             <Image src="/images/ballon.png" alt="Scene Image" width="500" height="300" 
                 objectFit='cover' />
             <h1 className="text-6xl font-bold mb-4">Hidden Gem Spot 旅圓</h1>
             <p className="text-3xl mb-8">紀錄自己的下一趟生活冒險。</p>
             <Link href="/home">
+            {message && <p className="text-white-500 p-5">{message}</p>}
               <button className="bg-red-400 text-red text-xl font-semibold py-3 px-5 rounded hover:bg-red-500 transition duration-300">開始探索</button>
             </Link>
         </div>

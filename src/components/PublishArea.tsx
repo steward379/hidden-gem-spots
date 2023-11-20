@@ -30,7 +30,7 @@ const PublishArea = ({
             {publishedPlaces.map(place => (
                 <li className="flex justify-between" key={place.id}>
                   <span> {place.name}</span>
-                  <button onClick={() => onRemoveFromPublish(place.id)}>移除</button>
+                  <button onClick={() => onRemoveFromPublish(place.id)}> ( - ) </button>
                 </li>
             ))}
             </ul>
