@@ -440,168 +440,168 @@ const MapDemoPage: React.FC = () => {
   // }
 
   return (
-    <div className="flex flex-col md:flex-row h-screen">
-  <div className="w-full md:w-2/3 flex justify-center items-center">
-    <MapComponentWithNoSSR 
-      onMarkerPlaced={handleMarkerPlaced}
-      isAddingMarker={isAddingMarker} 
-      isEditing={isEditing}
-      places={places} 
-      onCancel={handleCancel}
-      onMarkerClick={setSelectedPlace}
-      onMapClick={() => setSelectedPlace(null)}
-      selectedPlace={selectedPlace}
-    />
-  </div>
-  
-  <div className="w-full md:w-1/3 flex flex-col p-4 space-y-4 overflow-auto">
-    {!isEditing && (
-      <>
-        <button
-          onClick={() => setIsAddingMarker(!isAddingMarker)}
-          className="p-2 bg-blue-500 text-white rounded"
-        >
-          {isAddingMarker ? '取消新增景點' : '新增景點'}
-        </button>
-        <button 
-          className="mb-4 p-2 bg-blue-500 text-white rounded"
-          onClick={() => setShowPlacesList(!showPlacesList)}
-        >
-          景點列表
-        </button>
-        {showPlacesList && (
-          <div className="places-list">
-            {places.map((place) => (
-              <div key={place.id} className="place-item" onClick={() => handlePlaceSelect(place)}>
-                {place.name}
-              </div>
+  <div className="flex flex-col md:flex-row h-screen">
+    <div className="w-full md:w-2/3 flex justify-center items-center">
+      <MapComponentWithNoSSR 
+        onMarkerPlaced={handleMarkerPlaced}
+        isAddingMarker={isAddingMarker} 
+        isEditing={isEditing}
+        places={places} 
+        onCancel={handleCancel}
+        onMarkerClick={setSelectedPlace}
+        onMapClick={() => setSelectedPlace(null)}
+        selectedPlace={selectedPlace}
+      />
+    </div>
+    
+    <div className="w-full md:w-1/3 flex flex-col p-4 space-y-4 overflow-auto">
+      {!isEditing && (
+        <>
+          <button
+            onClick={() => setIsAddingMarker(!isAddingMarker)}
+            className="p-2 bg-blue-500 text-white rounded"
+          >
+            {isAddingMarker ? '取消新增景點' : '新增景點'}
+          </button>
+          <button 
+            className="mb-4 p-2 bg-blue-500 text-white rounded"
+            onClick={() => setShowPlacesList(!showPlacesList)}
+          >
+            景點列表
+          </button>
+          {showPlacesList && (
+            <div className="places-list">
+              {places.map((place) => (
+                <div key={place.id} className="place-item" onClick={() => handlePlaceSelect(place)}>
+                  {place.name}
+                </div>
+              ))}
+            </div>
+          )}
+          <button
+            onClick={() => Router.push('/publish-map')}
+            className="p-2 bg-blue-500 text-white rounded"
+          >
+            發佈地圖
+          </button>
+        </>
+      )}
+
+      {selectedPlace && !isEditing && (
+        <>
+          <button onClick={() => handleEditClick(selectedPlace)}>編輯景點</button>
+          <button onClick={handleDeletePlace}>刪除景點</button>
+          <div>
+            <h2>名稱：{selectedPlace.name}</h2>
+            <p>描述：{selectedPlace.description}</p>
+
+            <div className="image-preview relative" style={{ width: 300, height: 300 }}>
+            {selectedPlace.images.map((url, index) => (
+              <Image 
+                key={index} 
+                src={url}
+                alt={`${selectedPlace.name} image ${index}`} 
+                layout="fill" 
+                className="object-cover"
+              />
             ))}
+            </div>
           </div>
-        )}
-        <button
-          onClick={() => Router.push('/publish-map')}
-          className="p-2 bg-blue-500 text-white rounded"
-        >
-          發佈地圖
-        </button>
-      </>
-    )}
+        </>
+      )}
+      {newMarker && (
+        <div className="p-4 bg-white rounded shadow-md">
+          <h3 className="text-lg font-semibold mb-2 text-black">{isEditing ? '編輯景點' : '新增景點'}</h3>
+          <input 
+            type="text" 
+            placeholder="名稱" 
+            value={newMarker.name} 
+            onChange={(e) => handleInputChange('name', e.target.value)} 
+            className="p-2 w-full mb-2 border rounded text-black"
+          />
+          <textarea 
+            placeholder="描述" 
+            value={newMarker.description} 
+            onChange={(e) => handleInputChange('description', e.target.value)} 
+            className="p-2 w-full mb-2 border rounded text-black"
+          ></textarea>
+          <input 
+            type="text" 
+            placeholder="標籤 (用逗號分隔)" 
+            value={newMarker.tags} 
+            onChange={(e) => handleInputChange('tags', e.target.value)} 
+            className="p-2 w-full mb-2 border rounded text-black"
+          />
+          <select
+            title="choose-category" 
+            value={newMarker.category} 
+            onChange={(e) => handleInputChange('category', e.target.value)} 
+            className="p-2 w-full mb-2 border rounded text-black"
+          >
+            <option value="">選擇類別</option>
+            <option value="eat">吃的</option>
+            <option value="play">玩的</option>
+          </select>
+          <div className="image-uploader p-2 w-full mb-2 border rounded">
+          <DropzoneImage onFileUploaded={handleFileUpload} />
 
-    {selectedPlace && !isEditing && (
-      <>
-        <button onClick={() => handleEditClick(selectedPlace)}>編輯景點</button>
-        <button onClick={handleDeletePlace}>刪除景點</button>
-        <div>
-          <h2>名稱：{selectedPlace.name}</h2>
-          <p>描述：{selectedPlace.description}</p>
-
-          <div className="image-preview relative" style={{ width: 300, height: 300 }}>
-          {selectedPlace.images.map((url, index) => (
-            <Image 
-              key={index} 
-              src={url}
-              alt={`${selectedPlace.name} image ${index}`} 
-              layout="fill" 
-              className="object-cover"
-            />
-          ))}
-          </div>
-        </div>
-      </>
-    )}
-    {newMarker && (
-      <div className="p-4 bg-white rounded shadow-md">
-        <h3 className="text-lg font-semibold mb-2 text-black">{isEditing ? '編輯景點' : '新增景點'}</h3>
-        <input 
-          type="text" 
-          placeholder="名稱" 
-          value={newMarker.name} 
-          onChange={(e) => handleInputChange('name', e.target.value)} 
-          className="p-2 w-full mb-2 border rounded text-black"
-        />
-        <textarea 
-          placeholder="描述" 
-          value={newMarker.description} 
-          onChange={(e) => handleInputChange('description', e.target.value)} 
-          className="p-2 w-full mb-2 border rounded text-black"
-        ></textarea>
-        <input 
-          type="text" 
-          placeholder="標籤 (用逗號分隔)" 
-          value={newMarker.tags} 
-          onChange={(e) => handleInputChange('tags', e.target.value)} 
-          className="p-2 w-full mb-2 border rounded text-black"
-        />
-        <select
-          title="choose-category" 
-          value={newMarker.category} 
-          onChange={(e) => handleInputChange('category', e.target.value)} 
-          className="p-2 w-full mb-2 border rounded text-black"
-        >
-          <option value="">選擇類別</option>
-          <option value="eat">吃的</option>
-          <option value="play">玩的</option>
-        </select>
-        <div className="image-uploader p-2 w-full mb-2 border rounded">
-        <DropzoneImage onFileUploaded={handleFileUpload} />
-
-         {previewImages.map((src, index) => (
-            src ? (
-              <div key={index} className="image-preview relative" style={{ width: 300, height: 300 }}  >
-                <Image 
-                  src={src}
-                  alt={`Uploaded preview ${index}`} 
-                  layout="fill" 
-                  className="object-cover"
-                />
-                <button 
-                  className="absolute top-0 right-0 bg-red-500 text-white p-1"
-                  onClick={() => handleRemoveImage(index, src)}
-                >
-                  刪除
+          {previewImages.map((src, index) => (
+              src ? (
+                <div key={index} className="image-preview relative" style={{ width: 300, height: 300 }}  >
+                  <Image 
+                    src={src}
+                    alt={`Uploaded preview ${index}`} 
+                    layout="fill" 
+                    className="object-cover"
+                  />
+                  <button 
+                    className="absolute top-0 right-0 bg-red-500 text-white p-1"
+                    onClick={() => handleRemoveImage(index, src)}
+                  >
+                    刪除
+                  </button>
+                </div>
+              ) : null
+            ))}
+            {images.length < 3 && (
+              <label className="image-input-label">
+                <button className="image-input-button text-black"> 
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    multiple 
+                    onChange={handleImageChange} 
+                  /> 
+                  <span> + </span>
                 </button>
-              </div>
-            ) : null
-          ))}
-          {images.length < 3 && (
-            <label className="image-input-label">
-              <button className="image-input-button text-black"> 
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  multiple 
-                  onChange={handleImageChange} 
-                /> 
-                <span> + </span>
-              </button>
-            </label>
+              </label>
+            )}
+          </div>
+          <button 
+            onClick={handleSubmit} 
+            className="p-2 w-full text-white bg-green-500 rounded hover:bg-green-600"
+          >
+            {isEditing ? '確認修改' : '提交新景點'}
+          </button>
+          {isEditing && (
+            <button 
+              onClick={handleCancelEdit}
+              className="p-2 w-full text-white bg-red-500 rounded hover:bg-red-600 mt-2"
+            >
+              取消編輯
+            </button>
           )}
         </div>
-        <button 
-          onClick={handleSubmit} 
-          className="p-2 w-full text-white bg-green-500 rounded hover:bg-green-600"
-        >
-          {isEditing ? '確認修改' : '提交新景點'}
-        </button>
-        {isEditing && (
-          <button 
-            onClick={handleCancelEdit}
-            className="p-2 w-full text-white bg-red-500 rounded hover:bg-red-600 mt-2"
-          >
-            取消編輯
-          </button>
-        )}
-      </div>
-    )}
+      )}
+    </div>
+    <AlertModal 
+          isOpen={showDeleteConfirm}
+          onClose={() => setShowDeleteConfirm(false)}
+          onConfirm={confirmDelete}
+          message="您確定要刪除此景點嗎？"
+          showConfirmButton={true}
+        />
   </div>
-  <AlertModal 
-        isOpen={showDeleteConfirm}
-        onClose={() => setShowDeleteConfirm(false)}
-        onConfirm={confirmDelete}
-        message="您確定要刪除此景點嗎？"
-        showConfirmButton={true}
-      />
-</div>
   );
 };
 
