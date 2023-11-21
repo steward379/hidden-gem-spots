@@ -10,7 +10,6 @@ class MyDocument extends Document {
     return (
       <Html lang="zh-TW">
         <Head>
-          <meta name="viewport" content="width=device-width, initial-scale=1" />
           <meta name="description" content="你的網站描述" />
           <meta name="keywords" content="關鍵字1, 關鍵字2" />
           {/* Preconnect to Google Fonts */}

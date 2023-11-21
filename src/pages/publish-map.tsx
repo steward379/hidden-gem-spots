@@ -41,7 +41,7 @@ const ReactQuill = dynamic(() => import('react-quill'), {
     loading: () => <p>Loading...</p>,
 });
 
-const AlertModal = ({ isOpen, onClose, onConfirm, message, showConfirmButton = false }) => {
+const AlertModal = ({ isOpen, onClose, onConfirm = ()=> {}, message, showConfirmButton = false }) => {
   if (!isOpen) return null;
 
   return (
@@ -364,7 +364,13 @@ const PublishMapPage = () => {
         message="您確定要發佈此地圖嗎？"
         showConfirmButton={true}
       />
-     </DndProvider>
+      <AlertModal
+        isOpen={isAlertOpen}
+        onClose={() => setIsAlertOpen(false)}
+        message={alertMessage}
+        showConfirmButton={false}
+      />
+    </DndProvider>
   );
 };
 

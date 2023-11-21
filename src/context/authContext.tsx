@@ -138,6 +138,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await signOut(auth);
       setUser(null);
       setLoginMethod(LoginMethod.None);
+      router.push("/");
     } catch (error) {
       console.error("登出失敗", error);
     }
