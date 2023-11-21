@@ -9,13 +9,13 @@ const LandingPage = () => {
   const message = router.query.message;
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col font-sans">
       <div className="bg-cover bg-no-repeat bg-center h-screen flex items-center justify-center" style={{ backgroundImage: "url('/images/pexels-tyler-lastovic.jpg')" }}>
         <div className="bg-black opacity-20 rounded mt-20"></div>
         <div className="text-center text-white">
             <Image src="/images/ballon.png" alt="Scene Image" width="500" height="300" 
                 objectFit='cover' />
-            <h1 className="text-6xl font-bold mb-4">Hidden Gem Spot 旅圓</h1>
+            <h1 className="text-6xl mb-4 font-normal"><span className="font-medium">Hidden Gem Spot</span> 旅圓</h1>
             <p className="text-3xl mb-8">紀錄自己的下一趟生活冒險。</p>
             <Link href="/home">
             {message && <p className="text-white-500 p-5">{message}</p>}

@@ -9,11 +9,22 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Hepta Slab', 'Noto Sans TC', 'sans-serif'],
+        'noto-sans': ['Noto Sans TC', 'sans-serif'],
+      },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-conic':
           'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
       },
+      fontWeight: {
+        'light': '300',
+        // 'regular': '400',
+        'normal': '400',
+        'medium': '500',
+        'bold': '700'
+      }
     },
   },
   plugins: [],
