@@ -1,5 +1,5 @@
 // map/index.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import Router from 'next/router';
 
@@ -28,7 +28,7 @@ export interface Place {
   images: string[];
 }
 
-const AlertModal = ({ isOpen, onClose, onConfirm, message, showConfirmButton = false }) => {
+const AlertModal = ({ isOpen, onClose, onConfirm = () => {}, message, showConfirmButton = false }) => {
   if (!isOpen) return null;
 
   return (
@@ -100,22 +100,19 @@ const MapDemoPage: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
+  const fetchPlaces = useCallback(async () => {
+    if (!userId) return;
+    const placesQuery = query(collection(db, `users/${userId}/places`));
+    const querySnapshot = await getDocs(placesQuery);
+    setPlaces(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+  }, [userId]); 
+
   // 更新 places 資料
   useEffect(() => {
     if (userId) {
-      const fetchPlaces = async () => {
-        // const userRef = doc(db, 'users', userId);
-        const placesQuery = query(collection(db, `users/${userId}/places`));
-        // const placesRef = collection(userRef, 'places');
-        // const places = placeSnapshots.docs.map(doc => doc.data());
-        // setPlaces(places);
-        const querySnapshot = await getDocs(placesQuery);
-        setPlaces(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-      };
-  
       fetchPlaces();
     }
-  }, [userId]);
+  }, [userId, fetchPlaces]);
 
   const handleMarkerPlaced = (latlng) => {
     setNewMarker({ latlng, name: '', description: '', tags: '', category: '', images: [] });
@@ -280,7 +277,7 @@ const MapDemoPage: React.FC = () => {
         const newImages = imageUrls.filter((url) => url !== imageUrl);
     
         await updateDoc(placeRef, { images: newImages });
-    
+        await fetchPlaces(); 
         // Add a delay before fetching the updated document
         await new Promise((resolve) => setTimeout(resolve, 1000));
     
@@ -601,6 +598,12 @@ const MapDemoPage: React.FC = () => {
           message="您確定要刪除此景點嗎？"
           showConfirmButton={true}
         />
+    <AlertModal
+        isOpen={isAlertOpen}
+        onClose={() => setIsAlertOpen(false)}
+        message={alertMessage}
+        showConfirmButton={false}
+      />
   </div>
   );
 };
