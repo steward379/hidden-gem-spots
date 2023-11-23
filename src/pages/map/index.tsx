@@ -26,6 +26,10 @@ export interface Place {
     lng: number;
   };
   images: string[];
+  likes : number;
+  likedBy: string[];
+  duplicates: number;
+  duplicatedBy: string[];
 }
 
 const AlertModal = ({ isOpen, onClose, onConfirm = () => {}, message, showConfirmButton = false }) => {
@@ -362,11 +366,16 @@ const MapDemoPage: React.FC = () => {
           lat: newMarker.latlng.lat,
           lng: newMarker.latlng.lng
         },
+        likes: 0,
+        likedBy: [],
         images: imageUrls,
+        duplicates: 0,
+        duplicatedBy: [],
       };
        // const placesRef = doc(db, `users/${userId}/places`); 
       const placesRef = collection(db, `users/${userId}/places`); 
       const docRef = await addDoc(placesRef, newPlace);
+
       setPlaces(prev => [...prev, { id: docRef.id, ...newPlace }]);
       setNewMarker(null);
 
@@ -562,15 +571,15 @@ const MapDemoPage: React.FC = () => {
             ))}
             {images.length < 3 && (
               <label className="image-input-label">
-                <button className="image-input-button text-black"> 
-                  <input 
-                    type="file" 
-                    accept="image/*" 
-                    multiple 
-                    onChange={handleImageChange} 
-                  /> 
-                  <span> + </span>
-                </button>
+                  <div className="image-input-button text-black"> 
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      multiple 
+                      onChange={handleImageChange} 
+                    /> 
+                    <span> + </span>
+                  </div>
               </label>
             )}
           </div>

@@ -108,6 +108,7 @@ const MemberPage = () => {
         <div className="mb-4">
           <label className="block mb-2">更改名稱</label>
           <input
+            title="name-change"
             className="p-2 border border-gray-300 rounded text-black"
             type="text"
             defaultValue={user.name}
