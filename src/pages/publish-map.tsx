@@ -14,7 +14,6 @@ import dynamic from 'next/dynamic';
 // import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css'; 
 
-
 import firebaseServices from '../utils/firebase';
 const { db, auth, storage } = firebaseServices;
 
@@ -171,19 +170,21 @@ const PublishMapPage = () => {
     }
 
      // 創建要發布的地圖對象
-        const mapToPublish = {
-          title: title.trim(),
-          content: content.trim(),
-          coverImage: uploadedImageUrl,
-          publishedPlaces: publishedPlaces.map(place => ({
-            ...place,
-            tags: place.tags || [], // 如果 tags 為 undefined，則使用空數組
-          })),
-          publishDate: new Date().toISOString(),
-          userId: user.uid || 'anonymous',
-          likes: 0,
-          likedBy: []
-        };
+    const mapToPublish = {
+      title: title.trim(),
+      content: content.trim(),
+      coverImage: uploadedImageUrl,
+      publishedPlaces: publishedPlaces.map(place => ({
+        ...place,
+        tags: place.tags || [], // 如果 tags 為 undefined，則使用空數組
+      })),
+      publishDate: new Date().toISOString(),
+      userId: user.uid,
+      likes: 0,
+      likedBy: [],
+      duplicates: 0,
+      duplicatedBy: [],
+    };
 
     const userId = user.uid;
     const mapsRef = collection(db, `publishedMaps/${userId}/maps`);

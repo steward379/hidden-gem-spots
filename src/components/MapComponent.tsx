@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-
+import Image from 'next/image';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 // npm install @types/leaflet-geosearch
@@ -39,40 +39,80 @@ const MapComponent = ({
   onAddToPublish = undefined,
   onRemoveFromPublish = undefined,
   publishedPlaces = [],
+  allowLikes = false, 
+  allowDuplicate = false,
+  handlePlaceLikeClick = (string) => {},
+  handlePlaceDuplicate = (string) => {},
 }) => {
   const mapRef = useRef(null);
   const [map, setMap] = useState(null)
   const [newMarker, setNewMarker ] = useState(null)
   const [markers, setMarkers] = useState([]);
-  const [isLoading, setLoading] = useState(true);
+
+  const [isLoading, setLoading] = useState(false);
   const [userPosition, setUserPosition] = useState(null);
+  // const [shouldFetchLocation, setShouldFetchLocation] = useState(false);
+  const handleFetchLocationClick = () => {
+    // setShouldFetchLocation(true);
+    fetchLocation();
+  };
+
   const defaultLat = 25.0330;
   const defaultLng = 121.5654;
 
   const [alertMessage, setAlertMessage] = useState('');
-
   const showAlert = (message) => {
     setAlertMessage(message);
   };
 
+
+  const fetchLocation = () => {
+    setLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const newPosition = [position.coords.latitude, position.coords.longitude];
+        setUserPosition(newPosition);
+        if (map) {
+          map.setView(newPosition, 13); // 更新地圖視圖
+        }
+        setLoading(false);
+      },
+      (error) => {
+        console.error(error);
+        const defaultPosition = [defaultLat, defaultLng];
+        setUserPosition(defaultPosition);
+        if (map) {
+          map.setView(defaultPosition, 13); // 更新地圖視圖
+        }
+        setLoading(false);
+      },
+      { enableHighAccuracy: true }
+    );
+  };
+
   // location
-  useEffect(() => {
-    // 僅在組件掛載時執行一次
-    if (userPosition === null) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserPosition([position.coords.latitude, position.coords.longitude]);
-          setLoading(false);
-        },
-        (error) => {
-          console.error(error);
-          setUserPosition([defaultLat, defaultLng]);
-          setLoading(false);
-        },
-        { enableHighAccuracy: true }
-      );
-    }
-  }, [userPosition]); // []
+  // useEffect(() => {
+  //   if (!shouldFetchLocation) return;
+  //   // 僅在組件掛載時執行一次
+  //   // if (userPosition === null) {
+  //     setLoading(true);
+  //     navigator.geolocation.getCurrentPosition(
+  //       (position) => {
+    
+  //         setUserPosition([position.coords.latitude, position.coords.longitude]);
+  //         setShouldFetchLocation(false);
+  //         setLoading(false);
+  //       },
+  //       (error) => {
+  //         console.error(error);
+  //         setUserPosition([defaultLat, defaultLng]);
+  //         setShouldFetchLocation(false);
+  //         setLoading(false);
+  //       },
+  //       { enableHighAccuracy: true }
+  //     );
+  //   // }
+  // }, [userPosition, shouldFetchLocation]); // []
 
   // Initialize
   useEffect(()  => {
@@ -96,6 +136,16 @@ const MapComponent = ({
     };
   }, [mapRef, map, userPosition]);
 
+  const customIcon = new L.Icon({
+    iconUrl: 'images/marker-icon-2x-blue.png', 
+    iconRetinaUrl: 'images/marker-icon-2x-blue.png',
+    shadowUrl: 'images/marker-shadow.png',
+    iconSize: [25, 41], 
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34], 
+    shadowSize: [41, 41] 
+  });
+
   //search bar
   useEffect(() => {
     if(!map)  return;
@@ -110,7 +160,7 @@ const MapComponent = ({
         showMarker: true,
         showPopup: false,
         marker: {
-          icon: new L.Icon.Default(),
+          icon: customIcon,
           draggable: false,
         },
         maxMarkers: 1,
@@ -138,7 +188,7 @@ const MapComponent = ({
         miniMap.remove();
       };
     }
-  }, [map, isEditing]);
+  }, [map, isEditing, customIcon]);
 
   // database 'places' rendering
   useEffect(() => {
@@ -161,17 +211,32 @@ const MapComponent = ({
 
           const imageElements = place.images.map(image => `<Image src=${image} alt="${place.name}" width="100" height="100" />`).join('');
 
+          // temporarily
+          if(place.likes===undefined) { place.likes = 0;}
+
           const popupContent = `
           <div key=${place.id} class="text-center" style="width:150px">
-          <b class="text-lg">${place.name}</b>
-          <p>${place.description}</p>
-          ${imageElements}
-          <p class="text-sm text-gray-500 ${category.color} p-1 rounded">${category.text}</p>
-          <div class="flex flex-wrap gap-2 mt-2">
-            ${place.tags.map(tag => `<span class="text-xs bg-blue-200 px-2 py-1 rounded-full">${tag}</span>`).join(' ')}
+            <b class="text-lg">${place.name}</b>
+            <p>${place.description}</p>
+            ${imageElements}
+            <div class="like-section">
+              <span class="like-count">${place.likes} 個喜愛❤</span>
+              ${allowLikes ? `<button class="like-button" data-place-id="${place.id}">
+                <img src="/images/heart.png" alt="Like" width="20" height="20" />
+              </button>` : ''}
+            </div>
+            <div class="duplicate-section">
+              <span class="duplicate-count">${place.duplicates} 次複製</span>
+              ${allowDuplicate ? `<button class="duplicate-button" data-place-id="${place.id}">
+              <img src="/images/copy.png" alt="Duplicate" width="20" height="20" />
+              </button>` : ''}
+            </div>
+            <p class="text-sm text-gray-500 ${category.color} p-1 rounded">${category.text}</p>
+            <div class="flex flex-wrap gap-2 mt-2">
+              ${place.tags.map(tag => `<span class="text-xs bg-blue-200 px-2 py-1 rounded-full">${tag}</span>`).join(' ')}
+            </div>
           </div>
-        </div>
-        `;
+          `;
 
           const markerElement = L.marker(place.coordinates, {
                     draggable: isPublishing, // 如果在發佈模式，標記可拖動
@@ -198,18 +263,40 @@ const MapComponent = ({
       return () => {
         newMarkers.forEach(marker => marker.remove());
       };
-  }, [map, places, onMarkerClick, isPublishing, onAddToPublish]);
+  }, [map, places, onMarkerClick, isPublishing, onAddToPublish, allowLikes, allowDuplicate]);
 
-
-  // when users hit cancel button
+  // when users click like button when availavle
   useEffect(() => {
-    if (!isAddingMarker && newMarker) {
-      newMarker.remove(); 
-      setNewMarker(null); 
-      onCancel(); 
+    const handlePopupClick = (event) => {
+      const likeButton = event.popup._contentNode.querySelector('.like-button');
+      const duplicateButton = event.popup._contentNode.querySelector('.duplicate-button');
+  
+      if (likeButton) {
+        likeButton.addEventListener('click', () => {
+          const placeId = likeButton.getAttribute('data-place-id');
+          handlePlaceLikeClick(placeId);
+        });
+      }
+  
+      if (duplicateButton) {
+        duplicateButton.addEventListener('click', () => {
+          const placeId = duplicateButton.getAttribute('data-place-id');
+          handlePlaceDuplicate(placeId);
+        });
+      }
+    };
+  
+    if (map) {
+      map.on('popupopen', handlePopupClick);
     }
-  }, [isAddingMarker, newMarker, onCancel]);
-
+  
+    return () => {
+      if (map) {
+        map.off('popupopen', handlePopupClick);
+      }
+    };
+  }, [map, handlePlaceLikeClick, handlePlaceDuplicate]);
+  
   // basic map interaction
   useEffect(() => {
     if(map){
@@ -301,18 +388,19 @@ const MapComponent = ({
   }, [isLoading]); 
 
   return (
-    <div className="relative text-black" style={{ height: '100%', width: '100%', minHeight: '600px' }}>
-      {/* {isPublishing && publishedPlaces.map(place => ( */}
-        {/* // 渲染發布區的地點... */}
-        {/* ))} */}
-      {isLoading && (
-        // <button className="absolute top-0 left-0 right-0 bottom-0 flex justify-center items-center mt-4 bg-blue-500 text-white py-2 px-4 rounded opacity-75 z-10">
-        //   Loading...
-        // </button>
-        <AlertModal message={alertMessage} />
-      )}
-      <div ref={mapRef} style={{ height: '100%', width: '100%', minHeight: '600px', flex: '1 0 auto', zIndex: '1' }} />
-  </div>
+      <div className="relative h-full w-full min-h-[600px] text-black">
+      {isLoading && <AlertModal message={alertMessage} />}
+      <div ref={mapRef} className="z-10 h-full w-full min-h-[600px] flex-1" />
+        <div className="absolute top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2">
+          <img src="/images/marker-icon.png" alt="Marker" className="h-7 w-7" />
+        </div>
+        <button 
+          className="absolute top-0 left-10 z-10 m-2 bg-black text-white py-2 px-4 rounded hover:bg-gray-700"
+          onClick={handleFetchLocationClick}
+        >
+          獲取定位
+        </button>
+    </div>
   );
 };
 
