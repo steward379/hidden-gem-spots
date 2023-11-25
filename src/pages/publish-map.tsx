@@ -8,11 +8,10 @@ import DropzoneImage from '../components/DropzoneImage';
 
 import { useAuth } from '../context/authContext';
 
-
-// markdown
 import dynamic from 'next/dynamic';
 // use dynamic loading to avoid SSR error
-// import ReactQuill from 'react-quill';
+
+// markdown
 import 'react-quill/dist/quill.snow.css'; 
 
 import firebaseServices from '../utils/firebase';
@@ -230,12 +229,11 @@ const PublishMapPage = () => {
     handleAddToPublish(place);
   };
 
-    // 處理圖片檔案選擇
   const handleCoverImageChange = (event) => {
     const file = event.target.files[0];
     if (file) {
-      setCoverImageFile(file); // 儲存檔案對象
-      setCoverImagePreview(URL.createObjectURL(file)); // 創建並儲存預覽圖片的 URL
+      setCoverImageFile(file); 
+      setCoverImagePreview(URL.createObjectURL(file)); 
     }
   };
 
@@ -245,7 +243,6 @@ const PublishMapPage = () => {
     // 這裡你可以添加上傳邏輯或者將其留在 handleConfirmPublish 中
   };
 
-  // 處理圖片上傳
   const handleUploadCoverImage = async (): Promise<string> => {
     if (!coverImageFile || !user.uid) return;
 

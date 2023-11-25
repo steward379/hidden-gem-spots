@@ -142,18 +142,26 @@ const MapDemoPage: React.FC = () => {
     setNewMarker(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleFileUpload = (file) => {
+    const newImageUrls = [...previewImages, URL.createObjectURL(file)];
+    setPreviewImages(newImageUrls);
+    setImages([...images, file]);
+  };
+
   const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
       const selectedFiles = Array.from(event.target.files);
-      setImages(selectedFiles); // 存儲文件對象以進行上傳
+      setImages(selectedFiles); 
       const selectedFilesUrls = selectedFiles.map(file => URL.createObjectURL(file))
-      setPreviewImages(selectedFilesUrls); // 產生並存儲預覽 URL
+      setPreviewImages(selectedFilesUrls); 
     }
   };
   // cancel adding sites
   const handleCancel = () => {
     setIsAddingMarker(false);
     setNewMarker(null);
+    console.log('newmarker', newMarker);
+    setSelectedPlace(null);
     // if (newMarker) {
     //   newMarker.remove(); 
     // }
@@ -181,12 +189,8 @@ const MapDemoPage: React.FC = () => {
     });
   } 
 
-  const handleFileUpload = (file) => {
-    // 這裡的邏輯應該和 handleImageChange 相似
-    const newImageUrls = [...previewImages, URL.createObjectURL(file)];
-    setPreviewImages(newImageUrls);
-    setImages([...images, file]);
-  };
+
+
 
   const handleRemoveImage = async (index: number, imageSrc: string) => {
 
@@ -432,14 +436,6 @@ const MapDemoPage: React.FC = () => {
   
     return () => unsubscribe();
   }, [userId]);
-
-
-  // function ImageUploader({ images, setImages }) {
-  //   const handleImageChange = (e) => {
-  //     const files = Array.from(e.target.files);
-  //     setImages(prevImages => [...prevImages, ...files]);
-  //   };
-  // }
 
   return (
   <div className="flex flex-col md:flex-row h-screen">

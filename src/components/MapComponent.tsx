@@ -263,7 +263,7 @@ const MapComponent = ({
       return () => {
         newMarkers.forEach(marker => marker.remove());
       };
-  }, [map, places, onMarkerClick, isPublishing, onAddToPublish, allowLikes, allowDuplicate]);
+  }, [map, places, onMarkerClick, isPublishing, onAddToPublish, allowLikes, allowDuplicate, showInteract]);
 
   // when users click like button when availavle
   useEffect(() => {
@@ -392,7 +392,7 @@ const MapComponent = ({
       {isLoading && <AlertModal message={alertMessage} />}
       <div ref={mapRef} className="z-10 h-full w-full min-h-[600px] flex-1" />
         <div className="absolute top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2">
-          <img src="/images/marker-icon.png" alt="Marker" className="h-7 w-7" />
+          <Image src="/images/marker-icon.png" alt="Marker" className="h-7 w-7" width="30" height="30" />
         </div>
         <button 
           className="absolute top-0 left-10 z-10 m-2 bg-black text-white py-2 px-4 rounded hover:bg-gray-700"
