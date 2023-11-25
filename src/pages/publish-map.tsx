@@ -20,7 +20,7 @@ const { db, auth, storage } = firebaseServices;
 
 import { onAuthStateChanged } from "firebase/auth";
 
-import { collection, query, onSnapshot, addDoc } from 'firebase/firestore';
+import { collection, query, onSnapshot, addDoc, doc, setDoc } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 
 import { DndProvider } from 'react-dnd';
@@ -171,28 +171,37 @@ const PublishMapPage = () => {
     }
 
      // 創建要發布的地圖對象
-    const mapToPublish = {
+    const mapRef = doc(collection(db, 'publishedMaps', user.uid, 'maps'));
+    await setDoc(mapRef, {
       title: title.trim(),
       content: content.trim(),
       coverImage: uploadedImageUrl,
-      publishedPlaces: publishedPlaces.map(place => ({
-        ...place,
-        tags: place.tags || [], // 如果 tags 為 undefined，則使用空數組
-      })),
       publishDate: new Date().toISOString(),
       userId: user.uid,
       likes: 0,
       likedBy: [],
       duplicates: 0,
-      duplicatedBy: [],
-    };
+      duplicatedBy: []
+    });
 
-    const userId = user.uid;
-    const mapsRef = collection(db, `publishedMaps/${userId}/maps`);
-    const docRef = await addDoc(mapsRef, mapToPublish);
+      // 为每个地点创建文档
+      const newPublishedPlaces = [];
+      for (const place of publishedPlaces) {
+        const placeRef = doc(collection(db, 'publishedMaps', user.uid, 'maps', mapRef.id, 'places'));
+        await setDoc(placeRef, {
+          ...place,
+          likes: 0,
+          likedBy: [],
+          duplicates: 0,
+          duplicatedBy: []
+        });
+        newPublishedPlaces.push({ ...place, id: placeRef.id });
+      }
+
+      setPublishedPlaces(newPublishedPlaces);
+
     setIsPublishing(false);
-
-    Router.push(`/publishedMaps/${userId}/maps/${docRef.id}`);
+    Router.push(`/publishedMaps/${user.uid}/maps/${mapRef.id}`);
   };
 
   const handleCancelPublish = (place) => {

@@ -41,6 +41,7 @@ const MapComponent = ({
   publishedPlaces = [],
   allowLikes = false, 
   allowDuplicate = false,
+  showInteract = true,
   handlePlaceLikeClick = (string) => {},
   handlePlaceDuplicate = (string) => {},
 }) => {
@@ -211,14 +212,13 @@ const MapComponent = ({
 
           const imageElements = place.images.map(image => `<Image src=${image} alt="${place.name}" width="100" height="100" />`).join('');
 
-          // temporarily
-          if(place.likes===undefined) { place.likes = 0;}
-
           const popupContent = `
           <div key=${place.id} class="text-center" style="width:150px">
             <b class="text-lg">${place.name}</b>
             <p>${place.description}</p>
             ${imageElements}
+
+            ${showInteract ? `
             <div class="like-section">
               <span class="like-count">${place.likes} 個喜愛❤</span>
               ${allowLikes ? `<button class="like-button" data-place-id="${place.id}">
@@ -230,7 +230,7 @@ const MapComponent = ({
               ${allowDuplicate ? `<button class="duplicate-button" data-place-id="${place.id}">
               <img src="/images/copy.png" alt="Duplicate" width="20" height="20" />
               </button>` : ''}
-            </div>
+            </div>` : ''}
             <p class="text-sm text-gray-500 ${category.color} p-1 rounded">${category.text}</p>
             <div class="flex flex-wrap gap-2 mt-2">
               ${place.tags.map(tag => `<span class="text-xs bg-blue-200 px-2 py-1 rounded-full">${tag}</span>`).join(' ')}

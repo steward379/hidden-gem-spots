@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 import dynamic from 'next/dynamic';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, collection, getDocs } from 'firebase/firestore';
 import firebaseServices from  '../../../utils/firebase';
 const { db, auth, storage } = firebaseServices;
 import { useAuth } from '../../../context/authContext';
@@ -26,15 +26,13 @@ const EditMap = () => {
 
   const { user } = useAuth();
 
-const userId = user.uid
+  const userId = user.uid
 
   const { mapId } = router.query;
   
   const [mapData, setMapData] = useState({ title: '', content: '' });
 
   const [selectedPlace, setSelectedPlace] = useState(null);
-
-
   const [showSourceCode, setShowSourceCode] = useState(false);
 
   // 圖片處理
@@ -79,7 +77,15 @@ const userId = user.uid
               // 假設用戶名稱儲存在 'name' 字段中
               mapDetails.authorName = authorSnap.data().name || '未知';
             }
-  
+
+              // 取得地圖中的景點
+            const placesRef = collection(db, `publishedMaps/${userId}/maps/${mapId}/places`);
+            const placesSnap = await getDocs(placesRef);
+            mapDetails.publishedPlaces = placesSnap.docs.map(doc => ({
+              ...doc.data(),
+              id: doc.id  // 添加新的 placeId
+            }));
+    
             setMapData(mapDetails);  // 使用包含作者名字的數據
           } else {
             console.log('找不到地圖資料');

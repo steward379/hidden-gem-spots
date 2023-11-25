@@ -26,10 +26,10 @@ export interface Place {
     lng: number;
   };
   images: string[];
-  likes : number;
-  likedBy: string[];
-  duplicates: number;
-  duplicatedBy: string[];
+  likes?: number;
+  likedBy?: string[];
+  duplicates?: number;
+  duplicatedBy?: string[];
 }
 
 const AlertModal = ({ isOpen, onClose, onConfirm = () => {}, message, showConfirmButton = false }) => {
@@ -366,11 +366,7 @@ const MapDemoPage: React.FC = () => {
           lat: newMarker.latlng.lat,
           lng: newMarker.latlng.lng
         },
-        likes: 0,
-        likedBy: [],
         images: imageUrls,
-        duplicates: 0,
-        duplicatedBy: [],
       };
        // const placesRef = doc(db, `users/${userId}/places`); 
       const placesRef = collection(db, `users/${userId}/places`); 
@@ -457,6 +453,7 @@ const MapDemoPage: React.FC = () => {
         onMarkerClick={setSelectedPlace}
         onMapClick={() => setSelectedPlace(null)}
         selectedPlace={selectedPlace}
+        showInteract = {false}
       />
     </div>
     

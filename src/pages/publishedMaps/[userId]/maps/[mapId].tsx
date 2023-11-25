@@ -1,7 +1,7 @@
 // pages/publishedMaps/[userId]/maps/[mapId].tsx
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import { doc, getDoc, updateDoc, setDoc, deleteDoc, arrayUnion, arrayRemove, runTransaction, collection, addDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, setDoc, deleteDoc, arrayUnion, arrayRemove, runTransaction, collection, addDoc, getDocs } from 'firebase/firestore';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import firebaseServices from '../../../../utils/firebase';
@@ -29,6 +29,8 @@ const PublishedMapDetail = () => {
   const { user } = useAuth();
   const { userId, mapId } = router.query;
 
+  const [totalDuplicates, setTotalDuplicates] = useState(0);
+
   // let userId = mapData.userId;
 
   // get Map
@@ -48,10 +50,23 @@ const PublishedMapDetail = () => {
             mapDetails.authorName = authorSnap.data().name || '未知';
           }
 
+          // 取得地圖中的景點
+          const placesRef = collection(db, `publishedMaps/${userId}/maps/${mapId}/places`);
+          const placesSnap = await getDocs(placesRef);
+          mapDetails.publishedPlaces = placesSnap.docs.map(doc => ({
+            ...doc.data(),
+            id: doc.id  // 添加新的 placeId
+          }));
+  
           setMapData(mapDetails);  // 使用包含作者名字的數據
+
+          const totalDups = placesSnap.docs.reduce((sum, doc) => sum + (doc.data().duplicates || 0), 0);
+          setTotalDuplicates(totalDups);
         } else {
           console.log('找不到地圖資料');
         }
+
+
       }
     };
 
@@ -116,31 +131,28 @@ const PublishedMapDetail = () => {
   };
   
   const handlePlaceLikeClick = async (placeId) => {
+      console.log(placeId);
       
-      if (!placeId || !mapData || typeof mapId !== 'string') return;
+      if (!user || typeof mapId !== 'string') return;
 
       if (user && typeof user.uid === 'string') {
     
-      const mapRef = doc(db, `publishedMaps/${mapData.userId}/maps`, mapId);
-    
-      await runTransaction(db, async (transaction) => {
-        const mapDoc = await transaction.get(mapRef);
-        if (!mapDoc.exists()) {
-          throw "Document does not exist!";
-        }
-    
-        const mapData = mapDoc.data();
-        const updatedPublishedPlaces = mapData.publishedPlaces.map(place => {
-          if (place.id === placeId) {
-            const updatedLikes = place.likes ? place.likes + 1 : 1;
-            const updatedLikedBy = place.likedBy ? [...place.likedBy, user.uid] : [user.uid];
-            return { ...place, likes: updatedLikes, likedBy: updatedLikedBy };
+        const mapRef = doc(db, `publishedMaps/${mapData.userId}/maps/${mapId}`);
+        const placeRef = doc(db, `publishedMaps/${mapData.userId}/maps/${mapId}/places/${placeId}`);
+      
+        await runTransaction(db, async (transaction) => {
+          const placeDoc = await transaction.get(placeRef);
+          if (!placeDoc.exists()) {
+            throw "Document does not exist!";
           }
-          return place;
+      
+          const placeData = placeDoc.data();
+          const alreadyLiked = placeData.likedBy.includes(user.uid);
+          const updatedLikes = alreadyLiked ? (placeData.likes || 0) - 1 : (placeData.likes || 0) + 1;
+          const updatedLikedBy = alreadyLiked ? arrayRemove(user.uid) : arrayUnion(user.uid);
+      
+          transaction.update(placeRef, { likedBy: updatedLikedBy, likes: updatedLikes });
         });
-        transaction.update(mapRef, { publishedPlaces: updatedPublishedPlaces });
-      });
-    
   
       // 更新本地狀態
       setMapData(prevData => {
@@ -178,55 +190,63 @@ const PublishedMapDetail = () => {
     if (!placeId || !mapData || typeof mapId !== 'string') return;
 
     if (user && typeof user.uid === 'string') {
-  
-    const mapRef = doc(db, `publishedMaps/${mapData.userId}/maps`, mapId);
-  
-    await runTransaction(db, async (transaction) => {
-      const mapDoc = await transaction.get(mapRef);
-      if (!mapDoc.exists()) {
-        throw "Document does not exist!";
-      }
-        const mapData = mapDoc.data();
-        const updatedPublishedPlaces = mapData.publishedPlaces.map(place => {
-          if (place.id === placeId) {
-            const alreadyDuplicated = place.duplicatedBy && place.duplicatedBy.includes(user.uid);
-            const updatedDuplicates = alreadyDuplicated ? place.duplicates : (place.duplicates ? place.duplicates + 1 : 1);
-            const updatedDuplicatedBy = alreadyDuplicated ? place.duplicatedBy : [...(place.duplicatedBy || []), user.uid];
-
-            return { ...place, duplicates: updatedDuplicates, duplicatedBy: updatedDuplicatedBy };
-          }
-          return place;
-        });
-    
-        transaction.update(mapRef, { publishedPlaces: updatedPublishedPlaces });
-    
-      // 將景點複製到使用者的地圖中
-
-      let placeDataToDuplicate = null;
-
-      const publishedMapDoc = await getDoc(mapRef);
-
-      if (publishedMapDoc.exists()) {
-        const publishedMapData = publishedMapDoc.data();
-        placeDataToDuplicate = publishedMapData.publishedPlaces.find(place => place.id === placeId);
-        if (!placeDataToDuplicate) {
-          alert('找不到要複製的景點');
-          return;
-        }
-      } else {
-        alert('找不到地圖資料');
-        return;
-      }
-
-      // 複製景點到使用者的地圖中
+      const mapRef = doc(db, `publishedMaps/${mapData.userId}/maps/${mapId}`);
+      const placeRef = doc(db, `publishedMaps/${mapData.userId}/maps/${mapId}/places/${placeId}`);
       const userPlacesRef = collection(db, `users/${user.uid}/places`);
-      const { id, ...placeDataWithoutId } = placeDataToDuplicate;
-      await addDoc(userPlacesRef, placeDataWithoutId);
+    
+      await runTransaction(db, async (transaction) => {
+        const placeDoc = await transaction.get(placeRef);
+        const mapDoc = await transaction.get(mapRef);
+        if (!mapDoc.exists()) {
+          throw "Map Document does not exist!";
+        }
 
-      alert('景點已複製到您的地圖');
-    });
+        if (!placeDoc.exists()) {
+          throw "Document does not exist!";
+        }
+
+        const placeData = placeDoc.data();
+        const updatedDuplicates = (placeData.duplicates || 0) + 1;
+        const updatedDuplicatedBy = placeData.duplicatedBy.includes(user.uid) ? placeData.duplicatedBy : arrayUnion(user.uid);
+        // arrayUnion(user.uid) 會將 user.uid 加入到陣列中，但如果 user.uid 已經存在於陣列中，則不會有任何變化
+  
+        transaction.update(placeRef, { duplicatedBy: updatedDuplicatedBy, duplicates: updatedDuplicates });
+  
+        // 複製景點到使用者的地圖中
+        const placeDataToDuplicate = { ...placeData, likes: 0, likedBy: [], duplicates: 0, duplicatedBy: [] };
+        delete placeDataToDuplicate.id; // 移除原有的 id
+        await transaction.set(doc(userPlacesRef), placeDataToDuplicate);
+
+        // 更新地圖的 duplicates 和 duplicatedBy
+        const mapData = mapDoc.data();
+        const newMapDuplicates = (mapData.duplicates || 0) + 1;
+        const newMapDuplicatedBy = mapData.duplicatedBy.includes(user.uid) ? mapData.duplicatedBy : arrayUnion(user.uid);
+
+        transaction.update(mapRef, { duplicates: newMapDuplicates, duplicatedBy: newMapDuplicatedBy });
+         // 更新本地狀態
+        setMapData(prevData => {
+          const updatedPlaces = prevData.publishedPlaces.map(place => {
+            if (place.id === placeId) {
+              const newDuplicatedBy = place.duplicatedBy.includes(user.uid) ? place.duplicatedBy : [...(place.duplicatedBy || []), user.uid];
+              return { ...place, duplicates: updatedDuplicates, duplicatedBy: newDuplicatedBy };
+            }
+            return place;
+          });
+          const newMapDuplicatedBy = prevData.duplicatedBy.includes(user.uid) ? prevData.duplicatedBy : [...(prevData.duplicatedBy || []), user.uid];
+          return {
+            ...prevData,
+            publishedPlaces: updatedPlaces,
+            duplicates: prevData.duplicates + 1,
+            duplicatedBy: newMapDuplicatedBy
+          };
+        });
+        setTotalDuplicates(prev => prev + 1);
+
+        alert('景點已複製到您的地圖');
+
+      });
+    }
   }
-}
   
   const handleMarkerClick = (place) => {
     setSelectedPlace(place);
@@ -261,7 +281,8 @@ const PublishedMapDetail = () => {
           <button title="favorite-button" className="mr-2" onClick={handleLikeClick}>
             <Image src="/images/heart.png" alt="Like" width="20" height="20" />
           </button>
-          <span>{mapData.likes} 個喜愛</span>
+          <span>{mapData.likes} 枚喜愛</span><span>😆😆😆😆😆</span>
+          <span>{mapData.duplicates} 次複製</span>
         </div>
 
         {mapData.coverImage && (
@@ -272,7 +293,7 @@ const PublishedMapDetail = () => {
           <ReactQuill value={mapData.content} readOnly={true} theme="snow" />
         </div>
         {isMapCreator && (
-          <button className="mt-4 bg-blue-500 text-white py-2 px-4 rounded" onClick={() => router.push(`/edit-map/${userId}/${mapId}`)}>  
+          <button className="mt-4 bg-blue-500 text-white py-2 px-4 rounded" onClick={() => router.push(`/edit-map/${mapData.userId}/${mapId}`)}>  
             編輯地圖(施工中)
           </button>
         )}

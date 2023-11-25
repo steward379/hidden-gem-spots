@@ -3,4 +3,6 @@ export interface IUser {
     email: string | null;
     name: string | null;
     avatar: string | null;
+    following: string[];  
+    followers: string[]; 
   }

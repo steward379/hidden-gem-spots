@@ -1,4 +1,4 @@
-// authContext.tsx
+// pages/context/authContext.tsx
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, getAuth, createUserWithEmailAndPassword,  signInWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { useRouter }  from 'next/router';
@@ -13,6 +13,8 @@ interface IUser {
   email: string | null;
   name: string | null;
   avatar: string | null;
+  following: string[];  
+  followers: string[]; 
 }
 
 const AuthContext = createContext<{
@@ -40,6 +42,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<IUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [loginMethod, setLoginMethod] = useState<LoginMethod>(LoginMethod.None);
+
   const router = useRouter();
 
   // const auth = getAuth();
@@ -50,36 +53,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const userRef = doc(db, 'users', firebaseUser.uid);
         const docSnap = await getDoc(userRef);
 
+        let userData: IUser;
+
         if (!docSnap.exists()) {
-          await setDoc(userRef, {
+          userData = {
             uid: firebaseUser.uid,
             email: firebaseUser.email,
             name: firebaseUser.displayName,
             avatar: firebaseUser.photoURL,
-          });
+            following: [],
+            followers: []
+          };
+          await setDoc(userRef, userData);
+        } else {
+          userData = docSnap.data() as IUser;
         }
 
-        const userData: IUser = {
-          uid: firebaseUser.uid,
-          email: firebaseUser.email,
-          name: firebaseUser.displayName,
-          avatar: firebaseUser.photoURL,
-        };
         setUser(userData);
       } else {
         setUser(null);
         setLoading(false);
         if (router.asPath.startsWith("/accounting") || router.asPath.startsWith("/map")) {
-          // 重定向到首頁
-          router.push({
-            pathname: "/",
-            query: { message: "請先登入" },
-          });
+          router.push({ pathname: "/", query: { message: "請先登入" } });
         }
       }
       setLoading(false);
     });
-
+  
     // 清理監聽器
     return () => unsubscribe();
   }, [router]);
@@ -87,13 +87,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const loginWithEmail = async (email: string, password: string) => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const newUser = userCredential.user;
-      setUser({
-        uid: newUser.uid,
-        email: newUser.email,
-        name: newUser.displayName,
-        avatar: newUser.photoURL,
-      });
+      const firebaseUser = userCredential.user;
+      const userRef = doc(db, 'users', firebaseUser.uid);
+      const docSnap = await getDoc(userRef);
+  
+      if (docSnap.exists()) {
+        setUser(docSnap.data() as IUser);
+      }
       setLoginMethod(LoginMethod.Email);
     } catch (error) {
       console.error("Email 登入失敗", error);
@@ -104,11 +104,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const newUser = userCredential.user;
+      const userRef = doc(db, 'users', newUser.uid);
+
+      await setDoc(userRef, {
+        uid: newUser.uid,
+        email: newUser.email,
+        name: newUser.displayName,
+        avatar: newUser.photoURL,
+        following: [],
+        followers: []
+      });
+
       setUser({
         uid: newUser.uid,
         email: newUser.email,
         name: newUser.displayName,
         avatar: newUser.photoURL,
+        following: [],
+        followers: []
       });
       setLoginMethod(LoginMethod.Email);
     } catch (error) {
@@ -120,13 +133,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
-      const newUser = result.user;
-      setUser({
-        uid: newUser.uid,
-        email: newUser.email,
-        name: newUser.displayName,
-        avatar: newUser.photoURL,
-      });
+      const firebaseUser = result.user;
+      const userRef = doc(db, 'users', firebaseUser.uid);
+      const docSnap = await getDoc(userRef);
+  
+      if (docSnap.exists()) {
+        setUser(docSnap.data() as IUser);
+      }
       setLoginMethod(LoginMethod.Google);
     } catch (error) {
       console.error("Google 登入失敗", error);
