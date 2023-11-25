@@ -71,7 +71,6 @@ const MapDemoPage: React.FC = () => {
   const [images, setImages] = useState<File[]>([]);
   const [isAddingMarker, setIsAddingMarker] = useState(false); 
   const [newMarker, setNewMarker] = useState(null); 
-
   // const [markers, setMarkers] = useState([]);
   // const [image, setImage] = useState(null);
   const [previewImages, setPreviewImages] = useState<string[]>([]);
@@ -118,8 +117,8 @@ const MapDemoPage: React.FC = () => {
     }
   }, [userId, fetchPlaces]);
 
-  const handleMarkerPlaced = (latlng) => {
-    setNewMarker({ latlng, name: '', description: '', tags: '', category: '', images: [] });
+  const handleMarkerPlaced = (coordinates) => {
+    setNewMarker({ coordinates, name: '', description: '', tags: '', category: '', images: [] });
   };
 
   const handleDeletePlace = async () => {
@@ -156,15 +155,20 @@ const MapDemoPage: React.FC = () => {
       setPreviewImages(selectedFilesUrls); 
     }
   };
+
+  const toggleAddingMarker = () => {
+    if (isAddingMarker) {
+      handleCancel(); // 如果正在新增景點，則取消並重置狀態
+    } else {
+      setIsAddingMarker(true); // 否則，開始新增景點
+    }
+  };
+  
   // cancel adding sites
   const handleCancel = () => {
     setIsAddingMarker(false);
     setNewMarker(null);
-    console.log('newmarker', newMarker);
     setSelectedPlace(null);
-    // if (newMarker) {
-    //   newMarker.remove(); 
-    // }
   };
 
   const uploadImage = async (file: File, userId: string, placeName: string): Promise<string> => {
@@ -189,9 +193,6 @@ const MapDemoPage: React.FC = () => {
     });
   } 
 
-
-
-
   const handleRemoveImage = async (index: number, imageSrc: string) => {
 
     if (typeof previewImages[index] === 'string') {
@@ -213,7 +214,7 @@ const MapDemoPage: React.FC = () => {
 
   const handleEditClick = (place: Place) => {
     setNewMarker({
-      latlng: place.coordinates,
+      coordinates: place.coordinates,
       name: place.name,
       description: place.description,
       tags: place.tags.join(', '), 
@@ -367,8 +368,8 @@ const MapDemoPage: React.FC = () => {
         tags: newMarker.tags.split(','), 
         category: newMarker.category,
         coordinates: {
-          lat: newMarker.latlng.lat,
-          lng: newMarker.latlng.lng
+          lat: newMarker.coordinates.lat,
+          lng: newMarker.coordinates.lng
         },
         images: imageUrls,
       };
@@ -405,7 +406,7 @@ const MapDemoPage: React.FC = () => {
     } else if (!isFieldValid(newMarker.category)) {
       showAlert('請選擇類別');
       return;
-    } else if (!newMarker.latlng) {
+    } else if (!newMarker.coordinates) {
       showAlert('確定有在地圖上標記位置嗎？');
       return;
     }
@@ -457,7 +458,8 @@ const MapDemoPage: React.FC = () => {
       {!isEditing && (
         <>
           <button
-            onClick={() => setIsAddingMarker(!isAddingMarker)}
+            // onClick={() => setIsAddingMarker(!isAddingMarker)}
+            onClick={toggleAddingMarker} 
             className="p-2 bg-blue-500 text-white rounded"
           >
             {isAddingMarker ? '取消新增景點' : '新增景點'}
@@ -468,7 +470,7 @@ const MapDemoPage: React.FC = () => {
           >
             景點列表
           </button>
-          {showPlacesList && (
+          { !newMarker && showPlacesList && (
             <div className="places-list">
               {places.map((place) => (
                 <div key={place.id} className="place-item" onClick={() => handlePlaceSelect(place)}>

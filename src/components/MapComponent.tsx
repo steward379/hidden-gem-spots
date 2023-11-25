@@ -66,6 +66,12 @@ const MapComponent = ({
     setAlertMessage(message);
   };
 
+  useEffect(() => {
+    if (!isAddingMarker && newMarker ) {
+      newMarker.remove(); // 移除標記
+      setNewMarker(null); // 重置 newMarker 狀態
+    }
+  }, [isAddingMarker, newMarker, map]);
 
   const fetchLocation = () => {
     setLoading(true);
@@ -327,7 +333,7 @@ const MapComponent = ({
     }
   }, [isEditing, map, newMarker]);
 
-
+  // add marker
   useEffect(() => {
     if (!map) return;
 
@@ -361,13 +367,17 @@ const MapComponent = ({
       }
     };
 
+    if (!isAddingMarker && newMarker) {
+      newMarker.remove();
+      setNewMarker(null);
+    }
 
     map.on('click', onClick);
 
     return () => {
       map.off('click', onClick);
     };
-  }, [map, onMarkerPlaced, isAddingMarker, newMarker, onMapClick, isEditing]);
+  }, [map, onMarkerPlaced, isAddingMarker, newMarker, onMapClick, isEditing, onCancel]);
 
   useEffect(() => {
     if (map && selectedPlace) {
