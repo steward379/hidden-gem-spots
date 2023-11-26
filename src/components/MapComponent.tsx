@@ -181,14 +181,14 @@ const MapComponent = ({
       map.addControl(searchControl);
 
       // 初始化迷你地圖
-        const miniMap = new (L as any).Control.MiniMap(
-          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'), 
-          {
-            toggleDisplay: true,
-            minimized: false,
-            position: 'bottomright'
-          }
-        ).addTo(map);
+      const miniMap = new (L as any).Control.MiniMap(
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'), 
+        {
+          toggleDisplay: true,
+          minimized: false,
+          position: 'bottomright'
+        }
+      ).addTo(map);
 
       return () => {
         map.removeControl(searchControl);
@@ -239,7 +239,10 @@ const MapComponent = ({
             </div>` : ''}
             <p class="text-sm text-gray-500 ${category.color} p-1 rounded">${category.text}</p>
             <div class="flex flex-wrap gap-2 mt-2">
-              ${place.tags.map(tag => `<span class="text-xs bg-blue-200 px-2 py-1 rounded-full">${tag}</span>`).join(' ')}
+            ${place.tags ? 
+              `${place.tags.map(tag => `<span class="text-xs bg-blue-200 px-2 py-1 rounded-full">${tag}</span>`).join(' ')}`
+              : ''
+            }
             </div>
           </div>
           `;

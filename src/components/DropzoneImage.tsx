@@ -1,9 +1,9 @@
 import { useDropzone } from 'react-dropzone';
+import ts from 'typescript';
 
 const DropzoneImage = ({ onFileUploaded }) => {
   const { getRootProps, getInputProps } = useDropzone({
-    //@ts-ignore
-    accept: ['image/*'],
+    accept: ['image/*'] as any,
     onDrop: acceptedFiles => {
       onFileUploaded(acceptedFiles[0]);
     }

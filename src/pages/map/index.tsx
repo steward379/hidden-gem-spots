@@ -276,19 +276,19 @@ const MapDemoPage: React.FC = () => {
     
       // Get the document data before updating
       const placeSnap = await getDoc(placeRef);
+
       if (placeSnap.exists()) {
         const placeData = placeSnap.data();
-        const imageUrls = placeData.images || [];
-        console.log(`Original image URLs: ${imageUrls}`);
-        console.log(`Image URL is in original image URLs: ${imageUrls.includes(imageUrl)}`);
+        const imageUrls = placeData.images;
     
         // Create a new images array that does not include the image URL
         const newImages = imageUrls.filter((url) => url !== imageUrl);
     
         await updateDoc(placeRef, { images: newImages });
+
         await fetchPlaces(); 
         // Add a delay before fetching the updated document
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        // await new Promise((resolve) => setTimeout(resolve, 1000));
     
         // Fetch the document again and log the entire document
         const updatedPlaceSnap = await getDoc(placeRef);
@@ -303,16 +303,15 @@ const MapDemoPage: React.FC = () => {
     const newImageUrls = await Promise.all(
       images.map(file => uploadImage(file, userId, placeId))
     );
-
         
     // const updatedImages = [...previewImages.filter(url => !url.startsWith('blob')), ...imageUrls];
     // const updatedImages = [...(newMarker.imageUrls || []), ...imageUrls];
-    const updatedImages = [...(newMarker.images), ...newImageUrls];
+    const updatedImages = [...(newMarker.images || []) , ...newImageUrls];
 
     const updatedPlaceData = {
       ...newMarker,
       images: updatedImages,
-      tags: newMarker.tags.split(',').map(tag => tag.trim()),
+      tags: newMarker.tags.split(',').map(tag => tag.trim()) || [],
     };
 
     const placeRef = doc(db, `users/${userId}/places`, placeId);
@@ -325,7 +324,8 @@ const MapDemoPage: React.FC = () => {
 
     const imagesToDelete = originalImageUrls.filter(url => !previewImages.includes(url));
 
-    const deletePromises = imagesToDelete.map(async(url) => {
+    // const deletePromises = imagesToDelete.map(async(url) => {
+    for (const url of imagesToDelete) {
 
       const storagePath = extractStoragePathFromUrl(url);
       // const fullPath = `places/${userId}/${placeName}/${fileName}`;
@@ -343,10 +343,11 @@ const MapDemoPage: React.FC = () => {
           console.error(`Error deleting image from storage: ${error}`);
         }
       }
+    }
       
-    });
+    // });
     
-    await Promise.all(deletePromises);
+    // await Promise.all(deletePromises);
 
     setIsEditing(false);
     setSelectedPlace(null);
