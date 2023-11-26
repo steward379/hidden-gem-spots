@@ -17,13 +17,14 @@
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
+  /* color: rgb(var(--foreground-rgb));
   background: linear-gradient(
       to bottom,
       transparent,
       rgb(var(--background-end-rgb))
     )
-    rgb(var(--background-start-rgb));
+    rgb(var(--background-start-rgb)); */
+    background-color: rgb(186, 245, 255);
 }
 
 .modal {
@@ -39,4 +40,8 @@ body {
   justify-content: center;
   align-items: center;
   z-index: 999;
+}
+
+.h-screen-without-navbar {
+  height: calc(100vh - 64px); /* 視窗高度減去 Navbar 高度 */
 }

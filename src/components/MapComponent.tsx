@@ -226,7 +226,7 @@ const MapComponent = ({
 
             ${showInteract ? `
             <div class="like-section">
-              <span class="like-count">${place.likes} 個喜愛❤</span>
+              <span class="like-count">❤ ${place.likes} 枚喜愛</span>
               ${allowLikes ? `<button class="like-button" data-place-id="${place.id}">
                 <img src="/images/heart.png" alt="Like" width="20" height="20" />
               </button>` : ''}
@@ -247,25 +247,25 @@ const MapComponent = ({
           </div>
           `;
 
-          const markerElement = L.marker(place.coordinates, {
-                    draggable: isPublishing, // 如果在發佈模式，標記可拖動
-                }).addTo(map)
-                  .bindPopup(popupContent)
+      const markerElement = L.marker(place.coordinates, {
+                draggable: isPublishing, // 如果在發佈模式，標記可拖動
+            }).addTo(map)
+              .bindPopup(popupContent)
 
-            if (isPublishing) {
-              // 如果處於發佈模式，則設置拖放事件監聽
-              markerElement.on('dragend', (event) => {
-                const marker = event.target;
-                const position = marker.getLatLng();
-                onAddToPublish({ ...place, coordinates: position });
-              });
-            } else {
-              // 如果不是發佈模式，綁定點擊事件或其他事件
-              markerElement.on('click', () => onMarkerClick(place));
-            }
-      
-            return markerElement;
-          }).filter(marker => marker !== null);
+        if (isPublishing) {
+          // 如果處於發佈模式，則設置拖放事件監聽
+          markerElement.on('dragend', (event) => {
+            const marker = event.target;
+            const position = marker.getLatLng();
+            onAddToPublish({ ...place, coordinates: position });
+          });
+        } else {
+          // 如果不是發佈模式，綁定點擊事件或其他事件
+          markerElement.on('click', () => onMarkerClick(place));
+        }
+  
+        return markerElement;
+      }).filter(marker => marker !== null);
 
       setMarkers(newMarkers); 
 
@@ -273,6 +273,26 @@ const MapComponent = ({
         newMarkers.forEach(marker => marker.remove());
       };
   }, [map, places, onMarkerClick, isPublishing, onAddToPublish, allowLikes, allowDuplicate, showInteract]);
+
+  const onMarkerDragEnd = (event, place) => {
+    const marker = event.target;
+    const position = marker.getLatLng();
+    
+    const markerScreenPos = map.latLngToContainerPoint(position);
+    if (isInsidePublishArea(markerScreenPos, publishAreaRect)) {
+      onAddToPublish({ ...place, coordinates: position });
+    }
+  };
+  
+  const isInsidePublishArea = (markerPos, areaRect) => {
+    if (!areaRect) return false;
+    return (
+      markerPos.x >= areaRect.left &&
+      markerPos.x <= areaRect.right &&
+      markerPos.y >= areaRect.top &&
+      markerPos.y <= areaRect.bottom
+    );
+  };
 
   // when users click like button when availavle
   useEffect(() => {
@@ -401,17 +421,18 @@ const MapComponent = ({
   }, [isLoading]); 
 
   return (
-      <div className="relative h-full w-full min-h-[600px] text-black">
+    <div className="relative h-full w-full min-h-[600px] text-black">
       {isLoading && <AlertModal message={alertMessage} />}
       <div ref={mapRef} className="z-10 h-full w-full min-h-[600px] flex-1" />
         <div className="absolute top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2">
           <Image src="/images/marker-icon.png" alt="Marker" className="h-7 w-7" width="30" height="30" />
         </div>
-        <button 
-          className="absolute top-0 left-10 z-10 m-2 bg-black text-white py-2 px-4 rounded hover:bg-gray-700"
+        <button
+          title="location-fetch" 
+          className="absolute top-0 left-10 z-10 m-3 border-b bg-white text-black py-4 px-1 rounded hover:bg-green-300 shadow"
           onClick={handleFetchLocationClick}
         >
-          獲取定位
+          <Image src="/images/map-cursor.png" alt="Fetch-Location" className="h-7 w-7" width="30" height="30" />
         </button>
     </div>
   );

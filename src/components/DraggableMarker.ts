@@ -24,4 +24,5 @@ const DraggableMarker = ({ place, map }) => {
 
   return null; // 因為這是一個邏輯組件，不需要渲染任何 JSX
 };
+
 export default DraggableMarker;

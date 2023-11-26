@@ -214,7 +214,7 @@ const PublishedMapDetail = () => {
   
         // 複製景點到使用者的地圖中
         const placeDataToDuplicate = { ...placeData, likes: 0, likedBy: [], duplicates: 0, duplicatedBy: [] };
-        delete placeDataToDuplicate.id; // 移除原有的 id
+        // delete placeDataToDuplicate.id; // 移除原有的 id
         await transaction.set(doc(userPlacesRef), placeDataToDuplicate);
 
         // 更新地圖的 duplicates 和 duplicatedBy
@@ -258,46 +258,49 @@ const PublishedMapDetail = () => {
   const isMapCreator = user && mapData && user.uid === mapData.userId;
 
     return (
-    <div className="flex flex-col md:flex-row h-screen">
-      <div className="md:w-2/3 w-full">
-        <MapComponentWithNoSSR 
-          places={mapData.publishedPlaces}
-          onMarkerClick={handleMarkerClick}
-          allowLikes={true}
-          allowDuplicate = {true}
-          handlePlaceLikeClick={handlePlaceLikeClick}
-          handlePlaceDuplicate={handlePlaceDuplicate}
-        />
-      </div>
-    
-      <div className="md:w-1/3 w-full p-4 overflow-auto">
-        <h1 className="text-2xl font-bold mb-3">{mapData.title}</h1>
-        <p className="mb-4">
-          <strong className="font-semibold">作者：</strong>{mapData.authorName}<br/>
-          <strong className="font-semibold">發佈時間：</strong>{new Date(mapData.publishDate).toLocaleDateString()}
-        </p>
-
-        <div className="flex items-center mb-4">
-          <button title="favorite-button" className="mr-2" onClick={handleLikeClick}>
-            <Image src="/images/heart.png" alt="Like" width="20" height="20" />
-          </button>
-          <span>{mapData.likes} 枚喜愛</span><span>😆😆😆😆😆</span>
-          <span>{mapData.duplicates} 次複製</span>
+      <div className="flex flex-col h-screen-without-navbar md:flex-row text-black bg-gray-200">
+        <div className="md:w-2/3 w-full lg:m-10 md:m-5 m-0 border">
+          <MapComponentWithNoSSR 
+            places={mapData.publishedPlaces}
+            onMarkerClick={handleMarkerClick}
+            allowLikes={true}
+            allowDuplicate = {true}
+            handlePlaceLikeClick={handlePlaceLikeClick}
+            handlePlaceDuplicate={handlePlaceDuplicate}
+          />
         </div>
+      
+        <div className="lg:overflow-auto md:overflow-auto md:w-1/3 w-full lg:mb-10 lg:mt-10 md:mt-5 mt-7 lg:mr-10 md:mr-5 lg:p-8 md:p-4 p-10 bg-white shadow rounded">
+          <h1 className="text-2xl font-bold mb-3">{mapData.title}</h1>
+          <p className="mb-4">
+            <strong className="font-semibold">作者：</strong>{mapData.authorName}<br/>
+            <strong className="font-semibold">發佈時間：</strong>{new Date(mapData.publishDate).toLocaleDateString()}
+          </p>
 
-        {mapData.coverImage && (
-          <Image src={mapData.coverImage} alt="Cover Image" width="300" height="300" />
-        )}
+          <div className="flex items-center mb-4">
+            <button title="favorite-button-map" className="m-2 mr-2" onClick={handleLikeClick}>
+              <Image src="/images/heart.png" alt="Like" width="20" height="20" />
+            </button>
+            <span>{mapData.likes} 枚喜愛</span>
+            {/* <button title="duplicate-button-map" className="m-2 mr-2"> */}
+              {/* <Image src="/images/copy.png" alt="Like" width="20" height="20" /> */}
+            {/* </button> */}
+            <span className="m-2">{mapData.duplicates} 次複製</span>
+          </div>
 
-        <div className="bg-white text-black mt-4">
-          <ReactQuill value={mapData.content} readOnly={true} theme="snow" />
+          {mapData.coverImage && (
+            <Image src={mapData.coverImage} alt="Cover Image" width="300" height="300" />
+          )}
+
+          <div className="bg-white text-black mt-4">
+            <ReactQuill value={mapData.content} readOnly={true} theme="snow" />
+          </div>
+          {isMapCreator && (
+            <button className="mt-4 bg-blue-500 text-white py-2 px-4 rounded" onClick={() => router.push(`/edit-map/${mapData.userId}/${mapId}`)}>  
+              編輯地圖
+            </button>
+          )}
         </div>
-        {isMapCreator && (
-          <button className="mt-4 bg-blue-500 text-white py-2 px-4 rounded" onClick={() => router.push(`/edit-map/${mapData.userId}/${mapId}`)}>  
-            編輯地圖(施工中)
-          </button>
-        )}
-      </div>
     </div>
   );
 };

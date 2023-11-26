@@ -154,17 +154,17 @@ const EditMap = () => {
   };
 
   return (
-    <div className="flex flex-col md:flex-row h-screen">
-        <div className="md:w-2/3 w-full">
-        <MapComponentWithNoSSR 
-            places={mapData.publishedPlaces}
-            onMarkerClick={handleMarkerClick}
-        />
+    <div className="flex flex-col h-screen-without-navbar md:flex-row text-black bg-gray-200">
+        <div className="md:w-2/3 w-full lg:m-10 md:m-5 m-0 border">
+          <MapComponentWithNoSSR 
+              places={mapData.publishedPlaces}
+              onMarkerClick={handleMarkerClick}
+          />
         </div>
         
-        <div className="bg-white text-black md:w-1/3 w-full p-4 overflow-auto flex-column">
+        <div className="lg:overflow-auto md:overflow-auto md:w-1/3 w-full lg:mb-10 lg:mt-10 md:mt-5 mt-7 lg:mr-10 md:mr-5 lg:p-8 md:p-4 p-10 bg-white shadow rounded">
             <form onSubmit={handleSubmit}>
-                    <label> 標題更改 </label>
+                    <div> 標題更改 </div>
                     <input
                         className="text-black border rounded mb-2 w-full"
                         title="map-title"

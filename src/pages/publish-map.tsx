@@ -1,5 +1,5 @@
 // pages/publish-map.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import PublishArea from '../components/PublishArea'; // 你需要創建這個組件
 import Router from 'next/router';
 import Image from 'next/image';
@@ -40,11 +40,22 @@ const ReactQuill = dynamic(() => import('react-quill'), {
     loading: () => <p>Loading...</p>,
 });
 
+
 const AlertModal = ({ isOpen, onClose, onConfirm = ()=> {}, message, showConfirmButton = false }) => {
+
+  const publishAreaRef = useRef(null);
+  const [publishAreaRect, setPublishAreaRect] = useState(null);  
+
+  useEffect(() => {
+    if (publishAreaRef.current) {
+      setPublishAreaRect(publishAreaRef.current.getBoundingClientRect());
+    }
+  }, []);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-30 z-50 flex justify-center items-center">
+    <div ref={publishAreaRef}  className="fixed inset-0 bg-black bg-opacity-30 z-50 flex justify-center items-center">
       <div className="bg-white p-6 rounded-lg shadow-xl">
         <p className="text-black">{message}</p>
         <div className="flex justify-end space-x-4">
@@ -229,18 +240,12 @@ const PublishMapPage = () => {
     handleAddToPublish(place);
   };
 
-  const handleCoverImageChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      setCoverImageFile(file); 
-      setCoverImagePreview(URL.createObjectURL(file)); 
-    }
-  };
-
   const handleFileUpload = (file) => {
+    // const file = event.target.files[0];
+    // if (file) {
     setCoverImageFile(file);
     setCoverImagePreview(URL.createObjectURL(file));
-    // 這裡你可以添加上傳邏輯或者將其留在 handleConfirmPublish 中
+  // }
   };
 
   const handleUploadCoverImage = async (): Promise<string> => {
@@ -268,8 +273,8 @@ const PublishMapPage = () => {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="flex flex-col md:flex-row h-screen">
-        <div className="md:w-2/3 w-full">
+      <div className="flex flex-col h-screen-without-navbar md:flex-row text-black bg-gray-200">
+        <div className="md:w-2/3 w-full lg:m-10 md:m-5 m-0 border">
           <MapComponentWithNoSSR
             places={places}
             isPublishing={isPublishing}
@@ -278,14 +283,14 @@ const PublishMapPage = () => {
             publishedPlaces={publishedPlaces}
           />
         </div>
-        <div className="md:w-1/3 w-full p-4 overflow-auto">
+        <div className="lg:overflow-auto md:overflow-auto md:w-1/3 w-full lg:mb-10 lg:mt-10 md:mt-5 mt-7 lg:mr-10 md:mr-5 lg:p-8 md:p-4 p-10 bg-white shadow rounded">
           <div className="flex flex-col controls mb-4">
             {!isPublishing ? (
-              <button onClick={() => setIsPublishing(true)}>發佈地圖</button>
+              <button  className="mb-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300" onClick={() => setIsPublishing(true)}>發佈地圖</button>
             ) : (
               <>
-                <button onClick={handleConfirmPublish}>確定發布</button>
-                <button onClick={handleCancelPublish}>取消發布</button>
+                <button className="mb-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300" onClick={handleConfirmPublish}>確定發布</button>
+                <button className="mb-2 px-4 py-2 bg-white text-black border border-black rounded hover:bg-red-400 hover:text-white hover:border-white focus:outline-none focus:ring-2 focus:ring-blue-300" onClick={handleCancelPublish}>取消發布</button>
               </>
             )}
             <button 
@@ -296,24 +301,25 @@ const PublishMapPage = () => {
 
             
             </button>
-            <button onClick={handleAddAll}>景點全部新增</button>
-            <button onClick={handleClearAll}>景點全部清除</button>
+            <button className="mb-2 px-4 py-2 bg-white text-black border border-black rounded hover:bg-green-600 hover:text-white hover:border-white focus:outline-none focus:ring-2 focus:ring-blue-300" onClick={handleAddAll}>景點全部新增</button>
+            <button className="mb-2 px-4 py-2 bg-white text-black border border-black rounded hover:bg-red-400 hover:text-white hover:border-white focus:outline-none focus:ring-2 focus:ring-blue-300" onClick={handleClearAll}>景點全部清除</button>
           </div>
           {showPlacesList && (
             <div className="places-list border mt-5">
               {places.map((place) => (
-                <div key={place.id} className="place-item flex justify-between items-center">
+                <div key={place.id} className="place-item flex justify-between items-center p-2 border border-gray-300 rounded m-2">
                   {place.name}
                   <button
                     onClick={() => handleSelectPlace(place)}
-                    className="ml-2 bg-blue-500 text-white p-1 rounded"
+                    className="ml-2 bg-green-500 text-white p-2 pl-4 pr-4 rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300"
                   >
-                    (+)
+                    +
                   </button>
                 </div>
               ))}
             </div>
           )}
+          <span> 你也可拖曳圖標 (Marker) 以加入發佈區</span>
           <PublishArea
             publishedPlaces={publishedPlaces}
             onRemoveFromPublish={handleRemoveFromPublish}
@@ -324,9 +330,13 @@ const PublishMapPage = () => {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="地圖標題"
-              className="mb-2 p-2 w-full border rounded text-black"
+              className="mb-2 p-2 w-full border rounded text-black focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
             />
-            <button onClick={() => setShowSourceCode(!showSourceCode)}>
+            <div className="bg-white text-black">
+              <ReactQuill theme="snow" value={content} onChange={handleContentChange} />
+            </div>
+            <button className="mb-2 px-4 py-2 bg-white text-black border border-black rounded hover:bg-black hover:text-white hover:border-white focus:outline-none focus:ring-2 focus:ring-blue-300" 
+                    onClick={() => setShowSourceCode(!showSourceCode)}>
               {showSourceCode ? "隱藏原始碼" : "顯示原始碼"}
             </button>
             {showSourceCode && (
@@ -337,31 +347,24 @@ const PublishMapPage = () => {
                 className="mb-2 p-2 w-full border rounded text-black"
               />
             )}
-            <div className='bg-white text-black'>
-              <ReactQuill theme="snow" value={content} onChange={handleContentChange} />
-            </div>
-              <label> 代表圖片 </label>
-              <input 
-                title="trip-avatar"
-                id="cover-image" 
-                type="file" 
-                accept="image/*" 
-                onChange={handleCoverImageChange} 
-              />
+              <div> 代表圖片 </div>
               {/* {coverImagePreview && (
                 <div>
                   <Image src={coverImagePreview} alt="Cover Preview" width="300" height="300" />
                   <button onClick={() => setCoverImagePreview('')}>移除圖片</button>
                 </div>
               )} */}
-       
-            <DropzoneImage  onFileUploaded={handleFileUpload} />
-            {coverImagePreview && (
-              <div>
-                <Image src={coverImagePreview} alt="Cover Preview" width="300" height="300" />
-                <button onClick={() => setCoverImagePreview('')}>移除圖片</button>
-              </div>
-            )}
+
+            <DropzoneImage onFileUploaded={handleFileUpload} />
+              {coverImagePreview && (
+                <div className="mt-2">
+                  <Image src={coverImagePreview} alt="Cover Preview" width="300" height="300" />
+                  <button className="mt-2 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
+                          onClick={() => setCoverImagePreview('')}>
+                    移除圖片
+                  </button>
+                </div>
+              )}
           </div>
         </div>
       </div>

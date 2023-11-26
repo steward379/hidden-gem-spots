@@ -25,13 +25,15 @@ const Navbar: React.FC = () => {
   // }, []);
 
   return (
-    <nav className="navbar-container bg-red-400 text-white p-4">
+    <nav className="navbar-container fixed top-0 left-0 right-0 bg-black-200/80 text-black p-4 z-50 backdrop-blur-md">
       <div className="flex items-center space-x-4">
         <Link href="/">
-          <h1 className="flex text-2xl font-bold mb-2 cursor-pointer">
-            <Image src="/images/ballon.png" alt="logo" width="50" height="50" />
-            <span>Hidden Gem</span>
-          </h1>
+          <div className="flex items-end text-2xl font-bold mb-2 cursor-pointer">
+            <div>
+              <Image src="/images/ballon.png" alt="logo" width="50" height="50" />
+            </div>
+            <h1 className="flex text-2xl font-bold mb-2 cursor-pointer">Hidden Gem</h1>
+          </div>
         </Link>
         {user && (
           <>

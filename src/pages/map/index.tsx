@@ -440,41 +440,41 @@ const MapDemoPage: React.FC = () => {
   }, [userId]);
 
   return (
-  <div className="flex flex-col md:flex-row h-screen">
-    <div className="w-full md:w-2/3 flex justify-center items-center">
-      <MapComponentWithNoSSR 
-        onMarkerPlaced={handleMarkerPlaced}
-        isAddingMarker={isAddingMarker} 
-        isEditing={isEditing}
-        places={places} 
-        onCancel={handleCancel}
-        onMarkerClick={setSelectedPlace}
-        onMapClick={() => setSelectedPlace(null)}
-        selectedPlace={selectedPlace}
-        showInteract = {false}
-      />
-    </div>
+    <div className="flex flex-col h-screen-without-navbar md:flex-row text-black bg-gray-200">
+      <div className="md:w-2/3 w-full lg:m-10 md:m-5 m-0 border">
+        <MapComponentWithNoSSR 
+          onMarkerPlaced={handleMarkerPlaced}
+          isAddingMarker={isAddingMarker} 
+          isEditing={isEditing}
+          places={places} 
+          onCancel={handleCancel}
+          onMarkerClick={setSelectedPlace}
+          onMapClick={() => setSelectedPlace(null)}
+          selectedPlace={selectedPlace}
+          showInteract = {false}
+        />
+      </div>
     
-    <div className="w-full md:w-1/3 flex flex-col p-4 space-y-4 overflow-auto">
+      <div className="lg:overflow-auto md:overflow-auto md:w-1/3 w-full lg:mb-10 lg:mt-10 md:mt-5 mt-7 lg:mr-10 md:mr-5 lg:p-8 md:p-4 p-10 bg-white shadow rounded">
       {!isEditing && (
         <>
           <button
             // onClick={() => setIsAddingMarker(!isAddingMarker)}
             onClick={toggleAddingMarker} 
-            className="p-2 bg-blue-500 text-white rounded"
+            className="m-2 px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
           >
             {isAddingMarker ? '取消新增景點' : '新增景點'}
           </button>
           <button 
-            className="mb-4 p-2 bg-blue-500 text-white rounded"
             onClick={() => setShowPlacesList(!showPlacesList)}
+            className="m-2 px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
           >
             景點列表
           </button>
           { !newMarker && showPlacesList && (
             <div className="places-list">
               {places.map((place) => (
-                <div key={place.id} className="place-item" onClick={() => handlePlaceSelect(place)}>
+                <div key={place.id} className="place-item flex justify-between items-center p-2 border border-gray-300 rounded m-2" onClick={() => handlePlaceSelect(place)}>
                   {place.name}
                 </div>
               ))}
@@ -482,7 +482,7 @@ const MapDemoPage: React.FC = () => {
           )}
           <button
             onClick={() => Router.push('/publish-map')}
-            className="p-2 bg-blue-500 text-white rounded"
+            className="m-2 px-6 py-2 bg-green-700 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
           >
             發佈地圖
           </button>
@@ -491,11 +491,11 @@ const MapDemoPage: React.FC = () => {
 
       {selectedPlace && !isEditing && (
         <>
-          <button onClick={() => handleEditClick(selectedPlace)}>編輯景點</button>
-          <button onClick={handleDeletePlace}>刪除景點</button>
-          <div>
-            <h2>名稱：{selectedPlace.name}</h2>
-            <p>描述：{selectedPlace.description}</p>
+          <button className="m-2 px-4 py-2 bg-white text-black border border-black rounded hover:bg-green-600 hover:text-white hover:border-white focus:outline-none focus:ring-2 focus:ring-blue-300" onClick={() => handleEditClick(selectedPlace)}>編輯景點</button>
+          <button className="m-2 px-4 py-2 bg-white text-black border border-black rounded hover:bg-red-400 hover:text-white hover:border-white focus:outline-none focus:ring-2 focus:ring-blue-300"  onClick={handleDeletePlace}>刪除景點</button>
+          <div className="p-4 bg-white rounded shadow-md">
+            <h2 className="place-item flex justify-between items-center p-2 border border-gray-300 rounded m-2" >名稱：{selectedPlace.name}</h2>
+            <p className="place-item flex justify-between items-center p-2 border border-gray-300 rounded m-2">描述：{selectedPlace.description}</p>
 
             <div className="image-preview relative" style={{ width: 300, height: 300 }}>
             {selectedPlace.images.map((url, index) => (
@@ -565,8 +565,8 @@ const MapDemoPage: React.FC = () => {
                 </div>
               ) : null
             ))}
-            {images.length < 3 && (
-              <label className="image-input-label">
+            {/* {images.length < 3 && ( */}
+              {/* <label className="image-input-label">
                   <div className="image-input-button text-black"> 
                     <input 
                       type="file" 
@@ -576,8 +576,8 @@ const MapDemoPage: React.FC = () => {
                     /> 
                     <span> + </span>
                   </div>
-              </label>
-            )}
+              </label> */}
+            {/* )} */}
           </div>
           <button 
             onClick={handleSubmit} 
