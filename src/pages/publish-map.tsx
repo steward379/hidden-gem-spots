@@ -1,5 +1,5 @@
 // pages/publish-map.tsx
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import PublishArea from '../components/PublishArea'; // 你需要創建這個組件
 import Router from 'next/router';
 import Image from 'next/image';
@@ -40,22 +40,11 @@ const ReactQuill = dynamic(() => import('react-quill'), {
     loading: () => <p>Loading...</p>,
 });
 
-
 const AlertModal = ({ isOpen, onClose, onConfirm = ()=> {}, message, showConfirmButton = false }) => {
-
-  const publishAreaRef = useRef(null);
-  const [publishAreaRect, setPublishAreaRect] = useState(null);  
-
-  useEffect(() => {
-    if (publishAreaRef.current) {
-      setPublishAreaRect(publishAreaRef.current.getBoundingClientRect());
-    }
-  }, []);
-
   if (!isOpen) return null;
 
   return (
-    <div ref={publishAreaRef}  className="fixed inset-0 bg-black bg-opacity-30 z-50 flex justify-center items-center">
+    <div className="fixed inset-0 bg-black bg-opacity-30 z-50 flex justify-center items-center">
       <div className="bg-white p-6 rounded-lg shadow-xl">
         <p className="text-black">{message}</p>
         <div className="flex justify-end space-x-4">
@@ -319,7 +308,7 @@ const PublishMapPage = () => {
               ))}
             </div>
           )}
-          <span> 你也可拖曳圖標 (Marker) 以加入發佈區</span>
+          <span> 你也可拖曳圖標 (Marker) 以加入發佈地點</span>
           <PublishArea
             publishedPlaces={publishedPlaces}
             onRemoveFromPublish={handleRemoveFromPublish}
