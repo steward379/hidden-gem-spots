@@ -9,6 +9,7 @@ const { db, auth, storage } = firebaseServices;
 import { useAuth } from '../../../../context/authContext';
 
 import 'react-quill/dist/quill.snow.css'; 
+import { categoryMapping } from '@/src/constants';
 
 const MapComponentWithNoSSR = dynamic(
     () => import('../../../../components/MapComponent'),
@@ -20,18 +21,28 @@ const ReactQuill = dynamic(() => import('react-quill'), {
     loading: () => <p>Loading...</p>,
 });
 
+
 const PublishedMapDetail = () => {
+
+  const quillModules = {
+    toolbar: false // 這將隱藏工具列
+  };
 
   const router = useRouter();
 
   const [mapData, setMapData] = useState(null);
   const [selectedPlace, setSelectedPlace] = useState(null);
+
+  // auth
   const { user } = useAuth();
   const { userId, mapId } = router.query;
 
   const [totalDuplicates, setTotalDuplicates] = useState(0);
+  const [showPlacesList, setShowPlacesList] = useState(false);
 
-  // let userId = mapData.userId;
+  // search and filter
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
 
   // get Map
   useEffect(() => {
@@ -57,8 +68,9 @@ const PublishedMapDetail = () => {
             ...doc.data(),
             id: doc.id  // 添加新的 placeId
           }));
-  
-          setMapData(mapDetails);  // 使用包含作者名字的數據
+
+          // 使用包含作者名字的數據
+          setMapData(mapDetails);  
 
           const totalDups = placesSnap.docs.reduce((sum, doc) => sum + (doc.data().duplicates || 0), 0);
           setTotalDuplicates(totalDups);
@@ -202,7 +214,7 @@ const PublishedMapDetail = () => {
         }
 
         if (!placeDoc.exists()) {
-          throw "Document does not exist!";
+          throw "Place Document does not exist!";
         }
 
         const placeData = placeDoc.data();
@@ -213,9 +225,18 @@ const PublishedMapDetail = () => {
         transaction.update(placeRef, { duplicatedBy: updatedDuplicatedBy, duplicates: updatedDuplicates });
   
         // 複製景點到使用者的地圖中
-        const placeDataToDuplicate = { ...placeData, likes: 0, likedBy: [], duplicates: 0, duplicatedBy: [] };
+        // const placeDataToDuplicate = { ...placeData, likes: 0, likedBy: [], duplicates: 0, duplicatedBy: [] };
+
+        const placeDataForUserMap = {
+          name: placeData.name,
+          description: placeData.description,
+          tags: placeData.tags,
+          category: placeData.category,
+          coordinates: placeData.coordinates,
+          images: placeData.images
+        };
         // delete placeDataToDuplicate.id; // 移除原有的 id
-        await transaction.set(doc(userPlacesRef), placeDataToDuplicate);
+        await transaction.set(doc(userPlacesRef), placeDataForUserMap);
 
         // 更新地圖的 duplicates 和 duplicatedBy
         const mapData = mapDoc.data();
@@ -251,8 +272,29 @@ const PublishedMapDetail = () => {
   const handleMarkerClick = (place) => {
     setSelectedPlace(place);
   };
+  const handleMarkerClose = () => {
+    setSelectedPlace(null);
+  };
 
-  if (!mapData) return <div>載入中...</div>;
+  // 根據搜尋關鍵詞和類別篩選景點
+  const filteredPlaces = mapData?.publishedPlaces.filter(place =>
+    (place.name.toLowerCase().includes(searchTerm.trim().toLowerCase()) ||
+    place.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))) &&
+    (place.category === selectedCategory || selectedCategory === '')
+  );
+
+  if (!mapData) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-center">
+          <span className="block text-black mb-2">載入中...</span>
+          <div className="progress-bar w-32 h-2 bg-gray-200 relative">
+            <div className="progress w-0 h-2 bg-black absolute border rounded"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
     
   // 登入者是否為地圖作者
   const isMapCreator = user && mapData && user.uid === mapData.userId;
@@ -267,6 +309,7 @@ const PublishedMapDetail = () => {
             allowDuplicate = {true}
             handlePlaceLikeClick={handlePlaceLikeClick}
             handlePlaceDuplicate={handlePlaceDuplicate}
+            selectedPlace={selectedPlace}
           />
         </div>
       
@@ -285,21 +328,120 @@ const PublishedMapDetail = () => {
             {/* <button title="duplicate-button-map" className="m-2 mr-2"> */}
               {/* <Image src="/images/copy.png" alt="Like" width="20" height="20" /> */}
             {/* </button> */}
-            <span className="m-2">{mapData.duplicates} 次複製</span>
+            <span className="m-2">{mapData.duplicates} 次景點複製</span>
           </div>
 
           {mapData.coverImage && (
-            <Image src={mapData.coverImage} alt="Cover Image" width="300" height="300" />
+            <div className="w-full h-60 relative">
+              <Image src={mapData.coverImage} alt="Cover Image" layout="fill" className="object-cover" />
+            </div>
           )}
 
           <div className="bg-white text-black mt-4">
-            <ReactQuill value={mapData.content} readOnly={true} theme="snow" />
+            <ReactQuill value={mapData.content} readOnly={true} theme="snow" modules={quillModules}/>
           </div>
-          {isMapCreator && (
-            <button className="mt-4 bg-blue-500 text-white py-2 px-4 rounded" onClick={() => router.push(`/edit-map/${mapData.userId}/${mapId}`)}>  
+          {isMapCreator && ( 
+            <button className="mt-4 bg-gray-500 text-white py-2 px-4 rounded" onClick={() => router.push(`/edit-map/${user.uid}/${mapId}`)}>  
               編輯地圖
             </button>
           )}
+           <button
+          onClick={() => setShowPlacesList(!showPlacesList)}
+          className="m-4 bg-blue-500 text-white py-2 px-4 rounded"
+        >
+          {showPlacesList ? '隱藏景點列表' : '顯示景點列表'}
+        </button>
+        {showPlacesList && (
+          <div className="places-list mt-4">
+              {/* 搜尋和篩選 UI */}
+            <div className="search-and-filter">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="搜尋景點名稱或標籤"
+                className="p-2 w-full mb-2 border rounded text-black"
+              />
+              <select
+                title="category-select"
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="p-2 w-full mb-2 border rounded text-black"
+              >
+                  <option value="">搜尋類別</option>
+                  {Object.entries(categoryMapping).map(([key, { text }]) => (
+                    <option key={key} value={key}>{text}</option>
+                  ))}
+              </select>
+
+              { searchTerm || selectedCategory ? (
+                <>
+                  <h2 className="text-lg font-semibold mb-2">搜尋後景點列表</h2>
+                  { filteredPlaces.length === 0 ? (
+                    <p className="text-center">找不到符合條件的景點</p>
+                  ) : (
+                  <>
+                    {filteredPlaces.map(place => (
+                      <div key={place.id} className="hover:bg-yellow-50 place-item flex justify-between items-center p-2 border border-gray-300 rounded m-2 cursor-pointer" onClick={() => handleMarkerClick(place)}>
+                        {place.name}
+                      </div>
+                    ))}
+                  </>
+                  )}
+                </>
+                ) : (
+                <>
+                  <h2 className="text-lg font-semibold mb-2">景點列表</h2>
+                  {mapData.publishedPlaces.map((place) => (
+                    <div key={place.id} className="hover:bg-green-100 place-item flex justify-between items-center p-2 border border-gray-300 rounded m-2 cursor-pointer"
+                         onClick={() => handleMarkerClick(place)}>
+                      {place.name}
+                    </div>
+                  ))}
+                </>
+                )
+              }
+            </div>
+          </div>
+        )}
+
+         {selectedPlace && (
+          <div className="relative selected-place-detail mt-4 border shadow p-5">
+            <p className="absolute right-0 top-0 cursor-pointer p-5" onClick={handleMarkerClose} >
+              <i className="fas fa-times"></i>
+            </p>
+            <h3 className="text-xl font-bold">{selectedPlace.name}</h3>
+            <p className="text-gray-700 mt-2">{selectedPlace.description}</p>
+
+            {/* 類別 */}
+            <div className={`text-sm ${categoryMapping[selectedPlace.category]?.color || 'bg-gray-200'} p-1 rounded mt-2`}>
+              {categoryMapping[selectedPlace.category]?.text || '不明'}
+            </div>
+
+            {/* 標籤 */}
+            {selectedPlace.tags && selectedPlace.tags.filter(tag => tag.trim().length > 0).length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {selectedPlace.tags.map(tag => (
+                  <span key={tag} className="text-xs bg-blue-200 px-2 py-1 rounded-full">{tag}</span>
+                ))}
+              </div>
+            )}
+
+            {/* 圖片 */}
+            <div className="mt-4">
+              {selectedPlace.images.map((url, index) => (
+                <div key={index} className="image-preview mb-2 relative" style={{ width: 300, height:  300 }}>
+                  <Image 
+                    src={url}
+                    alt={`${selectedPlace.name} image ${index}`}
+                    layout="fill" 
+                    className="object-cover"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         </div>
     </div>
   );

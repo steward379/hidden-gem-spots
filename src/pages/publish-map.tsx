@@ -69,6 +69,12 @@ const PublishMapPage = () => {
   // const [userId, setUserId] = useState<string | null>(null);
   const [showPlacesList, setShowPlacesList] = useState(true);
 
+  const [selectedPlace, setSelectedPlace] = useState(null);
+
+  const handleMarkerClick = (place) => {
+    setSelectedPlace(place);
+  };
+
   const { user } = useAuth();
 
   // content 
@@ -83,6 +89,8 @@ const PublishMapPage = () => {
   // images 
   const [coverImageFile, setCoverImageFile] = useState(null); // 用於上傳的檔案對象
   const [coverImagePreview, setCoverImagePreview] = useState(''); // 用於顯示預覽圖片的 URL
+
+  const [areAllPlacesAdded, setAreAllPlacesAdded] = useState(false);
 
   const router = useRouter();
 
@@ -130,11 +138,13 @@ const PublishMapPage = () => {
     // 添加全部景點到發佈區
     const handleAddAll = () => {
       setPublishedPlaces(places);
+      setAreAllPlacesAdded(true);
     };
   
     // 清除發佈區的所有景點
     const handleClearAll = () => {
       setPublishedPlaces([]);
+      setAreAllPlacesAdded(false);
     };
 
   // 處理發佈
@@ -220,12 +230,17 @@ const PublishMapPage = () => {
     }
   };
 
+
+  const handleSelectPlace = (place) => {
+    setSelectedPlace(place); // 更新選中的景點
+  };
+
+
   const handleRemoveFromPublish = (placeId) => {
     setPublishedPlaces(prev => prev.filter(p => p.id !== placeId));
   };
 
-  const handleSelectPlace = (place) => {
-    // 點擊列表中的加號時調用
+  const handleAddPlace = (place) => {
     handleAddToPublish(place);
   };
 
@@ -270,48 +285,76 @@ const PublishMapPage = () => {
             onAddToPublish={handleAddToPublish}
             onRemoveFromPublish={handleRemoveFromPublish}
             publishedPlaces={publishedPlaces}
+            onMarkerClick={setSelectedPlace}
+            selectedPlace={selectedPlace} 
           />
         </div>
         <div className="lg:overflow-auto md:overflow-auto md:w-1/3 w-full lg:mb-10 lg:mt-10 md:mt-5 mt-7 lg:mr-10 md:mr-5 lg:p-8 md:p-4 p-10 bg-white shadow rounded">
-          <div className="flex flex-col controls mb-4">
+          <h1 className="text-2xl font-bold text-gray-800 mb-4"> {user.name}即將發佈地圖</h1>
+          <div className="text-gray-600 mb-5"> 
+            新增你想發佈的景點群。你也可拖曳圖標 (Marker) 以加入發佈地點。
+            並輸入本地圖的標題、內容、上傳封面照片(可選)。
+          </div>
+          <div className="flex flex-col w-full lg:w-auto lg:flex-row md:flex-col mb-4 controls">
             {!isPublishing ? (
-              <button  className="mb-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300" onClick={() => setIsPublishing(true)}>發佈地圖</button>
+              <button className="mb-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300" onClick={() => setIsPublishing(true)}>
+                <i className="fas fa-map-marked-alt"></i> 發佈地圖
+              </button>
             ) : (
               <>
-                <button className="mb-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300" onClick={handleConfirmPublish}>確定發布</button>
-                <button className="mb-2 px-4 py-2 bg-white text-black border border-black rounded hover:bg-red-400 hover:text-white hover:border-white focus:outline-none focus:ring-2 focus:ring-blue-300" onClick={handleCancelPublish}>取消發布</button>
+                <button 
+                  className="mb-5 mt-5 m-2 flex-column justify-center items-center border-2 border-dashed border-gray-300 rounded-lg h-20 w-32 cursor-pointer hover:border-gray-500 hover:bg-green-300"
+                  onClick={handleConfirmPublish}>
+                  <i className="fas fa-check mr-2"></i>
+                  <div>確定發布</div>
+                </button>
+                <button 
+                    className="mb-5 mt-5 m-2 flex-column justify-center items-center border-2 border-dashed border-gray-300 rounded-lg h-20 w-32 cursor-pointer hover:border-gray-500 hover:bg-gray-200" 
+                    onClick={handleCancelPublish}>
+                  <i className="fas fa-times mr-2"></i>
+                  <div>取消發布</div>
+                </button>
               </>
             )}
             <button 
-              className="mb-4 p-2 bg-blue-500 text-white rounded"
-              onClick={() => setShowPlacesList(!showPlacesList)} // 切換景點列表的顯示
-            >
-              {showPlacesList ? '隱藏景點列表' : '顯示景點列表'}
-
-            
-            </button>
-            <button className="mb-2 px-4 py-2 bg-white text-black border border-black rounded hover:bg-green-600 hover:text-white hover:border-white focus:outline-none focus:ring-2 focus:ring-blue-300" onClick={handleAddAll}>景點全部新增</button>
-            <button className="mb-2 px-4 py-2 bg-white text-black border border-black rounded hover:bg-red-400 hover:text-white hover:border-white focus:outline-none focus:ring-2 focus:ring-blue-300" onClick={handleClearAll}>景點全部清除</button>
+                className="mb-5 mt-5 m-2 flex-column justify-center items-center border-2 border-dashed border-gray-300 rounded-lg h-20 w-32 cursor-pointer hover:border-gray-500 hover:bg-blue-200" 
+                onClick={() => setShowPlacesList(!showPlacesList)}>
+              <i className={`fas ${showPlacesList ? 'fa-eye-slash' : 'fa-eye'}`}></i>
+              <div>{showPlacesList ? '隱藏景點列表' : '顯示景點列表'}</div>
+           </button>
           </div>
           {showPlacesList && (
             <div className="places-list border mt-5">
+                   <ul>
               {places.map((place) => (
-                <div key={place.id} className="place-item flex justify-between items-center p-2 border border-gray-300 rounded m-2">
-                  {place.name}
-                  <button
-                    onClick={() => handleSelectPlace(place)}
-                    className="ml-2 bg-green-500 text-white p-2 pl-4 pr-4 rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300"
-                  >
-                    +
-                  </button>
-                </div>
+                  <li key={place.id} className="cursor-pointer place-item flex justify-between items-center p-2 border border-gray-300 rounded m-2 hover:bg-green-100"
+                      onClick={() => handleSelectPlace(place)}>
+                    <span className="text-gray-600 cursor-pointer" > {place.name}</span>
+                    <button
+                      title="add-to-publish"
+                      onClick={() => handleAddPlace(place)}
+                      className="ml-2 bg-green-500 text-white p-2 pl-4 pr-4 rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300"
+                    >
+                      <i className="fas fa-plus"></i>
+                    </button>
+                  </li>
               ))}
+               </ul>
             </div>
           )}
+          
           <span> 你也可拖曳圖標 (Marker) 以加入發佈地點</span>
+          <button 
+            className={`mb-5 mt-5 m-2 flex flex-col justify-center items-center border-2 border-dashed ${areAllPlacesAdded ? 'border-red-300 hover:bg-red-300' : 'border-gray-300 hover:bg-green-300'} rounded-lg h-20 w-32 cursor-pointer hover:border-gray-500`}
+            onClick={areAllPlacesAdded ? handleClearAll : handleAddAll}
+          >
+            <i className={`fas ${areAllPlacesAdded ? 'fa-minus-square text-red-500' : 'fa-plus-square text-green-500'} mr-2 mb-2`}></i>
+            <div>{areAllPlacesAdded ? '景點全部清除' : '景點全部新增'}</div>
+          </button>
           <PublishArea
             publishedPlaces={publishedPlaces}
             onRemoveFromPublish={handleRemoveFromPublish}
+            onSelectPlace={setSelectedPlace} 
           />
           <div className="mt-10" >
             <input
@@ -324,10 +367,14 @@ const PublishMapPage = () => {
             <div className="bg-white text-black">
               <ReactQuill theme="snow" value={content} onChange={handleContentChange} />
             </div>
-            <button className="mb-2 px-4 py-2 bg-white text-black border border-black rounded hover:bg-black hover:text-white hover:border-white focus:outline-none focus:ring-2 focus:ring-blue-300" 
-                    onClick={() => setShowSourceCode(!showSourceCode)}>
-              {showSourceCode ? "隱藏原始碼" : "顯示原始碼"}
+            <button 
+              className="mb-5 mt-5  flex justify-center items-center border-2 border-dashed border-gray-300 rounded-lg h-14 w-40 cursor-pointer hover:border-gray-500 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              onClick={() => setShowSourceCode(!showSourceCode)}
+            >
+              <i className={`fas ${showSourceCode ? 'fa-eye-slash' : 'fa-eye'} mr-2`}></i>
+              <div>{showSourceCode ? "隱藏原始碼" : "顯示原始碼"}</div>
             </button>
+
             {showSourceCode && (
               <textarea
                 title="地圖內容原始碼"
@@ -345,14 +392,14 @@ const PublishMapPage = () => {
               )} */}
 
             <DropzoneImage onFileUploaded={handleFileUpload} />
-              {coverImagePreview && (
-                <div className="mt-2">
-                  <Image src={coverImagePreview} alt="Cover Preview" width="300" height="300" />
-                  <button className="mt-2 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
-                          onClick={() => setCoverImagePreview('')}>
-                    移除圖片
-                  </button>
-                </div>
+            {coverImagePreview && (
+            <div className="relative mt-2 mb-10 w-full h-60">
+                <Image src={coverImagePreview} alt="Cover Preview" layout="fill" className="object-cover" />
+                <button className="absolute top-0 right-0 bg-red-500 text-white p-2 rounded-full hover:bg-red-700"
+                        onClick={() => setCoverImagePreview('')}>
+                  移除圖片
+                </button>
+              </div>
               )}
           </div>
         </div>

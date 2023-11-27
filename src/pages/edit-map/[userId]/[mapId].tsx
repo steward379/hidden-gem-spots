@@ -105,7 +105,18 @@ const EditMap = () => {
     setSelectedPlace(place);
   };
 
-  if (!mapData) return <div>載入中...</div>;
+  if (!mapData) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-center">
+          <span className="block text-black mb-2">載入中...</span>
+          <div className="progress-bar w-32 h-2 bg-gray-200 relative">
+            <div className="progress w-0 h-2 bg-black absolute border rounded"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const  uploadImageToStorage = async (file) => {
     if (!file || !user.uid) return null;
@@ -205,12 +216,12 @@ const EditMap = () => {
                   ) : (
                     <span className="ml-4 text-gray-500">沒有選擇檔案</span>
                   )}
-                  {coverImagePreview && (
-                      <div className="mt-2">
-                        <Image src={coverImagePreview} alt="Cover Preview" width="300" height="300" />
-                        <button onClick={handleRemoveImage} className="mb-10 mt-2 bg-red-500 text-white py-2 px-4 rounded hover:bg-red-700 ">
-                          移除圖片
-                        </button>
+                 {coverImagePreview && (
+                    <div className="relative mt-2 mb-10 w-full h-60">
+                      <Image src={coverImagePreview} alt="Cover Preview" layout="fill" className="object-cover" />
+                      <button onClick={handleRemoveImage} className="absolute top-0 right-0 bg-red-500 text-white p-2 rounded-full hover:bg-red-700">
+                        移除圖片
+                      </button>
                     </div>
                   )}
                   <button type="submit" className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-700">

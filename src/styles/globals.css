@@ -27,6 +27,10 @@ body {
     background-color: rgb(186, 245, 255);
 }
 
+button {
+  transition: ease-in-out 0.3s;
+}
+
 .modal {
   display: flex;
   flex-direction: column;
@@ -44,4 +48,22 @@ body {
 
 .h-screen-without-navbar {
   height: calc(100vh - 64px); /* 視窗高度減去 Navbar 高度 */
+}
+
+/* progress-bar */
+.progress-bar {
+  overflow: hidden;
+}
+
+.progress {
+  animation: load 2s infinite ease-out;
+}
+
+@keyframes load {
+  0% {
+    width: 0;
+  }
+  100% {
+    width: 100%;
+  }
 }

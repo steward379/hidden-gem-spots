@@ -3,7 +3,7 @@ import React from 'react';
 import { useDrop } from 'react-dnd';
 import { Place } from '../types/Place';
 
-const PublishArea = ({ publishedPlaces, onAddToPublish, onRemoveFromPublish }) => {
+const PublishArea = ({ publishedPlaces, onAddToPublish = undefined, onRemoveFromPublish, onSelectPlace }) => {
   const [, drop] = useDrop({
     accept: 'place',
     drop: (item: Place, monitor) => {
@@ -19,22 +19,21 @@ const PublishArea = ({ publishedPlaces, onAddToPublish, onRemoveFromPublish }) =
       canDrop: !!monitor.canDrop(),
     }),
   });
-
-  // 其他代碼
-
     
     return (
       <div ref={drop} className="mt-5 p-2 border border-gray-300 rounded">
         <h3 className="mb-3 text-xl font-semibold text-gray-700">發佈區</h3>
         <ul>
           {publishedPlaces.map(place => (
-            <li key={place.id} className="flex justify-between items-center p-2 border border-gray-300 rounded m-2">
-              <span className="text-gray-600"> {place.name}</span>
-              <button 
+            <li key={place.id} className="cursor-pointer place-item flex justify-between hover:bg-green-100 items-center p-2 border border-gray-300 rounded m-2" 
+                 onClick={() => onSelectPlace(place)}>
+              <span className="text-gray-600 cursor-pointer" > {place.name}</span>
+              <button
+                title="move-out-from-publish" 
                 onClick={() => onRemoveFromPublish(place.id)}
-                className="ml-2 bg-red-500 text-white p-2 pl-4 pr-4 rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
+                className="ml-2 bg-red-400 text-white p-2 pl-4 pr-4 rounded hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-red-300"
               >
-                -
+                   <i className="fas fa-minus"></i>
               </button>
             </li>
           ))}
@@ -43,4 +42,5 @@ const PublishArea = ({ publishedPlaces, onAddToPublish, onRemoveFromPublish }) =
     );
 };
 
-  export default PublishArea;
+
+export default PublishArea;

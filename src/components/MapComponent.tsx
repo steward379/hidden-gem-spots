@@ -9,6 +9,8 @@ import 'leaflet-minimap/dist/Control.MiniMap.min.css'; // minimap_css
 import { GeoSearchControl, OpenStreetMapProvider } from 'leaflet-geosearch';
 import 'leaflet-minimap';
 
+import { categoryMapping } from '../constants';
+
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 
 L.Icon.Default.mergeOptions({
@@ -52,7 +54,7 @@ const MapComponent = ({
 
   const [isLoading, setLoading] = useState(false);
   const [userPosition, setUserPosition] = useState(null);
-  // const [shouldFetchLocation, setShouldFetchLocation] = useState(false);
+
   const handleFetchLocationClick = () => {
     // setShouldFetchLocation(true);
     fetchLocation();
@@ -143,19 +145,21 @@ const MapComponent = ({
     };
   }, [mapRef, map, userPosition]);
 
-  const customIcon = new L.Icon({
-    iconUrl: 'images/marker-icon-2x-blue.png', 
-    iconRetinaUrl: 'images/marker-icon-2x-blue.png',
-    shadowUrl: 'images/marker-shadow.png',
-    iconSize: [25, 41], 
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34], 
-    shadowSize: [41, 41] 
-  });
 
   //search bar
   useEffect(() => {
     if(!map)  return;
+
+    const customIcon = new L.Icon({
+      iconUrl: 'images/marker-icon-2x-blue.png', 
+      iconRetinaUrl: 'images/marker-icon-2x-blue.png',
+      shadowUrl: 'images/marker-shadow.png',
+      iconSize: [25, 41], 
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34], 
+      shadowSize: [41, 41] 
+    });
+
     if (map && !isEditing) {
       const provider = new OpenStreetMapProvider();
       // @ts-ignore
@@ -168,7 +172,7 @@ const MapComponent = ({
         showPopup: false,
         marker: {
           icon: customIcon,
-          draggable: false,
+          draggable: true,
         },
         maxMarkers: 1,
         retainZoomLevel: false,
@@ -179,6 +183,31 @@ const MapComponent = ({
       });
 
       map.addControl(searchControl);
+      
+      map.on('geosearch/showlocation', (event) => {
+        const marker = event.marker;
+        const locationName = event.location.label; // 從 event 獲取位置名稱
+    
+        const popupContent = `
+          <div class="text-center">
+            <p class="font-bold">${locationName}</p> <!-- 顯示位置名稱 -->
+            <p>經度: ${marker.getLatLng().lng.toFixed(5)}</p>
+            <p>緯度: ${marker.getLatLng().lat.toFixed(5)}</p>
+            <button id="delete-marker-btn" class="mt-2 bg-red-500 text-white py-1 px-2 rounded hover:bg-red-600 focus:outline-none">刪除標記</button>
+          </div>
+        `;
+        marker.bindPopup(popupContent).openPopup();
+    
+        // 添加事件監聽器，當點擊刪除按鈕時移除標記
+        marker.getPopup().on('contentupdate', () => {
+          const deleteButton = document.getElementById('delete-marker-btn');
+          if (deleteButton) {
+            deleteButton.addEventListener('click', () => {
+              marker.remove();
+            });
+          }
+        });
+      });
 
       // 初始化迷你地圖
       const miniMap = new (L as any).Control.MiniMap(
@@ -192,10 +221,13 @@ const MapComponent = ({
 
       return () => {
         map.removeControl(searchControl);
+
+        map.off('geosearch/showlocation');
+
         miniMap.remove();
       };
     }
-  }, [map, isEditing, customIcon]);
+  }, [map, isEditing]);
 
   // database 'places' rendering
   useEffect(() => {
@@ -209,14 +241,31 @@ const MapComponent = ({
       const newMarkers = places.map(place => {
         if (!place.coordinates) return null;
 
-          const categoryMapping = {
-            eat: { color: 'bg-yellow-200', text: '吃的' },
-            play: { color: 'bg-green-200', text: '玩的' },
-          };
-
           const category = categoryMapping[place.category] || { color: 'bg-gray-200', text: '不明' }; 
 
-          const imageElements = place.images.map(image => `<Image src=${image} alt="${place.name}" width="100" height="100" />`).join('');
+          const latestImages = place.images.slice(-2);
+          const imageElements = latestImages.map(image => 
+            `<div style="margin: 5px;">
+               <img src=${image} alt="${place.name}" style="max-width:100%; max-height:100px;" />
+             </div>`
+          ).join('');
+
+          const formatCoordinates = (lat, lng) => {
+            const latText = Math.round(lat * 10000) / 10000;
+            const lngText = Math.round(lng * 10000) / 10000;
+          
+            // const latText = roundedLat >= 0 ? `${roundedLat} N` : `${Math.abs(roundedLat)} S`;
+            // const lngText = roundedLng >= 0 ? `${roundedLng} E` : `${Math.abs(roundedLng)} W`;
+          
+            return `${latText}, ${lngText}`;
+          };
+
+          function copyCoordinates(elementId) {
+            const coords = document.getElementById(elementId).innerText;
+            navigator.clipboard.writeText(coords)
+              .then(() => alert('座標已複製到剪貼簿'))
+              .catch(err => console.error('無法複製座標:', err));
+          }
 
           const popupContent = `
           <div key=${place.id} class="text-center" style="width:150px">
@@ -224,7 +273,7 @@ const MapComponent = ({
             <p>${place.description}</p>
             ${imageElements}
 
-            ${showInteract ? `
+            ${!isPublishing && showInteract ? `
             <div class="like-section">
               <span class="like-count">❤ ${place.likes} 枚喜愛</span>
               ${allowLikes ? `<button class="like-button" data-place-id="${place.id}">
@@ -239,15 +288,21 @@ const MapComponent = ({
             </div>` : ''}
             <p class="text-sm text-gray-500 ${category.color} p-1 rounded">${category.text}</p>
             <div class="flex flex-wrap gap-2 mt-2">
-            ${place.tags ? 
-              `${place.tags.map(tag => `<span class="text-xs bg-blue-200 px-2 py-1 rounded-full">${tag}</span>`).join(' ')}`
+            ${
+              place.tags && place.tags.filter(tag => tag.trim().length > 0).length > 0 
+              ? place.tags.map(tag => `<span class="text-xs bg-blue-200 px-2 py-1 rounded-full">${tag}</span>`).join(' ')
               : ''
             }
+            </div>
+            <div class="coordinates-container">
+              <span id="coords-${place.id}">${formatCoordinates(place.coordinates.lat, place.coordinates.lng)}</span>
             </div>
           </div>
           `;
 
       const markerElement = L.marker(place.coordinates, {
+              //@ts-ignore
+                id: place.id,
                 draggable: isPublishing, // 如果在發佈模式，標記可拖動
             }).addTo(map)
               .bindPopup(popupContent)
@@ -274,15 +329,15 @@ const MapComponent = ({
       };
   }, [map, places, onMarkerClick, isPublishing, onAddToPublish, allowLikes, allowDuplicate, showInteract]);
 
-  const onMarkerDragEnd = (event, place) => {
-    const marker = event.target;
-    const position = marker.getLatLng();
+  // const onMarkerDragEnd = (event, place) => {
+  //   const marker = event.target;
+  //   const position = marker.getLatLng();
     
-    const markerScreenPos = map.latLngToContainerPoint(position);
-    if (isInsidePublishArea(markerScreenPos, publishAreaRect)) {
-      onAddToPublish({ ...place, coordinates: position });
-    }
-  };
+  //   const markerScreenPos = map.latLngToContainerPoint(position);
+  //   if (isInsidePublishArea(markerScreenPos, publishAreaRect)) {
+  //     onAddToPublish({ ...place, coordinates: position });
+  //   }
+  // };
   
   const isInsidePublishArea = (markerPos, areaRect) => {
     if (!areaRect) return false;
@@ -402,15 +457,19 @@ const MapComponent = ({
     };
   }, [map, onMarkerPlaced, isAddingMarker, newMarker, onMapClick, isEditing, onCancel]);
 
+   
   useEffect(() => {
     if (map && selectedPlace) {
       // 將地圖視圖中心移動到選中地點
       // map.setView(new L.LatLng(selectedPlace.coordinates.lat, selectedPlace.coordinates.lng), 13);
-      map.setView([selectedPlace.coordinates.lat, selectedPlace.coordinates.lng], 13);
-      
       // 如果有與 selectedPlace 相關的 marker，打開它的彈出窗口
       const relevantMarker = markers.find(marker => marker.options.id === selectedPlace.id);
-      relevantMarker?.openPopup();
+
+      if (relevantMarker) {
+        // 如果找到了相關聯的標記，則移動地圖視圖並打開其彈出窗口
+        map.setView([selectedPlace.coordinates.lat, selectedPlace.coordinates.lng], 13);
+        relevantMarker.openPopup();
+      }
     }
   }, [map, selectedPlace, markers]);
 
@@ -443,6 +502,9 @@ const AlertModal = ({ message }) => {
     <div className="fixed inset-0 bg-black bg-opacity-30 z-50 flex justify-center items-center">
       <div className="bg-white p-6 rounded-lg shadow-xl">
         <p className="text-black">{message}</p>
+        <div className="progress-bar w-32 h-2 bg-gray-200 relative">
+            <div className="progress w-0 h-2 bg-black absolute border rounded"></div>
+        </div>
       </div>
     </div>
   );
