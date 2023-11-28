@@ -145,15 +145,14 @@ const MapComponent = ({
     };
   }, [mapRef, map, userPosition]);
 
-
   //search bar
   useEffect(() => {
     if(!map)  return;
 
     const customIcon = new L.Icon({
-      iconUrl: 'images/marker-icon-2x-blue.png', 
-      iconRetinaUrl: 'images/marker-icon-2x-blue.png',
-      shadowUrl: 'images/marker-shadow.png',
+      iconUrl: '/images/marker-icon-2x-blue.png', 
+      iconRetinaUrl: '/images/marker-icon-2x-blue.png',
+      shadowUrl: '/images/marker-shadow.png',
       iconSize: [25, 41], 
       iconAnchor: [12, 41],
       popupAnchor: [1, -34], 
@@ -196,17 +195,17 @@ const MapComponent = ({
             <button id="delete-marker-btn" class="mt-2 bg-red-500 text-white py-1 px-2 rounded hover:bg-red-600 focus:outline-none">刪除標記</button>
           </div>
         `;
-        marker.bindPopup(popupContent).openPopup();
-    
-        // 添加事件監聽器，當點擊刪除按鈕時移除標記
-        marker.getPopup().on('contentupdate', () => {
+
+        marker.bindPopup(popupContent).openPopup();  
+
+        setTimeout(() => {
           const deleteButton = document.getElementById('delete-marker-btn');
           if (deleteButton) {
             deleteButton.addEventListener('click', () => {
               marker.remove();
             });
           }
-        });
+        }, 0);
       });
 
       // 初始化迷你地圖
@@ -275,26 +274,26 @@ const MapComponent = ({
 
             ${!isPublishing && showInteract ? `
             <div class="like-section">
-              <span class="like-count">❤ ${place.likes} 枚喜愛</span>
-              ${allowLikes ? `<button class="like-button" data-place-id="${place.id}">
+              <span class="like-count"> ${place.likes} 枚喜愛</span>
+              ${allowLikes ? `<button class="m-1 like-button" data-place-id="${place.id}">
                 <img src="/images/heart.png" alt="Like" width="20" height="20" />
               </button>` : ''}
             </div>
             <div class="duplicate-section">
               <span class="duplicate-count">${place.duplicates} 次複製</span>
-              ${allowDuplicate ? `<button class="duplicate-button" data-place-id="${place.id}">
+              ${allowDuplicate ? `<button class="m-2 duplicate-button" data-place-id="${place.id}">
               <img src="/images/copy.png" alt="Duplicate" width="20" height="20" />
               </button>` : ''}
             </div>` : ''}
-            <p class="text-sm text-gray-500 ${category.color} p-1 rounded">${category.text}</p>
-            <div class="flex flex-wrap gap-2 mt-2">
+            <div class="mt-3 mb-1 text-sm text-gray-500 ${category.color} p-1 rounded">${category.text}</div>
+            <div class="flex flex-wrap gap-2">
             ${
               place.tags && place.tags.filter(tag => tag.trim().length > 0).length > 0 
               ? place.tags.map(tag => `<span class="text-xs bg-blue-200 px-2 py-1 rounded-full">${tag}</span>`).join(' ')
               : ''
             }
             </div>
-            <div class="coordinates-container">
+            <div class="coordinates-container p-2">
               <span id="coords-${place.id}">${formatCoordinates(place.coordinates.lat, place.coordinates.lng)}</span>
             </div>
           </div>
