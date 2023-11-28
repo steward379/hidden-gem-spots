@@ -179,7 +179,6 @@ const PublishMapPage = () => {
       setCoverImage(uploadedImageUrl);
     }
 
-     // 創建要發布的地圖對象
     const mapRef = doc(collection(db, 'publishedMaps', user.uid, 'maps'));
     await setDoc(mapRef, {
       title: title.trim(),
@@ -190,10 +189,11 @@ const PublishMapPage = () => {
       likes: 0,
       likedBy: [],
       duplicates: 0,
-      duplicatedBy: []
+      duplicatedBy: [],
+      placesLikes: 0,
+      placesLikedBy: [],
     });
 
-      // 为每个地点创建文档
       const newPublishedPlaces = [];
       for (const place of publishedPlaces) {
         const placeRef = doc(collection(db, 'publishedMaps', user.uid, 'maps', mapRef.id, 'places'));
