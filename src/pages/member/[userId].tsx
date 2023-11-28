@@ -24,6 +24,8 @@ const MemberPage = () => {
 
   const [userDetails, setUserDetails] = useState({});
 
+  const [isFollowingState, setIsFollowingState] = useState(false);
+
   const [memberData, setMemberData] = useState({
     id: null,
     name: null,
@@ -51,12 +53,6 @@ const MemberPage = () => {
   };
 
   useEffect(() => {
-    if (userId) {
-      fetchMemberData(userId);
-    }
-  }, [userId]);
-
-  useEffect(() => {
     const fetchDetails = async (users) => {
       const details = {};
       for (const userId of users) {
@@ -77,8 +73,17 @@ const MemberPage = () => {
     const userRef = doc(db, 'users', userId as string);
     await updateDoc(userRef, { name: newName });
     updateProfile(getAuth().currentUser, { displayName: newName });
+    setMemberData(prev => ({ ...prev, name: newName })); 
+
     setName(newName);
   };
+
+  useEffect(() => {
+    if (user && memberData) {
+      setIsFollowingState(user.following.includes(memberData.id));
+    }
+  }, [user, memberData]);
+
 
   const handleAvatarChange = async (files) => {
     if (files.length > 0) {
@@ -91,23 +96,42 @@ const MemberPage = () => {
       await updateDoc(userRef, { avatar: avatarURL });
 
       updateProfile(getAuth().currentUser, { photoURL: avatarURL });
+      setMemberData(prev => ({ ...prev, avatar: avatarURL }));
+
       setAvatar(avatarURL);
     }
   };
 
-  if (loading) return <p>Loading...</p>;
-  if (!user) return <p>No user found.</p>;
+  useEffect(() => {
+    if (userId) {
+      fetchMemberData(userId);
+    }
+  }, [userId]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-center">
+          <span className="block text-black mb-2">載入中...</span>
+          <div className="progress-bar w-32 h-2 bg-gray-200 relative">
+            <div className="progress w-0 h-2 bg-black absolute border rounded"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // 檢查是否為當前用戶
   const isCurrentUser = user && user.uid === userId; 
 
   const isFollowing = (targetUserId) => {
-    return user && user.following && user.following.includes(targetUserId);
+    return memberData.followers.includes(user.uid);
+    // return user && user.following && user.following.includes(targetUserId);
   };  
 
   const followUser = async (targetUserId) => {
-    if (!user || !targetUserId) {
-      console.error('Invalid user IDs');
+    if (!user || !targetUserId || isFollowing(targetUserId)) {
+      console.error('Invalid action');
       return;
     }
 
@@ -125,15 +149,17 @@ const MemberPage = () => {
     // 更新本地狀態
     setMemberData(prevData => ({
       ...prevData,
-      following: prevData.following.concat(targetUserId)
+      followers: [...prevData.followers, user.uid] 
     }));
+
+    setIsFollowingState(true); 
   };
 
   const unFollowUser = async (targetUserId) => {
-    if (!user || !targetUserId) {
-      console.error('Invalid user IDs');
+    if (!user || !targetUserId || !isFollowing(targetUserId)) {
+      console.error('Invalid action');
       return;
-    }
+    }  
 
     const currentUserRef = doc(db, 'users', user.uid);
     const targetUserRef = doc(db, 'users', targetUserId);
@@ -149,17 +175,21 @@ const MemberPage = () => {
     // 更新本地狀態
     setMemberData(prevData => ({
       ...prevData,
-      following: prevData.following.filter(id => id !== targetUserId)
+      followers: prevData.followers.filter((id) => id !== user.uid) 
     }));
+
+    setIsFollowingState(false);
   };
 
   const renderFollowButton = () => {
-    console.log('renderFollowButton', user, userId, user.uid, memberData.id);
     if (!user || user.uid === userId || !memberData.id) return null;
+
+    const isCurrentlyFollowing = memberData.followers.includes(user.uid);
   
     return (
-      <button className="bg-red text-white" onClick={() => isFollowing(memberData.id) ? unFollowUser(memberData.id) : followUser(memberData.id)}>
-        {isFollowing(memberData.id) ? '取消追蹤' : '追蹤'}
+      <button className="m-5 bg-amber-500 button text-black rounded-lg p-2" 
+              onClick={() => isFollowing(memberData.id) ? unFollowUser(memberData.id) : followUser(memberData.id)}>
+        {isCurrentlyFollowing  ? '取消追蹤' : '追蹤'}
       </button>
     );
   };
@@ -183,7 +213,7 @@ const MemberPage = () => {
                   alt={userDetails[userId].name} 
                   width="50" 
                   height="50" 
-                  className="rounded-full"
+                  className="rounded-full w-12 h-12 cursor-pointer"
                 />
                 <span className="ml-2 text-sm font-medium">{userDetails[userId].name}</span>
               </Link>
@@ -198,7 +228,7 @@ const MemberPage = () => {
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-5">會員中心</h1>
       {memberData.avatar && (
-        <Image className="mb-5 rounded-full" alt="profile-image" src={memberData.avatar} width="100" height="100" />
+        <Image className="w-24 h-24 mb-5 rounded-full" alt="profile-image" src={memberData.avatar} width="100" height="100" />
       )}
     
       <h3 className="mb-4 text-lg font-semibold">
