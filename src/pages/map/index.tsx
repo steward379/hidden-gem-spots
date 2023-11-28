@@ -518,7 +518,7 @@ const MapDemoPage: React.FC = () => {
           { !newMarker && showPlacesList && (
              <div className="places-list mt-4">
              {/* 搜尋和篩選 UI */}
-           <div className="search-and-filter">
+            <div className="search-and-filter">
              <input
                type="text"
                value={searchTerm}

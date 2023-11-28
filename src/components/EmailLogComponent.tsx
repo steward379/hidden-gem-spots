@@ -60,9 +60,9 @@ const EmailLogComponent  = () => {
   return (
     <div>
     {user ? (
-        <button className= "text-white p-2 rounded" onClick={handleSignOut}>登出</button>
+        <button className= "text-black p-2 rounded" onClick={handleSignOut}>登出</button>
       ) : (
-        <button className="text-white p-2 rounded" onClick={toggleModal}>登入 / 註冊</button>
+        <button className="text-black p-2 rounded" onClick={toggleModal}>登入 / 註冊</button>
       )}
 
       {showModal && (

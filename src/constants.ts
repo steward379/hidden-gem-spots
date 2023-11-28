@@ -12,5 +12,7 @@ export const categoryMapping = {
     nature: { color: 'bg-green-400', text: '大自然' },
     play : { color: 'bg-yellow-200', text: '反正是玩的' },
     eat: { color: 'bg-red-300', text: '反正是吃的' },
+    music: { color: 'bg-purple-300', text: '音樂表演' },
+    drama: { color: 'bg-pink-300', text: '戲劇表演' },
     // ... 其他类别
   };

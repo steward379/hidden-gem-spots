@@ -21,7 +21,6 @@ const AlertModal = ({ isOpen, onClose, message }) => {
     );
   };
 
-
 export default function Home() {
     const router = useRouter();
     const message = router.query.message || '';
