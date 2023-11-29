@@ -235,10 +235,11 @@ const MemberPage = () => {
         {user && user.uid === userId ? <span>歡迎，</span> : <span>你正在造訪：</span>} 
         {memberData.name}
       </h3>
-    
-      <button className="mb-4 bg-blue-500 text-white py-2 px-4 rounded" onClick={() => router.push(`/user-maps/${userId}`)}>
-        查看地圖
-      </button>
+      <Link href={`/user-maps/${userId}`} className="flex items-center">
+        <button className="mb-4 bg-blue-500 text-white py-2 px-4 rounded" >
+          查看地圖
+        </button>
+      </Link>
   
       {isCurrentUser && (
         <>
