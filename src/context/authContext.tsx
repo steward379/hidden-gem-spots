@@ -21,6 +21,7 @@ const AuthContext = createContext<{
   user: IUser | null;
   loading: boolean;
   loginMethod: LoginMethod;
+  loaded: boolean;
   setLoginMethod: (method: LoginMethod) => void;
   loginWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string) => Promise<void>;
@@ -35,6 +36,7 @@ const AuthContext = createContext<{
   signUpWithEmail: async () => {},
   loginWithGoogle: async () => {},
   logout: async () => {},
+  loaded: false
 });
 
 // 創建一個提供者組件
@@ -43,12 +45,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const [loginMethod, setLoginMethod] = useState<LoginMethod>(LoginMethod.None);
 
+  const [loaded, setLoaded] = useState(false);
+
+
   const router = useRouter();
 
   // const auth = getAuth();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         const userRef = doc(db, 'users', firebaseUser.uid);
         const docSnap = await getDoc(userRef);
@@ -65,6 +70,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             followers: []
           };
           await setDoc(userRef, userData);
+
         } else {
           userData = docSnap.data() as IUser;
         }
@@ -76,12 +82,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (router.asPath.startsWith("/accounting") || router.asPath.startsWith("/map")) {
           router.push({ pathname: "/", query: { message: "請先登入" } });
         }
+
       }
       setLoading(false);
+          // 網站通知
+      setLoaded(true);
     });
-  
-    // 清理監聽器
-    return () => unsubscribe();
+    
+      // 清理監聽器
+      return () => {
+        unsubscribeAuth();
+      };
+
   }, [router]);
 
   const loginWithEmail = async (email: string, password: string) => {
@@ -157,8 +169,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, loginMethod, setLoginMethod, loginWithEmail, signUpWithEmail, loginWithGoogle, logout }}>
-      {!loading && children}
+    <AuthContext.Provider value={{ user, loading, loaded, loginMethod, setLoginMethod, loginWithEmail, signUpWithEmail, loginWithGoogle, logout }}>
+      {!loading && loaded && children}
     </AuthContext.Provider>
   );
 };
