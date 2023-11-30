@@ -13,6 +13,7 @@
     "@fortawesome/fontawesome-svg-core": "^6.5.0",
     "@fortawesome/free-solid-svg-icons": "^6.5.0",
     "@fortawesome/react-fontawesome": "^0.2.0",
+    "@googlemaps/google-maps-services-js": "^3.3.41",
     "@reduxjs/toolkit": "^1.9.7",
     "@types/leaflet": "^1.9.7",
     "@types/leaflet-geosearch": "^3.0.0",
