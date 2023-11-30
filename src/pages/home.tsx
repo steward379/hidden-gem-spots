@@ -98,6 +98,10 @@ export default function Home() {
     const goToPreviousPage = () => {
         setCurrentPage((prev) => (prev > 1 ? prev - 1 : prev));
     };
+    
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [currentTab]);
 
     useEffect(() => {
         if(router.query.message) {
