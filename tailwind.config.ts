@@ -24,7 +24,10 @@ const config: Config = {
         'normal': '400',
         'medium': '500',
         'bold': '700'
-      }
+      },
+      mixBlendMode: {
+        'color-burn': 'color-burn',
+      },
     },
   },
   plugins: [],
