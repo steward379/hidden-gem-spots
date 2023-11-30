@@ -8,8 +8,6 @@ import DropzoneImage from '../components/DropzoneImage';
 
 import { useAuth } from '../context/AuthContext';
 
-import { useMapNotification } from '../context/MapNotificationContext'; 
-
 import dynamic from 'next/dynamic';
 // use dynamic loading to avoid SSR error
 
@@ -95,8 +93,6 @@ const PublishMapPage = () => {
   const [coverImagePreview, setCoverImagePreview] = useState(''); // 用於顯示預覽圖片的 URL
 
   const [areAllPlacesAdded, setAreAllPlacesAdded] = useState(false);
-
-  const { addNotification } = useMapNotification();
 
   // alert&confirm
   const [isAlertOpen, setIsAlertOpen] = useState(false);
@@ -216,14 +212,6 @@ const PublishMapPage = () => {
       await setDoc(placeRef, placeData);
       newPublishedPlaces.push({ ...place, id: placeRef.id });
     }
-
-    addNotification({
-      type: 'mapPublished',
-      message: `新地圖已發佈: ${title}`,
-      userName: user.name, // 使用者名稱
-      mapTitle: title, // 地圖標題
-      mapId: mapRef.id, // 地圖ID
-    });
     
     setPublishedPlaces(newPublishedPlaces);
 
