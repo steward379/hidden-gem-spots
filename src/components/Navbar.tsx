@@ -37,19 +37,27 @@ const Navbar: React.FC = () => {
             <i className="fas fa-bars text-xl"></i>
           </button>
         {/* {isMenuOpen && ( */}
-          <div className={`absolute top-full left-0 right-0 p-4 sm:relative bg-white bg-opacity-70 sm:top-auto sm:p-0 transition-all duration-300 ease-in-out ${isMenuOpen ? 'block' : 'hidden'} sm:flex`}>
+          <div className={`absolute top-full left-0 right-0 p-4 sm:relative bg-white bg-opacity-70 
+          lg:bg-opacity-0 md:bg-opacity-0 sm:top-auto sm:p-0 transition-all duration-300 ease-in-out 
+          ${isMenuOpen ? 'block' : 'hidden'} sm:flex`}>
             <div className="flex flex-col sm:flex-row items-center sm:items-stretch">
               {user ? (
                 <>
                   <Link href={`/member/${user.uid}`}>
                     <div className="flex items-center cursor-pointer">
-                      <div className="rounded-full bg-sky-300 hard-light">
-                        <Image src={user.avatar || '/images/marker-icon.png'} alt="User avatar" width="30" height="30" className="rounded-full object-contain"/>
-                      </div>
-                      <div className="ml-3 text-sm sm:block">你好，{user.name || '會員'}</div>
+                        <div className="hard-light bg-yellow-500 relative w-12 h-12 rounded-full overflow-hidden">
+                          <Image 
+                            src={user.avatar || '/images/marker-icon.png'} 
+                            alt="User avatar" 
+                            layout="fill"
+                            objectFit="cover"
+                          />
+                        </div>
+                        <div className="ml-3 ext-sm sm:block">你好，{user.name || '會員'}</div>
                     </div>
                   </Link>
-                  <div className={`flex-grow  mt-4 sm:mt-0 ${isMenuOpen ? 'flex' : 'hidden'} sm:flex flex-col sm:flex-row`}>
+
+                  <div className={`flex-grow items-center mt-4 sm:mt-0 ${isMenuOpen ? 'flex' : 'hidden'} sm:flex flex-col sm:flex-row`}>
                     <Link href="/home">
                       <div className="sm:ml-4">探索</div>
                     </Link>
