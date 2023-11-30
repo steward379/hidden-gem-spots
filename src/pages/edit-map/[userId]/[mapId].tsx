@@ -7,7 +7,7 @@ import { doc, getDoc, updateDoc, collection, getDocs } from 'firebase/firestore'
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import firebaseServices from  '../../../utils/firebase';
 const { db, auth, storage } = firebaseServices;
-import { useAuth } from '../../../context/authContext';
+import { useAuth } from '../../../context/AuthContext';
 
 import DropzoneImage from '../../../components/DropzoneImage';
 
