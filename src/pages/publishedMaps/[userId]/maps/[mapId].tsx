@@ -453,7 +453,7 @@ const PublishedMapDetail = () => {
             </p>
             {mapData.coverImage && (
               <div className="w-full h-60 relative">
-                <Image src={mapData.coverImage} alt="Cover Image" layout="fill" className="object-cover" />
+                <Image src={mapData.coverImage} alt="Cover Image" fill className="object-cover" />
               </div>
             )}
             <div className="bg-white text-black mt-4">

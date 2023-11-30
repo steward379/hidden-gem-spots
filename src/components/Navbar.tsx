@@ -49,8 +49,8 @@ const Navbar: React.FC = () => {
                           <Image 
                             src={user.avatar || '/images/marker-icon.png'} 
                             alt="User avatar" 
-                            layout="fill"
-                            objectFit="cover"
+                            fill
+                            style={{ objectFit: 'cover' }}
                           />
                         </div>
                         <div className="ml-3 ext-sm sm:block">你好，{user.name || '會員'}</div>

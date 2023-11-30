@@ -218,7 +218,8 @@ const EditMap = () => {
                   )}
                  {coverImagePreview && (
                     <div className="relative mt-2 mb-10 w-full h-60">
-                      <Image src={coverImagePreview} alt="Cover Preview" layout="fill" className="object-cover" />
+                      <Image src={coverImagePreview} alt="Cover Preview" 
+                            fill className="object-cover" />
                       <button onClick={handleRemoveImage} className="absolute top-0 right-0 bg-red-500 text-white p-2 rounded-full hover:bg-red-700">
                         移除圖片
                       </button>
