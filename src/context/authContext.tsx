@@ -1,8 +1,9 @@
-// pages/context/authContext.tsx
+// pages/context/AuthContext.tsx
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, getAuth, createUserWithEmailAndPassword,  signInWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { useRouter }  from 'next/router';
-import { getDoc, doc, setDoc } from 'firebase/firestore';
+import { getDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
+import { getStorage, ref, getDownloadURL } from 'firebase/storage';
 import firebaseServices from '../utils/firebase';
 const { db, auth, storage } = firebaseServices;
 // import { IUser } from '../types/IUser';
@@ -27,6 +28,7 @@ const AuthContext = createContext<{
   signUpWithEmail: (email: string, password: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
+  updateUserProfile: (updatedData: Partial<IUser>) => Promise<void>;
 }>({
   user: null,
   loading: true,
@@ -36,10 +38,24 @@ const AuthContext = createContext<{
   signUpWithEmail: async () => {},
   loginWithGoogle: async () => {},
   logout: async () => {},
-  loaded: false
+  loaded: false,
+  updateUserProfile: async () => {}
 });
 
-// 創建一個提供者組件
+const getRandomAvatarUrl = async () => {
+  const randomNumber = Math.floor(Math.random() * 11) + 1; // 生成1到11之間的隨機數字
+  const storage = getStorage();
+  const avatarRef = ref(storage, `/avatar-default/a_${randomNumber}.png`);
+
+  try {
+    const url = await getDownloadURL(avatarRef);
+    return url;
+  } catch (error) {
+    console.error("無法獲取頭像 URL", error);
+    return null; 
+  }
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children}) => {
   const [user, setUser] = useState<IUser | null>(null);
   const [loading, setLoading] = useState(true);
@@ -47,6 +63,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const [loaded, setLoaded] = useState(false);
 
+  const updateUserProfile = async (updatedData) => {
+    if (!user) return;
+  
+    const userRef = doc(db, 'users', user.uid);
+    await updateDoc(userRef, updatedData);
+  
+    setUser((prevUser) => ({
+      ...prevUser,
+      ...updatedData,
+    }));
+  };
 
   const router = useRouter();
 
@@ -118,11 +145,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const newUser = userCredential.user;
       const userRef = doc(db, 'users', newUser.uid);
 
+      const randomAvatar = await getRandomAvatarUrl();
+
       await setDoc(userRef, {
         uid: newUser.uid,
         email: newUser.email,
-        name: newUser.displayName,
-        avatar: newUser.photoURL,
+        name: newUser.displayName || newUser.email.split('@')[0],
+        avatar: newUser.photoURL || randomAvatar,
         following: [],
         followers: []
       });
@@ -130,8 +159,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser({
         uid: newUser.uid,
         email: newUser.email,
-        name: newUser.displayName,
-        avatar: newUser.photoURL,
+        name: newUser.displayName || newUser.email.split('@')[0],
+        avatar: newUser.photoURL || randomAvatar,
         following: [],
         followers: []
       });
@@ -169,7 +198,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, loaded, loginMethod, setLoginMethod, loginWithEmail, signUpWithEmail, loginWithGoogle, logout }}>
+    <AuthContext.Provider value={{ user, loading, loaded, loginMethod, 
+    setLoginMethod, loginWithEmail, signUpWithEmail, loginWithGoogle, logout,
+    updateUserProfile}}>
       {!loading && loaded && children}
     </AuthContext.Provider>
   );
