@@ -28,7 +28,8 @@ const LandingPage = () => {
       <div className="md:flex gap-10 items-center justify-end bg-gray-100 p-16">
         <div className="md:flex-1 md:w-1/2">
           <div className="md:flex items-center justify-end">
-            <Image src="/images/pexels-marina-leonova.jpg" alt="Scene Image" width="1000" height="1000" />
+            <Image src="/images/pexels-marina-leonova.jpg" alt="Scene Image" width="500" height="500"
+                    className= "rounded-full" />
           </div>
         </div>
         <div className=" w-full md:w-1/2 text-center md:text-left p-4 text-black">
@@ -41,7 +42,7 @@ const LandingPage = () => {
       </div>
 
       {/* Block 2 */}
-      <div className="flex gap-4 flex-wrap-reverse items-center justify-center bg-white p-10">
+      <div className="md:flex gap-4 flex-wrap-reverse items-center justify-center bg-white p-10">
         <div className="flex-1 md:w-1/2 text-center md:text-right p-8 text-black" >
           <h2 className="text-4xl font-bold mb-3">2️⃣ 收藏更多景點</h2>
           <p className="mb-5 text-2xl"> 追蹤、收藏分享他人的景點，收納到自己的地圖中。</p>
@@ -50,7 +51,8 @@ const LandingPage = () => {
           </Link>
         </div>
         <div className="flex-1 md:w-1/2" style={{ maxHeight: "600px"}}>
-          <Image src="/images/pexels-bhupendra-singh.jpg" alt="Scene Image" width="1000" height="500" 
+          <Image src="/images/pexels-bhupendra-singh.jpg" alt="Scene Image" width="500" height="500" 
+                 className= "rounded-full"
                  style={{ objectFit: 'cover' }}
           />
         </div>
@@ -59,7 +61,8 @@ const LandingPage = () => {
       {/* Block 3 */}
       <div className="md:flex gap-10 items-center justify-end bg-gray-100 p-16">
         <div className="flex-1 md:w-1/2" style={{ maxHeight: "600px", overflow: 'hidden' }}>
-          <Image src="/images/pexels-photo-friends.jpeg" alt="Scene Image" width="1000" height="500" 
+          <Image src="/images/pexels-photo-friends.jpeg" alt="Scene Image" width="500" height="500" 
+                 className= "rounded-full"
                  style={{ objectFit: 'cover' }} />
         </div>
         <div className=" w-full md:w-1/2 text-center md:text-left p-4 text-black">

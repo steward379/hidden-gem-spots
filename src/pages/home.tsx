@@ -117,12 +117,10 @@ export default function Home() {
                 ${!isVisible && 'h-10 opacity-0 transition-opacity duration-1000'}`}
                 style= {{ backgroundImage: 'url(/images/night.jpg)', backgroundSize: 'cover'}}
                 >
-                {/* Globe Component */}
                 {/* <div className=" overflow-hidden "> */}
-                <div className="hard-light globe-container max-w-lg max-h-lg overflow-hidden">
+                <div className="hard-light scale-2-hard-light globe-container max-w-lg max-h-lg overflow-hidden">
                     <GlobeComponent size={1500} />
                 </div>
-                {/* </div> */}
                 {/* Content Section */}
                 <div className="content-section max-w-xl mx-auto items-center justify-center">
                     <div className="flex flex-col items-center bg-gray-300 rounded-full p-10 backdrop-blur-sm bg-opacity-30 hover:bg-opacity-60">

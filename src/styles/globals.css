@@ -92,10 +92,13 @@ button {
 }
 /* hard-light */
 .hard-light {
-  transition: transform 1s ease-in-out, mix-blend-mode 1s ease-in-out;
+  transition: transform 0.3s ease-in-out, mix-blend-mode 1s ease-in-out;
 }
 .hard-light:hover {
   mix-blend-mode: hard-light;
+  transform: scale(1.1);
+}
+.scale-2-hard-light {
   transform: scale(2);
 }
 /* color-burn */
