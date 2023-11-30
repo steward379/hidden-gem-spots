@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 import { collection, query, getDocs, doc, getDoc, deleteDoc } from 'firebase/firestore';
 import firebaseServices from '../../utils/firebase';
 const { db } = firebaseServices;
-import { useAuth } from '../../context/authContext';
+import { useAuth } from '../../context/AuthContext';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -94,6 +94,25 @@ const UserMapsPage = () => {
 
   }, [userId, user?.uid]);
 
+  const deleteMapAndPlaces = async (mapId) => {
+    // 建立對地圖下所有地點的引用
+    const placesRef = collection(db, `publishedMaps/${userId}/maps/${mapId}/places`);
+    
+    // 獲取所有地點的資料
+    const placesSnapshot = await getDocs(placesRef);
+  
+    // 刪除每一個地點
+    const deletePlacesPromises = placesSnapshot.docs.map((doc) => {
+      return deleteDoc(doc.ref);
+    });
+  
+    // 等待所有地點刪除完成
+    await Promise.all(deletePlacesPromises);
+  
+    // 刪除地圖本身
+    await deleteDoc(doc(db, `publishedMaps/${userId}/maps`, mapId));
+  };
+
   const handleDeleteMap = async (event, mapId) => {
     event.stopPropagation(); 
 
@@ -101,7 +120,7 @@ const UserMapsPage = () => {
       event.stopPropagation(); 
 
       try {
-        await deleteDoc(doc(db, `publishedMaps/${userId}/maps`, mapId));
+        await deleteMapAndPlaces(mapId);
         setMaps(maps.filter(map => map.id !== mapId));
         alert("地圖已刪除");
       } catch (error) {
@@ -122,7 +141,7 @@ const UserMapsPage = () => {
     return (
       <div className="user-info mb-5 lg:flex flex-column w-full">
         <div className="w-full lg:flex flex-column  hover:bg-rose-600 bg-blue-600 rounded-3xl mb-7 lg:mb-0 lg:rounded-full cursor-pointer transition-btn mr-5 p-10 lg:p-0">
-          <div className="flex p-0 w-30 hover:bg-amber-500 bg-red-400 rounded-full cursor-pointer transition-btn mr-3 mb-7 lg:mb-0" >
+          <div className=" flex p-0 w-30 hover:bg-amber-500 bg-red-400 rounded-full cursor-pointer transition-btn mr-3 mb-7 lg:mb-0" >
             <Link href={`/member/${userId}`} className="flex items-center m-2">
                 <div className="p-4 ml-4">
                   <h2 className="text-2xl font-normal lg:mb-0 text-stone-200 pt-3">{isCurrentUser ? '你的地圖' : `${mapMaker?.name}的地圖`}</h2>
@@ -131,14 +150,14 @@ const UserMapsPage = () => {
               <Image 
                 src={mapMaker?.avatar} 
                 alt={mapMaker?.name} 
-                className="w-24 h-24 rounded-full cursor-pointer" 
+                className="w-24 h-24 rounded-full cursor-pointer image-hover-effect" 
                 width="1000" 
                 height="1000" 
               />
             }
             </Link>
           </div>
-          <div className="p-4 ml-4">
+          <div className="p-4 ml-4 ">
             <h3 className="text-lg font-semibold text-rose-100">地圖受喜愛</h3>
             <p className="text-3xl font-bold text-rose-100">{totalLikes}</p> 
           </div>
@@ -164,19 +183,19 @@ const UserMapsPage = () => {
   };  
 
   return (
-    <div className="container mx-auto p-4 ">
+    <div className=" container mx-auto rounded-3xl p-20 ">
        {renderUserInfo()}
-       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 ">
+       <div className=" grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 ">
         {maps.map(map => (
-        <div key={map.id} className="border bg-cover bg-center hover:bg-yellow-500 transition-btn rounded-3xl bg-purple-400 " 
-               style={{ backgroundImage: `url('${map.coverImage}')`, height: '300px', backgroundSize: 'cover', backgroundPosition: 'center' }} 
+        <div key={map.id} className="skew-card border bg-cover bg-center hover:bg-yellow-500 transition-btn rounded-3xl bg-purple-400" 
+               style={{ backgroundImage: `url('${map.coverImage}')`, height: '300px', backgroundSize: 'cover', backgroundPosition: 'center', }} 
         >
 
             <div className="relative p-4 w-full h-full bg-gradient-to-t from-transparent to-blue-600 opacity-100 rounded-3xl  hover:bg-yellow-400 hover:bg-opacity-50">
               {isCurrentUser && (
-              <button className="absolute right-5 top-5 delete-button" 
+              <button title="delete-map" className="absolute right-0 top-0 delete-button w-20 h-20 rounded-full backdrop-blur-sm" 
                       onClick={(e) => handleDeleteMap(e, map.id)}>
-                <i className="fas fa-times text-white"></i> {/* 或您選擇的任何圖標 */}
+                <i className="scale-2 fas fa-times text-xl text-white"></i> 
               </button>
               )}
               <Link href={`/publishedMaps/${userId}/maps/${map.id}`}>
@@ -197,7 +216,8 @@ const UserMapsPage = () => {
           <h3 className="text-2xl font-bold mb-5">喜愛的地圖</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 ">
             {likedMaps.map(map => (
-              <div key={map.id} className="border bg-cover bg-center hover:bg-red-400 transition-btn rounded-3xl bg-orange-800" 
+              <div key={map.id} 
+                   className="skew-card border bg-cover bg-center hover:bg-red-400 transition-btn rounded-3xl bg-orange-800" 
                     style={{ backgroundImage: `url('${map.coverImage}')`, height: '300px', backgroundSize: 'cover', backgroundPosition: 'center' }} >
                 <Link href={`/publishedMaps/${map.authorId}/maps/${map.id}`}>
                   <div className="p-4 w-full h-full bg-gradient-to-t from-transparent to-red-500 opacity-100 rounded-3xl  hover:bg-yellow-300 hover:bg-opacity-50">
