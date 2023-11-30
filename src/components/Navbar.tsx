@@ -37,7 +37,7 @@ const Navbar: React.FC = () => {
             <i className="fas fa-bars text-xl"></i>
           </button>
         {/* {isMenuOpen && ( */}
-          <div className={`absolute top-full left-0 right-0  bg-opacity-80 backdrop-blur-lg p-4 sm:relative sm:bg-transparent sm:top-auto sm:p-0 transition-all duration-300 ease-in-out ${isMenuOpen ? 'block' : 'hidden'} sm:flex`}>
+          <div className={`absolute top-full left-0 right-0  p-4 sm:relative sm:bg-transparent sm:top-auto sm:p-0 transition-all duration-300 ease-in-out ${isMenuOpen ? 'block' : 'hidden'} sm:flex`}>
             <div className="flex flex-col sm:flex-row items-center sm:items-stretch">
               {user ? (
                 <>
