@@ -6,7 +6,7 @@ import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import firebaseServices from '../../../../utils/firebase';
 const { db, auth, storage } = firebaseServices;
-import { useAuth } from '../../../../context/authContext';
+import { useAuth } from '../../../../context/AuthContext';
 import Link from 'next/link';
 
 import 'react-quill/dist/quill.snow.css'; 
@@ -89,6 +89,7 @@ const PublishedMapDetail = () => {
           
         } else {
           console.log('找不到地圖資料');
+          router.push(`/user-maps/${user.uid}`);
         }
 
 
@@ -96,7 +97,7 @@ const PublishedMapDetail = () => {
     };
 
     fetchMapData();
-  }, [mapId, userId]);
+  }, [mapId, userId, user?.uid, router]);
 
   const handleLikeClick = async () => {
     if (!mapData || typeof mapId !== 'string') return;
@@ -580,7 +581,7 @@ const PublishedMapDetail = () => {
                   <Image 
                     src={url}
                     alt={`${selectedPlace.name} image ${index}`}
-                    layout="fill" 
+                    fill
                     className="object-cover"
                   />
                 </div>
