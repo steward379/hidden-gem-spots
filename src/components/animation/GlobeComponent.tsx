@@ -3,7 +3,7 @@ import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import gsap from 'gsap';
 
-const GlobeComponent = () => {
+const GlobeComponent = ({size = 900}) => {
   const globeContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -25,7 +25,7 @@ const GlobeComponent = () => {
     // window.addEventListener('resize', resizeRenderer);
 
     renderer.setClearColor(0xffffff, 0);
-    renderer.setSize(900, 900);
+    renderer.setSize(size, size);
     renderer.setPixelRatio(window.devicePixelRatio);
     globeContainerRef.current.appendChild(renderer.domElement);
 
@@ -112,7 +112,8 @@ const GlobeComponent = () => {
   return (
     //  bg-gradient-to-r  from-blue-500 to-cyan-400 w-16
     // css: container
-    <div className="container mx-auto flex justify-center items-center"
+    <div className="m-0">
+    <div className="container mx-auto justify-center items-center"
       style={{ height: '700px' }}
     > 
     {/* css : wrapper */}
@@ -125,6 +126,7 @@ const GlobeComponent = () => {
           {/* <div id="globe-shadow" className="w-48 h-2.5 bg-black/5 rounded-full mx-auto"></div> */}
         </div>
       </div>
+    </div>
     </div>
   );
 };
