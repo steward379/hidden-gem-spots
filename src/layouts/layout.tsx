@@ -1,15 +1,15 @@
-import React from 'react';
+import React, { useEffect} from 'react';
 import Navbar from '../components/Navbar';
-import { useAuth } from '../context/authContext';
+import { useAuth } from '../context/AuthContext';
 import { askNotificationPermission } from '../utils/notification';
-import { useAuthListeners } from '../hooks/useAuthListeners';
+import useAuthListeners from '../hooks/useAuthListeners';
 
 const Layout = ({ children }) => {
   const { user, loaded } = useAuth();
   
-  // useAuthListeners();
+  useAuthListeners();
   
-  React.useEffect(() => {
+  useEffect(() => {
     askNotificationPermission();
 
   }, [user, loaded]);
