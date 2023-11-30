@@ -6,7 +6,9 @@ import Image from 'next/image';
 // drop-image
 import DropzoneImage from '../components/DropzoneImage';
 
-import { useAuth } from '../context/authContext';
+import { useAuth } from '../context/AuthContext';
+
+import { useMapNotification } from '../context/MapNotificationContext'; 
 
 import dynamic from 'next/dynamic';
 // use dynamic loading to avoid SSR error
@@ -77,6 +79,8 @@ const PublishMapPage = () => {
 
   const { user } = useAuth();
 
+  const router = useRouter();
+
   // content 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -92,7 +96,7 @@ const PublishMapPage = () => {
 
   const [areAllPlacesAdded, setAreAllPlacesAdded] = useState(false);
 
-  const router = useRouter();
+  const { addNotification } = useMapNotification();
 
   // alert&confirm
   const [isAlertOpen, setIsAlertOpen] = useState(false);
@@ -194,23 +198,39 @@ const PublishMapPage = () => {
       placesLikedBy: [],
     });
 
-      const newPublishedPlaces = [];
-      for (const place of publishedPlaces) {
-        const placeRef = doc(collection(db, 'publishedMaps', user.uid, 'maps', mapRef.id, 'places'));
-        await setDoc(placeRef, {
-          ...place,
-          likes: 0,
-          likedBy: [],
-          duplicates: 0,
-          duplicatedBy: []
-        });
-        newPublishedPlaces.push({ ...place, id: placeRef.id });
-      }
+    const newPublishedPlaces = [];
+    for (const place of publishedPlaces) {
+      const placeRef = doc(collection(db, 'publishedMaps', user.uid, 'maps', mapRef.id, 'places'));
+      const placeData =  {
+        ...place,
+        coordinates: {
+          lat: place.coordinates.lat, 
+          lng: place.coordinates.lng
+        },
+        likes: 0,
+        likedBy: [],
+        duplicates: 0,
+        duplicatedBy: []
+      };
+      console.log(placeData);
+      await setDoc(placeRef, placeData);
+      newPublishedPlaces.push({ ...place, id: placeRef.id });
+    }
 
-      setPublishedPlaces(newPublishedPlaces);
+    addNotification({
+      type: 'mapPublished',
+      message: `新地圖已發佈: ${title}`,
+      userName: user.name, // 使用者名稱
+      mapTitle: title, // 地圖標題
+      mapId: mapRef.id, // 地圖ID
+    });
+    
+    setPublishedPlaces(newPublishedPlaces);
 
     setIsPublishing(false);
-    Router.push(`/publishedMaps/${user.uid}/maps/${mapRef.id}`);
+
+
+    Router.push(`/publishedMaps/${user.uid}/maps/${mapRef.id}`);    
   };
 
   const handleCancelPublish = (place) => {
