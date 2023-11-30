@@ -508,7 +508,8 @@ const MapDemoPage: React.FC = () => {
                 <input type="checkbox" id="toggle" className="sr-only" onChange={() => setShowPlacesList(!showPlacesList)} checked={showPlacesList} />
                 <div className={`block w-16 h-9 rounded-full transition-colors ${showPlacesList ? 'bg-green-500' : 'bg-red-500'}`}></div>
                 <div className={`dot absolute left-1 top-1 bg-white h-7 w-7 rounded-full transition transform ${showPlacesList ? 'translate-x-full' : ''}`}>
-                  <i className={`pl-1 pt-0.5 fas ${showPlacesList ? 'fa-eye' : 'fa-eye-slash'} text-gray-600 text-center`} style={{ lineHeight: '1.5rem' }}></i>
+                  <i className={`pl-1 pt-0.5 fas ${showPlacesList ? 'fa-eye' : 'fa-eye-slash'} text-gray-600 text-center`} 
+                  style={{ lineHeight: '1.5rem' }}></i>
                 </div>
               </div>
               <div className="ml-3 text-gray-700 font-medium">
@@ -552,37 +553,36 @@ const MapDemoPage: React.FC = () => {
                 </select>
               </div>
             </div>
-
-             { searchTerm || selectedCategory ? (
-               <>
-                 <h2 className="text-lg font-semibold mb-2">搜尋後景點列表</h2>
-                 { filteredPlaces.length === 0 ? (
-                   <p className="text-center">找不到符合條件的景點</p>
-                 ) : (
-                 <>
-                   {filteredPlaces.map(place => (
-                     <div key={place.id} className="hover:bg-yellow-50 place-item flex justify-between items-center p-2 border border-gray-300 rounded m-2 cursor-pointer" 
-                          onClick={() => handlePlaceSelect(place)}>
-                       {place.name}
-                     </div>
-                   ))}
-                 </>
-                 )}
-               </>
-               ) : (
-               <>
-                 <h2 className="text-lg font-semibold mb-2">景點列表</h2>
-                 {places.map((place) => (
-                   <div key={place.id} className="hover:bg-green-100 place-item flex justify-between items-center p-2 border border-gray-300 rounded m-2 cursor-pointer"
+              { searchTerm || selectedCategory ? (
+              <>
+                <h2 className="text-lg font-semibold mb-2">搜尋後景點列表</h2>
+                { filteredPlaces.length === 0 ? (
+                <p className="text-center">找不到符合條件的景點</p>
+                ) : (
+                <>
+                {filteredPlaces.map(place => (
+                    <div key={place.id} className="hover:bg-yellow-50 place-item flex justify-between items-center p-2 border border-gray-300 rounded m-2 cursor-pointer" 
                         onClick={() => handlePlaceSelect(place)}>
-                     {place.name}
-                   </div>
-                 ))}
-               </>
-               )
-             }
-           </div>
-         </div>
+                        {place.name}
+                    </div>
+                  ))}
+                </>
+                )}
+              </>
+              ) : (
+              <>
+                <h2 className="text-lg font-semibold mb-2">景點列表</h2>
+                {places.map((place) => (
+                  <div key={place.id} className="hover:bg-green-100 place-item flex justify-between items-center p-2 border border-gray-300 rounded m-2 cursor-pointer"
+                      onClick={() => handlePlaceSelect(place)}>
+                    {place.name}
+                  </div>
+                ))}
+              </>
+              )
+            }
+          </div>
+        </div>
           )}
         </>
       )}
@@ -618,7 +618,8 @@ const MapDemoPage: React.FC = () => {
             {/* 圖片 */}
             <div className="mt-5">
               {selectedPlace.images.map((url, index) => (
-                <div key={index} className="image-preview mb-2 relative" style={{ width: 300, height: 300 }}>
+                <div key={index} className="image-preview mb-2 relative" 
+                                 style={{ width: 300, height: 300 }}>
                   <Image 
                     src={url}
                     alt={`${selectedPlace.name} image ${index}`}
@@ -685,7 +686,8 @@ const MapDemoPage: React.FC = () => {
 
           {previewImages.map((src, index) => (
               src ? (
-                <div key={index} className="image-preview relative" style={{ width: 300, height: 300 }}  >
+                <div key={index} className="image-preview relative" 
+                                  style={{ width: 300, height: 300 }}  >
                   <Image 
                     src={src}
                     alt={`Uploaded preview ${index}`} 

@@ -404,7 +404,8 @@ const PublishedMapDetail = () => {
                   setShowPlacesList(false);}} checked={showLikedPlacesList} />
                   <div className={`block w-16 h-9 rounded-full transition-colors ${showLikedPlacesList ? 'bg-green-500' : 'bg-red-500'}`}></div>
                   <div className={`dot absolute left-1 top-1 bg-white h-7 w-7 rounded-full transition transform ${showLikedPlacesList ? 'translate-x-full' : ''}`}>
-                    <i className={`pl-1 pt-0.5 fas ${showLikedPlacesList ? 'fa-love' : 'fa-eye-slash'} text-gray-600 text-center`} style={{ lineHeight: '1.5rem' }}></i>
+                    <i className={`pl-1 pt-0.5 fas ${showLikedPlacesList ? 'fa-love' : 'fa-eye-slash'} text-gray-600 text-center`} 
+                       style={{ lineHeight: '1.5rem' }}></i>
                   </div>
                 </div>
                 <div className="ml-3 text-gray-700 font-medium">
@@ -577,7 +578,8 @@ const PublishedMapDetail = () => {
             {/* 圖片 */}
             <div className="mt-4">
               {selectedPlace.images.map((url, index) => (
-                <div key={index} className="image-preview mb-2 relative" style={{ width: 300, height:  300 }}>
+                <div key={index} className="image-preview mb-2 relative" 
+                                style={{ width: 300, height:  300 }}>
                   <Image 
                     src={url}
                     alt={`${selectedPlace.name} image ${index}`}

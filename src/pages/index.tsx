@@ -10,7 +10,8 @@ const LandingPage = () => {
 
   return (
     <div className="flex flex-col font-sans">
-      <div className="bg-cover bg-no-repeat bg-center h-screen flex items-center justify-center" style={{ backgroundImage: "url('/images/pexels-tyler-lastovic.jpg')" }}>
+      <div className="bg-cover bg-no-repeat bg-center h-screen flex items-center justify-center" 
+           style={{ backgroundImage: "url('/images/pexels-tyler-lastovic.jpg')" }}>
         <div className="bg-black opacity-20 rounded mt-20"></div>
         <div className="text-center text-white">
             <Image src="/images/ballon.png" alt="Scene Image" width="500" height="300" 
@@ -50,7 +51,8 @@ const LandingPage = () => {
             <button className="text-xl max-w-xs py-3 px-5 bg-blue-500 text-white font-semibold rounded hover:bg-blue-700 transition duration-300">瀏覽地圖</button>
           </Link>
         </div>
-        <div className="flex-1 md:w-1/2" style={{ maxHeight: "600px"}}>
+        <div className="flex-1 md:w-1/2" 
+              style={{ maxHeight: "600px"}}>
           <Image src="/images/pexels-bhupendra-singh.jpg" alt="Scene Image" width="500" height="500" 
                  className= "rounded-full"
                  style={{ objectFit: 'cover' }}
@@ -60,7 +62,8 @@ const LandingPage = () => {
 
       {/* Block 3 */}
       <div className="md:flex gap-10 items-center justify-end bg-gray-100 p-16">
-        <div className="flex-1 md:w-1/2" style={{ maxHeight: "600px", overflow: 'hidden' }}>
+        <div className="flex-1 md:w-1/2"
+             style={{ maxHeight: "600px", overflow: 'hidden' }}>
           <Image src="/images/pexels-photo-friends.jpeg" alt="Scene Image" width="500" height="500" 
                  className= "rounded-full"
                  style={{ objectFit: 'cover' }} />
