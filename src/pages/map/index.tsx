@@ -11,7 +11,7 @@ import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from "firebas
 import firebaseServices from '../../utils/firebase'; 
 const { db, auth, storage } = firebaseServices; 
 
-import { useAuth } from '../../context/authContext';
+import { useAuth } from '../../context/AuthContext';
 
 import { categoryMapping } from '../../constants'
 
@@ -95,7 +95,7 @@ const MapDemoPage: React.FC = () => {
     // const [userId, setUserId] = useState<string | null>(null);
   // userAuth
   const { user } = useAuth();
-  let userId = user.uid;
+  let userId = user?.uid;
 
   const showAlert = (message) => {
     setAlertMessage(message);
@@ -137,6 +137,7 @@ const MapDemoPage: React.FC = () => {
     setNewMarker({ coordinates, name: '', description: '', tags: '', category: '', images: [] });
   };
 
+  
   const handleDeletePlace = async () => {
     if (selectedPlace) {
       setShowDeleteConfirm(true);
@@ -621,7 +622,7 @@ const MapDemoPage: React.FC = () => {
                   <Image 
                     src={url}
                     alt={`${selectedPlace.name} image ${index}`}
-                    layout="fill" 
+                    fill
                     className="object-cover"
                   />
                 </div>
@@ -688,7 +689,7 @@ const MapDemoPage: React.FC = () => {
                   <Image 
                     src={src}
                     alt={`Uploaded preview ${index}`} 
-                    layout="fill" 
+                    fill
                     className="object-cover"
                   />
                   <button 
