@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Dispatch, SetStateAction } from 'react';
-import { User, GoogleAuthProvider, Auth, signInWithPopup, signOut, onAuthStateChanged, provider } from "firebase/auth";
+import { User, GoogleAuthProvider, Auth, signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
 import { Firestore, doc, setDoc } from "firebase/firestore";
 import firebase from "../utils/firebase";
 import { LoginMethod } from '../LoginMethod';
