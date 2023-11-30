@@ -14,7 +14,7 @@ const LandingPage = () => {
         <div className="bg-black opacity-20 rounded mt-20"></div>
         <div className="text-center text-white">
             <Image src="/images/ballon.png" alt="Scene Image" width="500" height="300" 
-                objectFit='cover' />
+                   style={{ objectFit: 'cover' }} />
             <h1 className="text-6xl mb-4 font-normal"><span className="font-medium">Hidden Gem Spot</span> 旅圓</h1>
             <p className="text-3xl mb-8">紀錄自己的下一趟生活冒險。</p>
             <Link href="/home">
@@ -51,7 +51,7 @@ const LandingPage = () => {
         </div>
         <div className="flex-1 md:w-1/2" style={{ maxHeight: "600px"}}>
           <Image src="/images/pexels-bhupendra-singh.jpg" alt="Scene Image" width="1000" height="500" 
-            objectFit='cover'
+                 style={{ objectFit: 'cover' }}
           />
         </div>
       </div>
@@ -60,7 +60,7 @@ const LandingPage = () => {
       <div className="md:flex gap-10 items-center justify-end bg-gray-100 p-16">
         <div className="flex-1 md:w-1/2" style={{ maxHeight: "600px", overflow: 'hidden' }}>
           <Image src="/images/pexels-photo-friends.jpeg" alt="Scene Image" width="1000" height="500" 
-                objectFit='cover' />
+                 style={{ objectFit: 'cover' }} />
         </div>
         <div className=" w-full md:w-1/2 text-center md:text-left p-4 text-black">
           <h2 className="text-4xl font-bold mb-3">1️⃣ 原來你也在！景點交友</h2>
