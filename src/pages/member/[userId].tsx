@@ -1,9 +1,11 @@
 // pages/member/[userId].tsx
+import { useAuth } from '../../context/AuthContext';
+import { useRef } from 'react';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import { useAuth } from '../../context/authContext';
 import Image from 'next/image';
 import ImageUploader from '@/src/components/ImageUploader';
+import DropzoneImage from '@/src/components/DropzoneImage';
 import Link from 'next/link';
 
 import { getAuth, updateProfile } from 'firebase/auth';
@@ -12,12 +14,38 @@ import firebaseServices from '../../utils/firebase';
 const { db, auth, storage } = firebaseServices; 
 import { doc, updateDoc, getDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 
+import useAuthListeners  from '@/src/hooks/useAuthListeners';
+
 const MemberPage = () => {
+
+  const [notifications, setNotifications] = useState([]);
+
+  const handleNewNotification = (message) => {
+    setNotifications((prevNotifications) => [...prevNotifications, message]);
+  };
+
+  // useAuthListeners(handleNewNotification);
+
+  const checkForNewFollowersRef = useRef(null);
+  const checkForNewMapsRef = useRef(null);
+
+  useAuthListeners(handleNewNotification, (fn) => checkForNewFollowersRef.current = fn, (fn) => checkForNewMapsRef.current = fn);
+
+  const sendNotifyBtn = async () =>{
+    if (checkForNewFollowersRef.current) {
+      await checkForNewFollowersRef.current();
+    }
+    if (checkForNewMapsRef.current) {
+      await checkForNewMapsRef.current();
+    }
+  }
+
   const router = useRouter();
 
   const { userId } = router.query;
   
   const { user, logout, loading } = useAuth();
+  const { updateUserProfile } = useAuth();
 
   const [name, setName] = useState(null);
   const [avatar, setAvatar] = useState(null);
@@ -73,9 +101,10 @@ const MemberPage = () => {
     const userRef = doc(db, 'users', userId as string);
     await updateDoc(userRef, { name: newName });
     updateProfile(getAuth().currentUser, { displayName: newName });
-    setMemberData(prev => ({ ...prev, name: newName })); 
 
+    setMemberData(prev => ({ ...prev, name: newName })); 
     setName(newName);
+    updateUserProfile({ name: newName });
   };
 
   useEffect(() => {
@@ -99,6 +128,7 @@ const MemberPage = () => {
       setMemberData(prev => ({ ...prev, avatar: avatarURL }));
 
       setAvatar(avatarURL);
+      updateUserProfile({ avatar: avatarURL });
     }
   };
 
@@ -227,9 +257,19 @@ const MemberPage = () => {
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-5">會員中心</h1>
-      {memberData.avatar && (
-        <Image className="w-24 h-24 mb-5 rounded-full" alt="profile-image" src={memberData.avatar} width="100" height="100" />
-      )}
+
+      <button className="bg-blue-500 text-white py-2 px-4 rounded" onClick={sendNotifyBtn}>接收通知</button>
+
+      <div className="notifications">
+        {notifications.map((notification, index) => (
+          <div key={index} className="notification">{notification}</div>
+        ))}
+      </div>
+      {/* {memberData.avatar && ( */}
+        <Image className="w-24 h-24 mb-5 rounded-full" 
+              alt="profile-image" 
+              src={memberData.avatar ? memberData.avatar : '/images/marker-icon.png' } width="100" height="100" />
+      {/* )} */}
     
       <h3 className="mb-4 text-lg font-semibold">
         {user && user.uid === userId ? <span>歡迎，</span> : <span>你正在造訪：</span>} 
@@ -246,6 +286,9 @@ const MemberPage = () => {
           <h4 className="mb-4 text-md">{user.email}</h4>
           <div className="mb-4"> 
             <ImageUploader onImageUpload={handleAvatarChange} />
+            <div className="mb-4"> 
+              <DropzoneImage onFileUploaded={handleAvatarChange} />
+            </div>
           </div>
           <div className="mb-4">
             <label className="block mb-2">更改名稱</label>
@@ -268,3 +311,9 @@ const MemberPage = () => {
 };
 
 export default MemberPage;
+
+{/* <a href="https://iconscout.com/3d-illustrations/short" 
+class="text-underline font-size-sm" target="_blank">Short Hair Man With Bucket Hat</a> 
+by <a href="https://iconscout.com/contributors/moehzackbean" 
+class="text-underline font-size-sm">Big Marsȟa</a> 
+on <a href="https://iconscout.com" class="text-underline font-size-sm">IconScout</a> */}
