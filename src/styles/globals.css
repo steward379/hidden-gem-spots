@@ -91,11 +91,19 @@ button {
   max-width: 100%; 
 }
 /* hard-light */
+.hard-light {
+  transition: transform 1s ease-in-out, mix-blend-mode 1s ease-in-out;
+}
 .hard-light:hover {
   mix-blend-mode: hard-light;
+  transform: scale(2);
 }
-.blend-mode:hover {
-  mix-blend-mode: hard-light;
+/* color-burn */
+.color-burn {
+  transition: transform 0.2s ease-in-out, mix-blend-mode 0.2s ease-in-out;
+}
+.color-burn:hover {
+  mix-blend-mode: color-burn;
 }
 /* images-scale-light */
 .image-hover-effect {

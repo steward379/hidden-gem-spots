@@ -113,19 +113,19 @@ export default function Home() {
   
     return (
         <div className={`bg-gradient-to-r from-sky-500 to-cyan-300`}>
-            <div className={`relative mx-auto mb-0 flex justify-center items-center  
+            <div className={`  overflow-hidden relative mx-auto mb-0 flex justify-center items-center  
                 ${!isVisible && 'h-10 opacity-0 transition-opacity duration-1000'}`}
-                style= {{ backgroundImage: 'url(/images/night.jpg)', backgroundSize: 'conver'}}
+                style= {{ backgroundImage: 'url(/images/night.jpg)', backgroundSize: 'cover'}}
                 >
                 {/* Globe Component */}
                 {/* <div className=" overflow-hidden "> */}
-                <div className="globe-container max-w-lg max-h-lg overflow-hidden">
-                 <GlobeComponent size={1500} />
+                <div className="hard-light globe-container max-w-lg max-h-lg overflow-hidden">
+                    <GlobeComponent size={1500} />
                 </div>
                 {/* </div> */}
                 {/* Content Section */}
                 <div className="content-section max-w-xl mx-auto items-center justify-center">
-                    <div className="flex flex-col items-center bg-gray-300 rounded-full p-10 backdrop-blur-sm bg-opacity-10">
+                    <div className="flex flex-col items-center bg-gray-300 rounded-full p-10 backdrop-blur-sm bg-opacity-30 hover:bg-opacity-60">
                         <Image src="/images/ballon.png" alt="Scene Image" width="300" height="300" style={{ objectFit: 'cover', mixBlendMode: 'color-burn' }} />
                         <h1 className="text-4xl mb-4 text-gray-800">Hidden Gem Spots</h1>
                         <p className="text-xl mb-6 text-gray-500">找尋你的秘密景點</p>
@@ -157,7 +157,7 @@ export default function Home() {
                     </button>
                 </div>
                 {currentTab === "popular" && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-10 z-10">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-10">
                     {paginatedMaps.map(map => (
                         <MapCard key={map.id} map={map} userId={user?.uid} />
                     ))}
