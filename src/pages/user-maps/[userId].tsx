@@ -1,4 +1,4 @@
-//user-maps/[userId].tsx
+//pages/user-maps/[userId].tsx
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { collection, query, getDocs, doc, getDoc, deleteDoc } from 'firebase/firestore';
@@ -121,8 +121,23 @@ const UserMapsPage = () => {
 
       try {
         await deleteMapAndPlaces(mapId);
-        setMaps(maps.filter(map => map.id !== mapId));
-        alert("地圖已刪除");
+        alert("刪除成功");
+
+        const updatedMaps = maps.filter(map => map.id !== mapId);
+        setMaps(updatedMaps);
+  
+        // 如果刪除的地圖在喜愛列表中，從喜愛列表中移除
+        const updatedLikedMaps = likedMaps.filter(map => map.id !== mapId);
+        setLikedMaps(updatedLikedMaps);
+
+        const likesCount = updatedMaps.reduce((sum, map) => sum + (map.likes || 0), 0);
+        const duplicatesCount = updatedMaps.reduce((sum, map) => sum + (map.duplicates || 0), 0);
+        const placesLikesCount = updatedMaps.reduce((sum, map) => sum + (map.placesLikes || 0), 0);
+  
+        setTotalLikes(likesCount); 
+        setTotalDuplicates(duplicatesCount);
+        setTotalPlaceLikes(placesLikesCount);
+
       } catch (error) {
         console.error("刪除失敗: ", error);
         alert("刪除過程中出現錯誤");
