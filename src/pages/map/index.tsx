@@ -91,6 +91,8 @@ const MapDemoPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
 
+  //show hint
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
     // const [userId, setUserId] = useState<string | null>(null);
   // userAuth
@@ -108,16 +110,6 @@ const MapDemoPage: React.FC = () => {
   const handlePlaceClose = () => {
     setSelectedPlace(null);
   };
-
-  // useEffect(() => {
-  //   const unsubscribe = onAuthStateChanged(auth, user => {
-  //     if (user) {
-  //       setUserId(user.uid); // 如果用戶已登入，保存用戶 ID
-  //     }
-  //   });
-
-  //   return () => unsubscribe();
-  // }, []);
 
   const fetchPlaces = useCallback(async () => {
     if (!userId) return;
@@ -469,10 +461,18 @@ const MapDemoPage: React.FC = () => {
   
     return `${latText}, ${lngText}`;
   };
+
+  const handlePublishClick = () => {
+    if (places.length === 0) { // 假設 places 陣列儲存著所有景點
+      showAlert('你還沒有新增景點');
+      return;
+    } 
+    Router.push('/publish-map');
+  };
   
   return (
-    <div className="flex flex-col h-screen-without-navbar md:flex-row text-black bg-gray-200">
-      <div className="md:w-2/3 w-full lg:m-10 md:m-5 m-0 border">
+    <div className="flex flex-col md:flex-row h-screen-without-navbar text-black bg-gray-200">
+      <div className="lg:w-2/3 md:w-1/2 w-full lg:m-10 md:m-5 m-0 border">
         <MapComponentWithNoSSR 
           onMarkerPlaced={handleMarkerPlaced}
           isAddingMarker={isAddingMarker} 
@@ -486,44 +486,70 @@ const MapDemoPage: React.FC = () => {
         />
       </div>
     
-      <div className="lg:overflow-auto md:overflow-auto md:w-1/3 w-full lg:mb-10 lg:mt-10 md:mt-5 mt-7 lg:mr-10 md:mr-5 lg:p-8 md:p-4 p-10 bg-white shadow rounded relative">
-        <h1 className="text-2xl font-bold text-gray-800 mb-4 mt-16 md:mt-20 lg:mt-10"> {user?.name} 的地圖</h1>
-        <div className="text-gray-600 text-sm"> 
-          點選圖標以閱讀、編輯或刪除景點，或點選新增來新增景點
+      <div className="relative lg:w-1/3 md:w-1/2 w-full lg:overflow-auto md:overflow-auto lg:mb-10 lg:mt-10 md:mt-5 mt-7
+      lg:mr-10 md:mr-5 lg:p-8 md:p-4 p-10 bg-white shadow rounded ">
+        <button
+          className="absolute top-0 left-3"
+          onClick={() => setIsCollapsed(!isCollapsed)}
+        >
+          {isCollapsed ? (
+            <div className="mb-3 mt-2">
+              <i className="fas fa-chevron-down"></i>
+              <i className="fas fa-question-circle ml-1"></i>
+              <span className="text-sm hidden lg:inline lg:ml-2 font-medium">顯示提示</span>
+            </div>
+          ): (
+            <div className="mb-3 mt-2">
+              <i className="fas fa-chevron-up"></i>
+              <i className="fas fa-question-circle ml-1"></i>
+              <span className="text-sm hidden lg:inline lg:ml-2 font-medium">隱藏提示</span>
+            </div>
+          )}
+        </button>
+        <div className={`mt-12 transition-all duration-500 ease-in-out ${isCollapsed ? 'max-h-0' : 'max-h-32'} overflow-hidden`}>
+          <h1 className="text-2xl font-bold text-gray-800 mb-4"> {user?.name} 的個人地圖</h1>
+          <div className="text-gray-600 text-sm"> 
+            點選地圖上的<span className="ml-1 mr-1">
+              <i className="fas fa-location-pin text-red-500"></i>
+              </span>以閱讀、編輯或刪除景點，或點選新增來新增景點。你也可以點選眼睛圖示來隱藏或顯示景點列表並搜尋點選。
+          </div>
         </div>
         {!isEditing && (
         <>
+
+          <button 
+            className="absolute top-6 right-5 flex items-center justify-center bg-teal-50 shadow-lg hover:bg-teal-600  py-2 px-4 rounded-lg hover:text-white"
+            onClick={handlePublishClick}
+          >
+            <i className={`fas fa-upload p-2`}></i>
+            <div className="hidden lg:flex">發佈</div>
+          </button>
+
           <button
             // onClick={() => setIsAddingMarker(!isAddingMarker)}
             onClick={toggleAddingMarker} 
-            className="rounded-full mb-5 mt-5 m-2 flex-column justify-center items-center border-2 border-dashed border-gray-300 h-24 w-24 cursor-pointer hover:border-gray-500 hover:bg-green-300"
+            className="h-16 w-16 lg:h-24 lg:w-24 rounded-full mb-5 mt-5 m-2 flex-column justify-center items-center border-2 border-dashed border-gray-300 cursor-pointer hover:border-gray-500 hover:bg-green-300"
           >
-            <i className={`fas ${isAddingMarker ? 'fa-minus' : 'fa-map-pin'}`}></i>
-            <div>{isAddingMarker ? '取消新增景點' : '新增景點'}</div>
+            <i className={`fas ${isAddingMarker ? 'fa-minus' : 'fa-location-dot'}`}></i>
+            <div className="text-sm hidden lg:block">{isAddingMarker ? '取消景點' : '新增景點'}</div>
           </button>
 
-          <div className="absolute top-3 right-40 flex items-center justify-center mb-5 mt-5">
+          <div className="absolute top-5 right-24 lg:right-40 flex items-center justify-center mb-5 mt-5">
             <label htmlFor="toggle" className="flex items-center cursor-pointer">
               <div className="relative">
                 <input type="checkbox" id="toggle" className="sr-only" onChange={() => setShowPlacesList(!showPlacesList)} checked={showPlacesList} />
-                <div className={`block w-16 h-9 rounded-full transition-colors ${showPlacesList ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                <div className={`flex items-center w-16 h-9 rounded-full transition-colors ${showPlacesList ? 'bg-green-500' : 'bg-gray-400'}`}>
+                  <i className={`fas ${showPlacesList ? 'fa-eye-slash ml-2 text-stone-500 ' : 'fa-eye ml-9 text-gray-900'} text-center`} ></i>
+                </div>
                 <div className={`dot absolute left-1 top-1 bg-white h-7 w-7 rounded-full transition transform ${showPlacesList ? 'translate-x-full' : ''}`}>
-                  <i className={`pl-1 pt-0.5 fas ${showPlacesList ? 'fa-eye' : 'fa-eye-slash'} text-gray-600 text-center`} 
-                  style={{ lineHeight: '1.5rem' }}></i>
                 </div>
               </div>
-              <div className="ml-3 text-gray-700 font-medium">
-                {showPlacesList ? '隱藏景點' : '顯示景點'}
+              <div className="ml-2 text-gray-700 font-medium text-sm hidden lg:flex">
+                <i className="fas fa-list-ul"></i>
+                {showPlacesList ? '' : ''}
               </div>
             </label>
           </div>
-
-          <Link href={`/publish-map`}>
-            <button className="absolute top-6 right-5 flex items-center justify-center bg-teal-50 shadow-lg hover:bg-teal-600  py-2 px-4 rounded-lg hover:text-white">
-              <i className={`fas fa-upload p-2`}></i> 
-              <div>發佈地圖</div>
-            </button>
-          </Link>
 
           { !newMarker && showPlacesList && (
              <div className="places-list mt-4">
@@ -630,23 +656,25 @@ const MapDemoPage: React.FC = () => {
               ))}
             </div>
             <button
-              className="absolute right-24 top-0 mb-5 mt-5 m-2 bg-blue-100 flex-column justify-center items-center border-2 border-dashed border-gray-300 rounded-full h-20 w-20 cursor-pointer hover:border-gray-500 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              title="edit-place"
+              className=" h-12 w-12  absolute right-14 top-0 mb-5 mt-5 m-2 bg-blue-100 flex-column justify-center items-center border-2 border-dashed border-gray-300 rounded-full cursor-pointer hover:border-gray-500 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
               onClick={() => handleEditClick(selectedPlace)}
             >
-              <i className="fas fa-edit"></i> 編輯
+              <i className="fas fa-edit"></i>
             </button>
 
             <button
+              title="delete-place"
               // className="m-2 px-4 py-2 bg-red-100 text-black border border-black rounded hover:bg-red-400 hover:text-white hover:border-white focus:outline-none focus:ring-2 focus:ring-blue-300"
-              className="absolute right-0 top-0 mb-5 mt-5 m-2 bg-red-100 flex-column justify-center items-center border-2 border-gray-300  rounded-full  h-20 w-20  cursor-pointer hover:border-gray-500 hover:bg-red-300 focus:outline-none focus:ring-2 focus:ring-red-500"
+              className=" h-12 w-12  absolute right-0 top-0 mb-5 mt-5 m-2 bg-red-100 flex-column justify-center items-center border-2 border-gray-300  rounded-full cursor-pointer hover:border-gray-500 hover:bg-red-300 focus:outline-none focus:ring-2 focus:ring-red-500"
               onClick={handleDeletePlace}
             >
-              <i className="fas fa-trash-alt"></i> 刪除
+              <i className="fas fa-trash-alt"></i>
             </button> 
           </div>
         </>
       )}
-
+      <div> {isAddingMarker && !newMarker && '在地圖上點選位置以新增景點'}</div>
       {newMarker && (
         <div className="p-4 bg-white rounded shadow-md">
           <h3 className="text-lg font-semibold mb-2 text-black">{isEditing ? '編輯景點' : '新增景點'}</h3>
@@ -722,7 +750,7 @@ const MapDemoPage: React.FC = () => {
           </div>
           <button
             onClick={handleSubmit}
-            className="mb-5 mt-5 m-2 bg-green-100 flex-column justify-center items-center border-2 border-dashed border-gray-300 rounded-lg h-12 w-40 cursor-pointer hover:border-green-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="mb-3 mt-5 m-2 bg-green-100 flex-column justify-center items-center border-2 border-dashed border-gray-300 rounded-lg h-12 w-40 cursor-pointer hover:border-green-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             {isEditing ? (
               <span>
@@ -730,7 +758,7 @@ const MapDemoPage: React.FC = () => {
               </span>
             ) : (
               <span>
-                <i className="fas fa-plus-circle"></i> 提交新景點
+                <i className="fas fa-upload "></i> 提交新景點
               </span>
             )}
           </button>
@@ -738,7 +766,7 @@ const MapDemoPage: React.FC = () => {
           {isEditing && (
             <button
               onClick={handleCancelEdit}
-              className="mb-5 mt-5 m-2 bg-red-100 flex-column justify-center items-center border-2 border-dashed border-gray-300 rounded-lg h-12 w-40 cursor-pointer hover:border--500 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="mb-5 m-2 bg-red-100 flex-column justify-center items-center border-2 border-dashed border-gray-300 rounded-lg h-12 w-40 cursor-pointer hover:border--500 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <span>
                 <i className="fas fa-times-circle"></i> 取消編輯
