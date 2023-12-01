@@ -114,16 +114,19 @@ export default function Home() {
     const handleClick = () => {
         isVisible ? setIsVisible(false) : setIsVisible(true);
     };
-  
+
+    // transition-container
+    // ${!isVisible && 'h-0 opacity-0 transition-opacity duration-1000'}
     return (
         <div className={`bg-gradient-to-r from-sky-500 to-cyan-300`}>
-            <div className={`  overflow-hidden relative mx-auto mb-0 flex justify-center items-center  
-                ${!isVisible && 'h-10 opacity-0 transition-opacity duration-1000'}`}
+            <div className={`custom-transition-container overflow-hidden relative mx-auto mb-0 flex justify-center items-center  
+                ${!isVisible && 'custom-hidden '}`}
+                
                 style= {{ backgroundImage: 'url(/images/night.jpg)', backgroundSize: 'cover'}}
                 >
                 {/* <div className=" overflow-hidden "> */}
-                <div className="hard-light scale-2-hard-light globe-container max-w-lg max-h-lg overflow-hidden">
-                    <GlobeComponent size={1500} />
+                <div className="hard-light globe-container max-w-lg max-h-lg overflow-hidden">
+                    <GlobeComponent />
                 </div>
                 {/* Content Section */}
                 <div className="content-section max-w-xl mx-auto items-center justify-center">
@@ -140,10 +143,10 @@ export default function Home() {
                     </div>
                 </div>
             </div>
-            <div className="mr-5 ml-5">
+            <div className="mr-5 ml-5 mt-10">
                 <div className="flex justify-center items-center">
                     <div className="mb-5 cursor-pointer text-center border-dotted border border:black rounded-full p-4 pt-9 pb-9" 
-                        onClick={()=>handleClick()}> {isVisible? '隱藏地球' : '顯示地球' } 
+                        onClick={handleClick}> {isVisible? '隱藏地球' : '顯示地球' } 
                     </div>
                 </div>
                 <div className="flex mb-4">
