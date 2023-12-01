@@ -90,16 +90,44 @@ button {
   z-index: 20; 
   max-width: 100%; 
 }
-/* hard-light */
+/* merely-hard-light */
+.hard-light-only{
+  transition: transform 0.3s ease-in-out, mix-blend-mode 1s ease-in-out;
+}
+.hard-light-only:hover {
+  mix-blend-mode: hard-light;
+  /* 放大 */
+  transform: scale(1.5);
+}
+
+/* flex-on-hover */
+.flex-on-hover {
+  transition: transform 0.7s ease-in-out;
+  transform: translateX(0); 
+}
+.flex-on-hover:hover {
+  /* display: block; */
+  transform: translateY(300px);
+}
+@media (max-width: 768px) {
+  .flex-on-hover:hover {
+    transform: translateY(150px);
+  }
+}
+
+
+/* hard-light-scale-up-lg */
 .hard-light {
   transition: transform 0.3s ease-in-out, mix-blend-mode 1s ease-in-out;
 }
 .hard-light:hover {
   mix-blend-mode: hard-light;
-  transform: scale(1.1);
+  transform: scale(1.7);
 }
-.scale-2-hard-light {
-  transform: scale(2);
+@media (max-width: 768px) {
+  .hard-light:hover {
+    transform: scale(1.1);
+  }
 }
 /* color-burn */
 .color-burn {
@@ -108,7 +136,7 @@ button {
 .color-burn:hover {
   mix-blend-mode: color-burn;
 }
-/* images-scale-light */
+/* hard-light-scale-up-sm */
 .image-hover-effect {
   transition: transform 0.2s ease-in-out, mix-blend-mode 0.2s ease-in-out;
 }
@@ -117,7 +145,7 @@ button {
   mix-blend-mode: hard-light;
   transform: scale(1.195);
 }
-/* scale for delete */
+/* scale-up-md for delete */
 .scale-2{
   transition: transform 0.1s ease-in-out, mix-blend-mode 0.1s ease-in-out;
 }
@@ -130,4 +158,17 @@ button {
 }
 .skew-card:hover {
   transform: skew(1.5deg, 1.5deg);
+}
+
+/* invisible smooth */
+.custom-transition-container {
+  transition: opacity 0.5s ease, height 0.5s ease;
+  overflow: hidden;
+  opacity: 1; /* 初始透明度 */
+  height: auto; /* 初始高度 */
+}
+
+.custom-transition-container.custom-hidden {
+  opacity: 0; /* 完全透明 */
+  height: 0; /* 高度為0 */
 }
