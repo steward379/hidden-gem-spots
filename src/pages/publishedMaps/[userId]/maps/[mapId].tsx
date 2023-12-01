@@ -23,23 +23,26 @@ const ReactQuill = dynamic(() => import('react-quill'), {
 });
 
 const PublishedMapDetail = () => {
-
-  const quillModules = {
-    toolbar: false // 這將隱藏工具列
-  };
-
   const router = useRouter();
-
-  const [mapData, setMapData] = useState(null);
-  const [selectedPlace, setSelectedPlace] = useState(null);
-
   // auth
   const { user } = useAuth();
   const { userId, mapId } = router.query;
 
-  const [totalDuplicates, setTotalDuplicates] = useState(0);
-  const [totalPlacesLikes, setTotalPlacesLikes] = useState(0);
+  // routing mode
+  const [isRoutingMode, setIsRoutingMode] = useState(false);
+
+  const quillModules = {
+    toolbar: false 
+  };
+
+  //show
+  const [showMapContent, setShowMapContent] = useState(true);
+
+  const [mapData, setMapData] = useState(null);
+  const [selectedPlace, setSelectedPlace] = useState(null);
+
   const [showPlacesList, setShowPlacesList] = useState(false);
+
 
   // search and filter
   const [searchTerm, setSearchTerm] = useState('');
@@ -49,9 +52,18 @@ const PublishedMapDetail = () => {
   const [likedPlaces, setLikedPlaces] = useState([]);
   const [showLikedPlacesList, setShowLikedPlacesList] = useState(false); 
   const [alreadyMapLiked, setAlreadyMapLiked] = useState(false);
+  const [isMapLiked, setIsMapLiked] = useState(false);
 
-  //show
-  const [showMapContent, setShowMapContent] = useState(true);
+  // total
+  const [totalDuplicates, setTotalDuplicates] = useState(0);
+  const [totalPlacesLikes, setTotalPlacesLikes] = useState(0);
+
+  // like heart changed
+  useEffect(() => {
+    if (mapData && user) {
+      setIsMapLiked(mapData.likedBy.includes(user.uid));
+    }
+  }, [mapData, user]);
 
   // get Map
   useEffect(() => {
@@ -142,6 +154,8 @@ const PublishedMapDetail = () => {
         likes: alreadyLiked ? prevData.likes - 1 : prevData.likes + 1,
         likedBy: alreadyLiked ? prevData.likedBy.filter(uid => uid !== user.uid) : [...prevData.likedBy, user.uid]
       }));
+
+      setIsMapLiked(!isMapLiked); 
     } else {
       // 未登入用戶的處理
       const likedMaps = JSON.parse(localStorage.getItem('likedMaps') || '[]');
@@ -156,7 +170,6 @@ const PublishedMapDetail = () => {
   };
   
   const handlePlaceLikeClick = async (placeId) => {
-    
     if (!user || typeof mapId !== 'string') return;
 
     if (user && typeof user.uid === 'string') {
@@ -166,7 +179,6 @@ const PublishedMapDetail = () => {
       await runTransaction(db, async (transaction) => {
         const placeDoc = await transaction.get(placeRef);
         const mapDoc = await transaction.get(mapRef);
-        const mapData = mapDoc.data();
 
         if (!placeDoc.exists()) {
           throw "Document does not exist!";
@@ -183,12 +195,14 @@ const PublishedMapDetail = () => {
         if (!mapDoc.exists()) {
           throw "Map Document does not exist!";
         }
+        const mapData = mapDoc.data();
 
         const otherPlacesLiked = mapData.publishedPlaces?.some(
           place => place.id !== placeId && (place.likedBy || []).includes(user.uid)
         );
 
         let newPlacesLikedBy;
+        
         if (alreadyLiked && !otherPlacesLiked) {
           newPlacesLikedBy = arrayRemove(user.uid);
         } else if (!alreadyLiked) {
@@ -205,7 +219,7 @@ const PublishedMapDetail = () => {
               const alreadyLiked = place.likedBy && place.likedBy.includes(user.uid);
               const updatedLikes = alreadyLiked ? place.likes - 1 : (place.likes ? place.likes + 1 : 1);
               const updatedLikedBy = alreadyLiked ? place.likedBy.filter(uid => uid !== user.uid) : [...(place.likedBy || []), user.uid];
-              return { ...place, likes: updatedLikes, likedBy: updatedLikedBy };
+              return { ...place, likes: updatedLikes, likedBy: updatedLikedBy,  isLiked: !place.isLiked  };
             }
             return place;
           });
@@ -221,10 +235,8 @@ const PublishedMapDetail = () => {
             placesLikes: newTotalPlacesLikes,
             placesLikedBy: newPlacesLikedBy ? newPlacesLikedBy : prevData.placesLikedBy
           };
-
         });
       });
- 
     } else {
         // 未登入用戶的處理
         const likedPlaces = JSON.parse(localStorage.getItem('likedPlaces') || '[]');
@@ -366,73 +378,108 @@ const PublishedMapDetail = () => {
   // 登入者是否為地圖作者
   const isMapCreator = user && mapData && user.uid === mapData.userId;
 
-    return (
-      <div className="flex flex-col h-screen-without-navbar md:flex-row text-black bg-gray-200">
-        <div className="md:w-2/3 w-full lg:m-10 md:m-5 m-0 border">
-          <MapComponentWithNoSSR 
-            places={mapData.publishedPlaces}
-            onMarkerClick={handleMarkerClick}
-            allowLikes={true}
-            allowDuplicate = {true}
-            handlePlaceLikeClick={handlePlaceLikeClick}
-            handlePlaceDuplicate={handlePlaceDuplicate}
-            selectedPlace={selectedPlace}
-          />
-        </div>
-      
-        <div className="relative lg:overflow-auto md:overflow-auto md:w-1/3 w-full lg:mb-10 lg:mt-10 md:mt-5 mt-7 lg:mr-10 md:mr-5 lg:p-8 md:p-4 p-10 bg-white shadow rounded">
-          <div className="">
-            <div className="absolute top-0 right-5 flex items-center justify-center mb-5 mt-5">
-            <label htmlFor="toggle-like" className="flex items-center cursor-pointer">
+  return (
+    <div className="flex flex-col h-screen-without-navbar md:flex-row text-black bg-gray-200">
+      <div className="md:w-2/3 w-full lg:m-10 md:m-5 m-0 border">
+        <MapComponentWithNoSSR 
+          places={mapData.publishedPlaces}
+          onMarkerClick={handleMarkerClick}
+          allowLikes={true}
+          allowDuplicate = {true}
+          handlePlaceLikeClick={handlePlaceLikeClick}
+          handlePlaceDuplicate={handlePlaceDuplicate}
+          selectedPlace={selectedPlace}
+          isRoutingMode={isRoutingMode}
+          setIsRoutingMode={setIsRoutingMode}
+        />
+      </div>
+    
+      <div className="relative lg:overflow-auto md:overflow-auto md:w-1/3 w-full lg:mb-10
+      lg:mt-10 md:mt-5 mt-7 lg:mr-10 md:mr-5 lg:p-8 md:p-4 p-10 bg-white shadow rounded">
+        <div className="">
+          <div className="absolute top-0 right-5 flex items-center justify-center mb-5 mt-5">
+          <button onClick={() => setIsRoutingMode(!isRoutingMode)}>
+              {isRoutingMode ? "離開路徑模式" : "規劃路徑"}
+            </button>
+          <label htmlFor="toggle-like" className="flex items-center cursor-pointer">
+            <div className="relative">
+              <input type="checkbox" id="toggle-like" className="sr-only" onChange={() =>{setShowPlacesList(!showPlacesList);
+              setShowLikedPlacesList(false);}} checked={showPlacesList} />
+              <div className={`flex items-center w-16 h-9 rounded-full transition-colors ${showPlacesList ? 'bg-sky-500' : 'bg-gray-400'}`}>
+                <i className={`fas ${showPlacesList ? 'fa-eye-slash ml-2 text-white ' : 'fa-eye ml-9 text-gray-900'} text-center`} ></i>
+              </div>
+              <div className={`dot absolute left-1 top-1 bg-white h-7 w-7 rounded-full transition transform ${showPlacesList ? 'translate-x-full' : ''}`}>
+              </div>
+            </div>
+            <div className="ml-1.5 text-gray-700 font-medium  hidden lg:inline">
+              <i className="fas fa-list ml-1 mr-1"></i>
+              {showPlacesList ? '' : ''}
+            </div>
+          </label>
+          </div>
+          <div className="absolute top-0 right-30 flex items-center justify-center mb-5 mt-5">
+            <label htmlFor="toggle" className="flex items-center cursor-pointer">
               <div className="relative">
-                <input type="checkbox" id="toggle-like" className="sr-only" onChange={() =>{setShowPlacesList(!showPlacesList);
-                setShowLikedPlacesList(false);}} checked={showPlacesList} />
-                <div className={`block w-16 h-9 rounded-full transition-colors ${showPlacesList ? 'bg-sky-500' : 'bg-gray-400'}`}></div>
-                <div className={`dot absolute left-1 top-1 bg-white h-7 w-7 rounded-full transition transform ${showPlacesList ? 'translate-x-full' : ''}`}>
-                  <i className={`pl-1 pt-0.5 fas ${showPlacesList ? 'fa-eye' : 'fa-eye-slash'} text-gray-600 text-center`} style={{ lineHeight: '1.5rem' }}></i>
+                <input type="checkbox" id="toggle" className="sr-only" onChange={() => {setShowLikedPlacesList(!showLikedPlacesList);
+                setShowPlacesList(false);}} checked={showLikedPlacesList} />
+                <div className={`flex items-center w-16 h-9 rounded-full transition-colors ${showLikedPlacesList ? 'bg-red-400' : 'bg-gray-400'}`}>
+                  <i className={`fas ${showLikedPlacesList ? 'fa-heart-broken ml-2.5 text-white ' : 'fa-heart ml-9 text-white'} text-center`} ></i>
+                </div>
+                <div className={`dot absolute left-1 top-1 bg-white h-7 w-7 rounded-full transition transform ${showLikedPlacesList ? 'translate-x-full' : ''}`}>
                 </div>
               </div>
-              <div className="ml-3 text-gray-700 font-medium">
-                {showPlacesList ? '隱藏景點' : '顯示景點'}
+              <div className="ml-1.5 text-gray-700 font-medium hidden lg:inline">
+              <i className="fas fa-list ml-1 mr-1"></i>
+                {showLikedPlacesList ? '' : ''}
               </div>
             </label>
-            </div>
-            <div className="absolute top-0 right-30 flex items-center justify-center mb-5 mt-5">
-              <label htmlFor="toggle" className="flex items-center cursor-pointer">
-                <div className="relative">
-                  <input type="checkbox" id="toggle" className="sr-only" onChange={() => {setShowLikedPlacesList(!showLikedPlacesList);
-                  setShowPlacesList(false);}} checked={showLikedPlacesList} />
-                  <div className={`block w-16 h-9 rounded-full transition-colors ${showLikedPlacesList ? 'bg-red-500' : 'bg-gray-400'}`}></div>
-                  <div className={`dot absolute left-1 top-1 bg-white h-7 w-7 rounded-full transition transform ${showLikedPlacesList ? 'translate-x-full' : ''}`}>
-                    <i className={`pl-1 pt-0.5 fas ${showLikedPlacesList ? 'fa-heart' :  'fa-hand-peace'} text-gray-600 text-center`} 
-                       style={{ lineHeight: '1.5rem' }}></i>
-                  </div>
-                </div>
-                <div className="ml-3 text-gray-700 font-medium">
-                  {showLikedPlacesList ? '隱藏所愛' : '顯示所愛'}
-                </div>
-              </label>
-            </div>
           </div>
-          
-          <h1 className="text-2xl font-bold mb-3 mt-9">{mapData.title}</h1>
+        </div>
+        
+        <div className="flex items-center justify-center mb-2 mt-3">
+          <h1 className="text-2xl font-bold  ">
+            <i className="fas fa-map-location-dot mr-2 mt-5"></i>
+            {mapData.title}
+          </h1>
+          <button className="rounded-2xl bg-sky-100 p-2 mt-3 ml-3"
+              onClick={()=>{ setShowMapContent(!showMapContent)}}> 
+            {showMapContent ? (
+              <>
+                <i className="fas fa-eye-slash mr-2"></i>
+                <span className="hidden lg:inline text-sm"> 隱藏文章 </span>
+              </>
+              ):( 
+              <>
+                <i className="fas fa-map-location mr-2"></i>
+                <span  className="hidden lg:inline"> 地圖文章 </span>
+              </>
+            )}
+          </button>
+        </div>
 
-          <div className="flex items-center mb-4">
-            <button title="favorite-button-map" className="m-2 mr-2" onClick={handleLikeClick}>
-              <Image src="/images/heart.png" alt="Like" width="20" height="20" />
+        <div className="flex items-center mb-4">
+          <div className="flex items-center mr-2">
+            <button title="favorite-button-map" className="m-2 mr-1.5" onClick={handleLikeClick}>
+            {isMapLiked ? (
+              <i className="fas fa-heart text-red-500"></i>
+            ) : (
+              <i className="far fa-heart"></i>
+            )}
             </button>
-            <span>{mapData.likes} 枚 喜愛</span>
-            {/* <button title="duplicate-button-map" className="m-2 mr-2"> */}
-              {/* <Image src="/images/copy.png" alt="Like" width="20" height="20" /> */}
-            {/* </button> */}
-            <span className="m-2">{totalDuplicates} 次景點複製</span> 
-            <span className="m-2">{totalPlacesLikes} 次景點喜愛 </span>
+            <span>{mapData.likes} </span>
           </div>
 
-        <button className="rounded-2xl bg-sky-100 p-2 mb-4"
-            onClick={()=>{ setShowMapContent(!showMapContent)}}> 
-          {showMapContent ? '隱藏地圖內容' : '顯示地圖內容'}
-        </button>
+          <div className="border-2 p-1 rounded-3xl">
+            <span className="text-sm ml-2"> 景點共 </span>
+            <span className="ml-1 text-sm">{totalDuplicates} 次 
+              <i className="fas fa-copy ml-1 mr-1 text-black"></i>
+            </span> 
+            <span className="ml-1 text-sm">{totalPlacesLikes} 次
+              <i className="fas fa-heart ml-1 mr-1 text-black"></i>
+            </span>
+          </div>
+        </div>
+
         {showMapContent && (
           <div className="relative border shadow p-3 rounded-3xl">
             <div className="flex-column items-center mb-4">
@@ -461,9 +508,8 @@ const PublishedMapDetail = () => {
             </div>
             {isMapCreator && ( 
                 <Link href={`/edit-map/${user.uid}/${mapId}`} >
-                  <button className="absolute bg-sky-100 right-0 top-0 rounded-full mb-5 mt-5 m-2 flex-column justify-center items-center border-2 border-dashed border-gray-300  h-24 w-24 cursor-pointer hover:border-gray-500 hover:bg-green-300" >  
-                  <i className="fa fa-edit"></i>
-                    <div>編輯地圖</div>
+                  <button title="edit-map-content" className=" h-12 w-12 absolute bg-sky-100 right-0 top-0 rounded-full mb-5 mt-5 m-2 flex-column justify-center items-center border-2 border-dashed border-gray-300 cursor-pointer hover:border-gray-500 hover:bg-green-300" >  
+                    <i className="fa fa-edit"></i>
                   </button>
                 </Link>
             )}
@@ -526,6 +572,13 @@ const PublishedMapDetail = () => {
                         {mapData.publishedPlaces.map(place => (
                           <div key={place.id} className="hover:bg-green-100 place-item flex justify-between items-center p-2 border border-gray-300 rounded m-2 cursor-pointer" onClick={() => handleMarkerClick(place)}>
                             {place.name}
+                            <button onClick={() => handlePlaceLikeClick(place.id)}>
+                              {place.isLiked ? (
+                                <i className="fas fa-heart text-red-500"></i>
+                              ) : (
+                                <i className="far fa-heart"></i>
+                              )}
+                            </button>
                           </div>
                         ))}
                       </>
