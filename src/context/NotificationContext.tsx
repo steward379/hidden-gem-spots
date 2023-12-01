@@ -1,7 +1,7 @@
 // src/context/NotificationContext.js
 import React, { createContext, useContext, useState } from 'react';
 
-const NotificationContext = createContext();
+const NotificationContext = createContext(null);
 
 export const NotificationProvider = ({ children }) => {
   const [lastFollowers, setLastFollowers] = useState([]);
