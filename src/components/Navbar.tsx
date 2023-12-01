@@ -59,13 +59,20 @@ const Navbar: React.FC = () => {
 
                   <div className={`flex-grow items-center mt-4 sm:mt-0 ${isMenuOpen ? 'flex' : 'hidden'} sm:flex flex-col sm:flex-row`}>
                     <Link href="/home">
-                      <div className="sm:ml-4">探索</div>
+                      <div className="sm:ml-4 lg:ml-10 md:ml-7">
+                        <i className="fas fa-compass"></i>
+                        <span className="ml-2">探索</span>
+                      </div>
                     </Link>
                     <Link href={`/user-maps/${user.uid}`}>
-                      <div className="mt-4 sm:mt-0 sm:ml-4">我的地圖</div>
+                      <div className="mt-4 sm:mt-0 sm:ml-4 lg:ml-5 md:ml-3">
+                        我的地圖
+                      </div>
                     </Link>
                     <Link href="/map">
-                      <div className="mt-4 sm:mt-0 sm:ml-4">管理景點</div>
+                      <div className="mt-4 sm:mt-0 sm:ml-4 lg:ml-5 md:ml-3">
+                        管理景點
+                        </div>
                     </Link>
                     <button title="logout" onClick={logout} className="mt-4 sm:mt-0 sm:ml-4">
                       <i className="fas fa-arrow-right-from-bracket"></i>
