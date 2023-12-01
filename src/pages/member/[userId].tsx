@@ -16,12 +16,16 @@ import { doc, updateDoc, getDoc, arrayUnion, arrayRemove } from 'firebase/firest
 
 import useAuthListeners  from '@/src/hooks/useAuthListeners';
 
+type AuthListener = (message: any) => void | {};
+
 const MemberPage = () => {
 
   const [notifications, setNotifications] = useState([]);
 
   const handleNewNotification = (message) => {
     setNotifications((prevNotifications) => [...prevNotifications, message]);
+
+    return {}; //avoid type error
   };
 
   // useAuthListeners(handleNewNotification);
