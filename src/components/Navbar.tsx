@@ -45,7 +45,7 @@ const Navbar: React.FC = () => {
                 <>
                   <Link href={`/member/${user.uid}`}>
                     <div className="flex items-center cursor-pointer">
-                        <div className="hard-light bg-yellow-500 relative w-12 h-12 rounded-full overflow-hidden">
+                        <div className="image-hover-effect bg-yellow-500 relative w-12 h-12 rounded-full overflow-hidden">
                           <Image 
                             src={user.avatar || '/images/marker-icon.png'} 
                             alt="User avatar" 
