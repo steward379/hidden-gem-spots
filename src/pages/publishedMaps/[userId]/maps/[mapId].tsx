@@ -387,7 +387,7 @@ const PublishedMapDetail = () => {
               <div className="relative">
                 <input type="checkbox" id="toggle-like" className="sr-only" onChange={() =>{setShowPlacesList(!showPlacesList);
                 setShowLikedPlacesList(false);}} checked={showPlacesList} />
-                <div className={`block w-16 h-9 rounded-full transition-colors ${showPlacesList ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                <div className={`block w-16 h-9 rounded-full transition-colors ${showPlacesList ? 'bg-sky-500' : 'bg-gray-400'}`}></div>
                 <div className={`dot absolute left-1 top-1 bg-white h-7 w-7 rounded-full transition transform ${showPlacesList ? 'translate-x-full' : ''}`}>
                   <i className={`pl-1 pt-0.5 fas ${showPlacesList ? 'fa-eye' : 'fa-eye-slash'} text-gray-600 text-center`} style={{ lineHeight: '1.5rem' }}></i>
                 </div>
@@ -402,9 +402,9 @@ const PublishedMapDetail = () => {
                 <div className="relative">
                   <input type="checkbox" id="toggle" className="sr-only" onChange={() => {setShowLikedPlacesList(!showLikedPlacesList);
                   setShowPlacesList(false);}} checked={showLikedPlacesList} />
-                  <div className={`block w-16 h-9 rounded-full transition-colors ${showLikedPlacesList ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                  <div className={`block w-16 h-9 rounded-full transition-colors ${showLikedPlacesList ? 'bg-red-500' : 'bg-gray-400'}`}></div>
                   <div className={`dot absolute left-1 top-1 bg-white h-7 w-7 rounded-full transition transform ${showLikedPlacesList ? 'translate-x-full' : ''}`}>
-                    <i className={`pl-1 pt-0.5 fas ${showLikedPlacesList ? 'fa-love' : 'fa-eye-slash'} text-gray-600 text-center`} 
+                    <i className={`pl-1 pt-0.5 fas ${showLikedPlacesList ? 'fa-heart' :  'fa-hand-peace'} text-gray-600 text-center`} 
                        style={{ lineHeight: '1.5rem' }}></i>
                   </div>
                 </div>
