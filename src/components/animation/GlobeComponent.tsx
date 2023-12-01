@@ -3,7 +3,7 @@ import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import gsap from 'gsap';
 
-const GlobeComponent = ({size = 900}) => {
+const GlobeComponent = () => {
   const globeContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -25,7 +25,7 @@ const GlobeComponent = ({size = 900}) => {
     // window.addEventListener('resize', resizeRenderer);
 
     renderer.setClearColor(0xffffff, 0);
-    renderer.setSize(size, size);
+    renderer.setSize(1100, 1100);
     renderer.setPixelRatio(window.devicePixelRatio);
     globeContainerRef.current.appendChild(renderer.domElement);
 
@@ -113,16 +113,17 @@ const GlobeComponent = ({size = 900}) => {
     //  bg-gradient-to-r  from-blue-500 to-cyan-400 w-16
     // css: container
     <div className="m-0">
-    <div className="container mx-auto justify-center items-center"
-      style={{ height: '700px' }}
-    > 
+      {/* no flex */}
+      <div className="container mx-auto justify-center flex items-center"
+        style={{ height: '700px' }}
+      > 
     {/* css : wrapper */}
       <div className="wrapper flex flex-col lg:flex-column items-center">    
         {/* <div className="text-red text-6xl mb-8 lg:mb-0"> */}<div>
           {/* <h1>Hidden Gem Spots</h1> */}
         </div>
         <div className="globe-total-container relative">
-          <div ref={globeContainerRef} id="globe-container"></div>
+          <div ref={globeContainerRef} id="globe-container" className="flex-on-hover"></div>
           {/* <div id="globe-shadow" className="w-48 h-2.5 bg-black/5 rounded-full mx-auto"></div> */}
         </div>
       </div>
