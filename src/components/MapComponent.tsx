@@ -9,9 +9,8 @@ import 'leaflet/dist/leaflet.css';
 import 'leaflet-geosearch/dist/geosearch.css'; // geosearch_css
 import 'leaflet-minimap/dist/Control.MiniMap.min.css'; // minimap_css
 import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
-
 // function
-import { decimalToDms } from '../utils/decimalCoordinates'
+import { decimalToDms, formatCoordinates } from '../utils/decimalCoordinates'
 // conponents
 import AlertModal from './AlertModal';
 // zustand
@@ -20,7 +19,6 @@ import useGooglePlacesStore from '../store/googlePlacesStore';
 import { categoryMapping } from '../constants';
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
-
 L.Icon.Default.mergeOptions({
   iconUrl: '/images/marker-add.png', 
   iconRetinaUrl: '/images/marker-add.png',
@@ -32,26 +30,8 @@ L.Icon.Default.mergeOptions({
   shadowSize: [20, 20] 
 });
 
-const formatCoordinates = (lat, lng) => {
-  const latText = Math.round(lat * 10000) / 10000;
-  const lngText = Math.round(lng * 10000) / 10000;
 
-  // const latText = roundedLat >= 0 ? `${roundedLat} N` : `${Math.abs(roundedLat)} S`;
-  // const lngText = roundedLng >= 0 ? `${roundedLng} E` : `${Math.abs(roundedLng)} W`;
-
-  return `${latText}, ${lngText}`;
-};
-
-// TypeScript Options
-
-// interface MapComponentProps {
-//   // ... 其他 props
-//   selectedPlace: Place | null;
-// }
-
-// const MapComponent: React.FC<MapComponentProps> = ({ 
 const MapComponent = ({ 
-  // places
   places = [], 
   selectedPlace = null,
   // interaction
@@ -60,40 +40,36 @@ const MapComponent = ({
   isAddingMarker = false, 
   onMarkerClick = undefined, 
   onCancel = undefined, 
-  // status
+
   isEditing = false, 
   isPublishing = false,
   onAddToPublish = undefined,
   // onRemoveFromPublish = undefined,
   // publishedPlaces = [],
-  // like and duplicate
   allowLikes = false, 
   allowDuplicate = false,
   showInteract = true,
   handlePlaceLikeClick = (string) => {},
   handlePlaceDuplicate = (string) => {},
-  // routing machine mode
   setIsRoutingMode = null,
   isRoutingMode = false,
   isFreeMode = false,
   onRouteCalculated = undefined,
   onModeChange = undefined
 }) => {
-
   // zustand
   const { googlePlace, clearGooglePlace } = useGooglePlacesStore();
-
-  // Taipei as default
+  // Taipei 101
   const defaultLat = 25.0330;
   const defaultLng = 121.5654;
 
   const [isAlertOpen, setIsAlertOpen] = useState(false);
-  const [alertMessage, setAlertMessage] = useState('');
   const [ showDeleteConfirm, setShowDeleteConfirm ] = useState(false);
-  const showAlert = (message) => {
-    setAlertMessage(message);
-    setIsAlertOpen(true);
-  };
+  const [alertMessage, setAlertMessage] = useState('');
+    // const showAlert = (message) => {
+  //   setAlertMessage(message);
+  //   setIsAlertOpen(true);
+  // };
 
   const mapRef = useRef(null);
   const [map, setMap] = useState(null)
@@ -104,14 +80,15 @@ const MapComponent = ({
   const [userPosition, setUserPosition] = useState(null);
 
   const handleFetchLocationClick = () => {
-    // setShouldFetchLocation(true);
     fetchLocation();
   };
 
   // routing machine
   const [routeWaypoints, setRouteWaypoints] = useState([]);
   const [routingControl, setRoutingControl] = useState(null);
+  
   const [waypoints, setWaypoints] = useState([]);
+
   const [startMarker, setStartMarker] = useState(null);
   const [endMarker, setEndMarker] = useState(null);
   const [freeModeMarkers, setFreeModeMarkers] = useState([]);
@@ -124,14 +101,6 @@ const MapComponent = ({
       routingControl.setWaypoints(routeWaypoints);
     }
   }, [routeWaypoints, routingControl, isRoutingPaused]);
-
-  // kill new markers while canceling
-  useEffect(() => {
-    if (!isAddingMarker && newMarker ) {
-      newMarker.remove(); // 移除標記
-      setNewMarker(null); // 重置 newMarker 狀態
-    }
-  }, [isAddingMarker, newMarker, map]);
 
   const customFreeIcon = useMemo(() => {
     return new L.Icon({
@@ -161,6 +130,14 @@ const MapComponent = ({
     });
   }, []); 
 
+  // kill new markers while canceling
+  useEffect(() => {
+    if (!isAddingMarker && newMarker ) {
+      newMarker.remove(); 
+      setNewMarker(null); 
+    }
+  }, [isAddingMarker, newMarker, map]);
+
   // const [googleMarkers, setGoogleMarkers] = useState([]);
 
   // const removeGoogleMarker = (markerToRemove) => {
@@ -176,60 +153,10 @@ const MapComponent = ({
   //   setGoogleMarkers([]);
   // };
 
-  useEffect(() => {
-    if (map && googlePlace) {
-      const tempMarker = L.marker([googlePlace.coordinates.lat, googlePlace.coordinates.lng], {
-        icon: customGoogleIcon,
-      }).addTo(map);
-  
-      const popupContent = `
-        <div class="text-center z-20" style="width:150px">
-          <b class="text-lg">${googlePlace.name}</b>
-          <p>${googlePlace.description == undefined ? '' : googlePlace.description }</p>
-          <div class="${categoryMapping[googlePlace.category]?.color || 'bg-gray-200'} p-2 rounded mb-4 w-full">
-            ${categoryMapping[googlePlace.category]?.text || '不明'}
-          </div>
-          <div class="coordinates-container p-2">
-            <span>${formatCoordinates(googlePlace.coordinates.lat, googlePlace.coordinates.lng)}</span>
-          </div>
-          <button id="delete-temp-marker-btn" class="mt-2 bg-red-500 text-white py-1 px-2 rounded hover:bg-red-600 focus:outline-none">刪除標記</button>
-        </div>
-      `;
-  
-      // tempMarker.bindPopup(popupContent).openPopup();
-      tempMarker.bindPopup(popupContent);
-
-      // setTimeout(() => {
-      //   const deleteButton = document.getElementById('delete-marker-btn');
-      //   if (deleteButton) {
-      //     deleteButton.addEventListener('click', () => {
-      //       tempMarker.remove();
-      //     });
-      //   }
-      // }, 0);
-
-      tempMarker.on('popupopen', () => {
-        const deleteButton = document.getElementById('delete-temp-marker-btn');
-        if (deleteButton) {
-          deleteButton.onclick = () => {
-            tempMarker.remove();
-            clearGooglePlace();
-          };
-        }
-      });
-
-      // setGoogleMarkers(prevMarkers => [...prevMarkers, tempMarker]);
-  
-      // 清理效果
-      return () => {
-        tempMarker.remove();
-      };
-    }
-  }, [map, googlePlace, customGoogleIcon, clearGooglePlace]);
-
   // fetch user location while permitted
   const fetchLocation = () => {
     setLoading(true);
+
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const newPosition = [position.coords.latitude, position.coords.longitude];
@@ -298,16 +225,120 @@ const MapComponent = ({
 
   const updateRoute = useCallback((place) => {
     if (isRoutingMode && !isRoutingPaused) {
-      // 處理添加到路徑的邏輯
       setRouteWaypoints(prev => [...prev, L.latLng(place.coordinates.lat, place.coordinates.lng)]);
       if (onRouteCalculated) {
         onRouteCalculated([...routeWaypoints, L.latLng(place.coordinates.lat, place.coordinates.lng)]);
       }
     } else if (!isRoutingMode)  {
-      // 非路徑模式時的默認行為（顯示詳情）
       onMarkerClick(place);
     }
   }, [isRoutingMode, onRouteCalculated, routeWaypoints, onMarkerClick, isRoutingPaused]);
+
+  // 'places' rendering
+  useEffect(() => {
+    if (!map || !places) return;
+    // if (map && places) {
+
+    // markers.forEach(marker => {
+    //   marker.remove();
+    // });
+
+    const newMarkers = places.map(place => {
+      if (!place.coordinates) return null;
+
+      const category = categoryMapping[place.category] || { color: 'bg-gray-200', text: '不明' }; 
+
+      const latestImages = place.images.slice(-2);
+      const imageElements = latestImages.map(image => 
+        `<div style="margin: 5px;">
+            <img src=${image} alt="${place.name}" style="max-width:100%; max-height:100px;" />
+          </div>`
+      ).join('');
+
+      // function copyCoordinates(elementId) {
+      //   const coords = document.getElementById(elementId).innerText;
+      //   navigator.clipboard.writeText(coords)
+      //     .then(() => showAlert('座標已複製到剪貼簿'))
+      //     .catch(err => console.error('無法複製座標:', err));
+      // }
+
+      const popupContent = `
+      <div key=${place.id} class="text-center z-20" style="width:150px">
+        <b class="text-lg">${place.name}</b>
+        <p>${place.description}</p>
+        ${imageElements}
+
+        <div class="mt-3 mb-3 text-sm text-gray-500 ${category.color} p-1 rounded">${category.text}</div>
+        <div class="flex flex-wrap gap-2" >
+        ${
+          place.tags && place.tags.filter(tag => tag.trim().length > 0).length > 0 
+          ? place.tags.map(tag => `<span class="text-xs bg-blue-200 px-2 py-1 rounded-full">${tag}</span>`).join(' ')
+          : ''
+        }
+        </div>
+        ${!isPublishing && showInteract ? `
+          <div class="flex items-center justify-center mt-2 ">
+            <div class="like-section flex items-center justify-center mr-2">
+              ${allowLikes ? `<button class="like-button" data-place-id="${place.id}">
+                <i class="fas fa-heart text-lg text-red-300 hover:text-red-500"></i>
+              </button>` : ''}
+              <span class="like-count ml-2"> ${place.likes} 枚</span>
+            </div>
+            <div class="duplicate-section flex items-center justify-center">
+              ${allowDuplicate ? `<button class="duplicate-button mr-2" data-place-id="${place.id}">
+                <i class="fas fa-copy text-lg text-gray-600 hover:text-green-500"></i>
+              </button>` : ''}
+              <span class="duplicate-count">${place.duplicates} 次</span>
+            </div>
+          </div>` : ''
+      }
+        <div class="coordinates-container p-2">
+          <span id="coords-${place.id}">${formatCoordinates(place.coordinates.lat, place.coordinates.lng)}</span>
+        </div>
+      </div>
+      `;
+
+      const markerElement = L.marker(place.coordinates, {
+        // @ts-ignore
+              id: place.id,
+              draggable: isPublishing, // 如果在發佈模式，標記可拖動
+      }).addTo(map)
+        .bindPopup(popupContent)
+
+      if (isPublishing) {
+        // 如果處於發佈模式，則設置拖放事件監聽
+        markerElement.on('dragend', (event) => {
+          const marker = event.target;
+          const position = marker.getLatLng();
+          onAddToPublish({ ...place, coordinates: position });
+        });
+      } else {
+        // 如果不是發佈模式，綁定點擊事件或其他事件
+        markerElement.on('click', () => onMarkerClick(place));
+      }
+
+      markerElement.on('click', () => updateRoute(place));
+      return markerElement;
+    })
+    // }).filter(marker => marker !== null);
+    
+    // setMarkers(newMarkers); 
+
+    // return () => {
+    //   newMarkers.forEach(marker => marker.remove()); 
+    // };
+
+    setMarkers(prevMarkers => {
+      // 移除舊的標記
+      prevMarkers.forEach(marker => {
+        if (!newMarkers.includes(marker) && !freeModeMarkers.includes(marker)) {
+          marker.remove();
+        }
+      });
+      return newMarkers;
+    });
+  
+  }, [map, places, allowDuplicate, allowLikes, freeModeMarkers, isPublishing, onMarkerClick, onAddToPublish, showInteract, updateRoute]);
 
   //search bar & mini map 
   useEffect(() => {
@@ -389,116 +420,59 @@ const MapComponent = ({
     }
   }, [map, isEditing, customIcon]);
 
-  // const [placesUpdated, setPlacesUpdated] = useState(false);
-
-  // 'places' rendering
+  // google marker
   useEffect(() => {
-    if (!map || !places) return;
-    // if (map && places) {
-
-    // markers.forEach(marker => {
-    //   marker.remove();
-    // });
-
-    const newMarkers = places.map(place => {
-      if (!place.coordinates) return null;
-
-      const category = categoryMapping[place.category] || { color: 'bg-gray-200', text: '不明' }; 
-
-      const latestImages = place.images.slice(-2);
-      const imageElements = latestImages.map(image => 
-        `<div style="margin: 5px;">
-            <img src=${image} alt="${place.name}" style="max-width:100%; max-height:100px;" />
-          </div>`
-      ).join('');
-
-      // function copyCoordinates(elementId) {
-      //   const coords = document.getElementById(elementId).innerText;
-      //   navigator.clipboard.writeText(coords)
-      //     .then(() => showAlert('座標已複製到剪貼簿'))
-      //     .catch(err => console.error('無法複製座標:', err));
-      // }
-
+    if (map && googlePlace) {
+      const tempMarker = L.marker([googlePlace.coordinates.lat, googlePlace.coordinates.lng], {
+        icon: customGoogleIcon,
+      }).addTo(map);
+  
       const popupContent = `
-      <div key=${place.id} class="text-center z-20" style="width:150px">
-        <b class="text-lg">${place.name}</b>
-        <p>${place.description}</p>
-        ${imageElements}
-
-        <div class="mt-3 mb-3 text-sm text-gray-500 ${category.color} p-1 rounded">${category.text}</div>
-        <div class="flex flex-wrap gap-2" >
-        ${
-          place.tags && place.tags.filter(tag => tag.trim().length > 0).length > 0 
-          ? place.tags.map(tag => `<span class="text-xs bg-blue-200 px-2 py-1 rounded-full">${tag}</span>`).join(' ')
-          : ''
-        }
+        <div class="text-center z-20" style="width:150px">
+          <b class="text-lg">${googlePlace.name}</b>
+          <p>${googlePlace.description == undefined ? '' : googlePlace.description }</p>
+          <div class="${categoryMapping[googlePlace.category]?.color || 'bg-gray-200'} p-2 rounded mb-4 w-full">
+            ${categoryMapping[googlePlace.category]?.text || '不明'}
+          </div>
+          <div class="coordinates-container p-2">
+            <span>${formatCoordinates(googlePlace.coordinates.lat, googlePlace.coordinates.lng)}</span>
+          </div>
+          <button id="delete-temp-marker-btn" class="mt-2 bg-red-500 text-white py-1 px-2 rounded hover:bg-red-600 focus:outline-none">刪除標記</button>
         </div>
-        ${!isPublishing && showInteract ? `
-          <div class="flex items-center justify-center mt-2 ">
-            <div class="like-section flex items-center justify-center mr-2">
-              ${allowLikes ? `<button class="like-button" data-place-id="${place.id}">
-                <i class="fas fa-heart text-lg text-red-300 hover:text-red-500"></i>
-              </button>` : ''}
-              <span class="like-count ml-2"> ${place.likes} 枚</span>
-            </div>
-            <div class="duplicate-section flex items-center justify-center">
-              ${allowDuplicate ? `<button class="duplicate-button mr-2" data-place-id="${place.id}">
-                <i class="fas fa-copy text-lg text-gray-600 hover:text-green-500"></i>
-              </button>` : ''}
-              <span class="duplicate-count">${place.duplicates} 次</span>
-            </div>
-          </div>` : ''
-      }
-        <div class="coordinates-container p-2">
-          <span id="coords-${place.id}">${formatCoordinates(place.coordinates.lat, place.coordinates.lng)}</span>
-        </div>
-      </div>
       `;
+  
+      // tempMarker.bindPopup(popupContent).openPopup();
+      tempMarker.bindPopup(popupContent);
 
-      const markerElement = L.marker(place.coordinates, {
-            //@ts-ignore
-              id: place.id,
-              draggable: isPublishing, // 如果在發佈模式，標記可拖動
-      }).addTo(map)
-        .bindPopup(popupContent)
+      // setTimeout(() => {
+      //   const deleteButton = document.getElementById('delete-marker-btn');
+      //   if (deleteButton) {
+      //     deleteButton.addEventListener('click', () => {
+      //       tempMarker.remove();
+      //     });
+      //   }
+      // }, 0);
 
-      if (isPublishing) {
-        // 如果處於發佈模式，則設置拖放事件監聽
-        markerElement.on('dragend', (event) => {
-          const marker = event.target;
-          const position = marker.getLatLng();
-          onAddToPublish({ ...place, coordinates: position });
-        });
-      } else {
-        // 如果不是發佈模式，綁定點擊事件或其他事件
-        markerElement.on('click', () => onMarkerClick(place));
-      }
-
-      markerElement.on('click', () => updateRoute(place));
-
-      return markerElement;
-
-    })
-    // }).filter(marker => marker !== null);
-    
-    // setMarkers(newMarkers); 
-
-    // return () => {
-    //   newMarkers.forEach(marker => marker.remove());
-    // };
-
-    setMarkers(prevMarkers => {
-      // 移除舊的標記
-      prevMarkers.forEach(marker => {
-        if (!newMarkers.includes(marker) && !freeModeMarkers.includes(marker)) {
-          marker.remove();
+      tempMarker.on('popupopen', () => {
+        const deleteButton = document.getElementById('delete-temp-marker-btn');
+        if (deleteButton) {
+          deleteButton.onclick = () => {
+            tempMarker.remove();
+            clearGooglePlace();
+          };
         }
       });
-      return newMarkers;
-    });
-  
-  }, [map, places, allowDuplicate, allowLikes, freeModeMarkers, isPublishing, onMarkerClick, onAddToPublish, showInteract, updateRoute]);
-  
+
+      // setGoogleMarkers(prevMarkers => [...prevMarkers, tempMarker]);
+      
+      return () => {
+        tempMarker.remove();
+      };
+    }
+  }, [map, googlePlace, customGoogleIcon, clearGooglePlace]);
+
+
+  // const [placesUpdated, setPlacesUpdated] = useState(false);
 
   useEffect(() => {
     places.forEach(place => {
@@ -669,6 +643,7 @@ const MapComponent = ({
       const existingMarker = freeModeMarkers.find(marker => marker.getLatLng().equals(event.latlng));
 
       if (!existingMarker) {
+
       const newMarker = L.marker(event.latlng, {
         icon: customFreeIcon,
         draggable: true
