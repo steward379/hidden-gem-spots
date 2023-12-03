@@ -15,7 +15,10 @@ import DropzoneImage from '../../components/DropzoneImage';
 import GooglePlaces from '../../components/GooglePlaces';
 import { useDispatch } from 'react-redux';
 import { setPlacesRedux } from '../../store/slices/placesSlice';
-import { categoryMapping } from '../../constants'
+import { categoryMapping } from '../../constants';
+import { formatCoordinates, decimalToDms } from '../../utils/decimalCoordinates'
+
+import RainbowButtonModule from '@/src/styles/rainbowButton.module.css';
 // import { Place } from '../../types/Place';
 // import { NewMarkerData } from '../../types/NewMarkerData';
 export interface Place {
@@ -29,6 +32,7 @@ export interface Place {
     lng: number;
   };
   images: string[];
+  createdTime?: string;
   likes?: number;
   likedBy?: string[];
   duplicates?: number;
@@ -39,6 +43,33 @@ const MapComponentWithNoSSR = dynamic(
   { ssr: false }
 );
 const MapDemoPage: React.FC = () => {
+
+  const [googlePlacesSearchForNewMarker, setGooglePlacesSearchForNewMarker] = useState(false);
+
+  const toggleGooglePlacesSearch = (value: boolean, forNewMarker = false) => {
+    if (forNewMarker) {
+      setGooglePlacesSearchForNewMarker(value);
+      setGooglePlacesSearch(false);
+    } else {
+      setGooglePlacesSearch(value);
+      setGooglePlacesSearchForNewMarker(false);
+    }
+  };
+
+  const handleSelectPlaceForNewMarker = (place: Place) => {
+    // 處理新標記的選擇
+    // 例如，可以更新 newMarker 的狀態或進行其他處理
+    // setNewMarker(place);
+    // toggleGooglePlacesSearch(false);
+  };
+
+  const handleGooglePlacesForNewMarker = () => {
+    if (newMarker) {
+      setLatitude(newMarker.coordinates.lat.toString());
+      setLongitude(newMarker.coordinates.lng.toString());
+      toggleGooglePlacesSearch(true, true);
+    }
+  };
 
   const [hideAddingMarker, setHideAddingMarker] = useState(false);
   const [latitude, setLatitude] = useState('');
@@ -69,6 +100,26 @@ const MapDemoPage: React.FC = () => {
 
   const [isCollapsed, setIsCollapsed] = useState(false);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5; // 您可以根據需要調整每頁顯示的項目數
+  
+  const filteredPlaces = places?.filter(place =>
+    (place.name.toLowerCase().includes(searchTerm.trim().toLowerCase()) ||
+    place.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))) &&
+    (place.category === selectedCategory || selectedCategory === '')
+  );
+
+  // 計算分頁
+  const indexOfLastPlace = currentPage * itemsPerPage;
+  const indexOfFirstPlace = indexOfLastPlace - itemsPerPage;
+  const currentPlaces = filteredPlaces.slice(indexOfFirstPlace, indexOfLastPlace);
+
+  // 計算總頁數
+  const totalPages = Math.ceil(filteredPlaces.length / itemsPerPage);
+
+  // 切換頁面函數
+  const paginate = (pageNumber) => setCurrentPage(pageNumber)
+
   const { user } = useAuth();
   let userId = user?.uid;
   
@@ -78,7 +129,6 @@ const MapDemoPage: React.FC = () => {
   };
   const handlePlaceSelect = (place: Place) => {
     setSelectedPlace(place);
-    setGooglePlacesSearch(false);
   };
   const handlePlaceClose = () => {
     setSelectedPlace(null);
@@ -113,12 +163,12 @@ const MapDemoPage: React.FC = () => {
     setNewMarker({ coordinates, name: '', description: '', tags: '', category: '', images: [] });
   };
 
+  // Delete: Place
   const handleDeletePlace = async () => {
     if (selectedPlace) {
       setShowDeleteConfirm(true);
     }
   };
-
   const confirmDelete = async () => {
     if (selectedPlace) {
       const placeRef = doc(db, `users/${userId}/places`, selectedPlace.id);
@@ -139,35 +189,16 @@ const MapDemoPage: React.FC = () => {
     setImages([...images, file]);
   };
 
-  const decimalToDms = (decimalLat: number, decimalLng: number): string => {
-    // 緯度轉換
-    const degreesLat = parseInt(decimalLat.toString());
-    const minutesLat = parseInt(((decimalLat - degreesLat) * 60).toString());
-    const secondsLat = (((decimalLat - degreesLat) * 3600) % 60).toFixed(1);
-
-    // 經度轉換
-    const degreesLng = parseInt(decimalLng.toString());
-    const minutesLng = parseInt(((decimalLng - degreesLng) * 60).toString());
-    const secondsLng = (((decimalLng - degreesLng) * 3600) % 60).toFixed(1);
-
-    // 組合成度分秒格式
-    const latDirection = decimalLat >= 0 ? "N" : "S";
-    const lngDirection = decimalLng >= 0 ? "E" : "W";
-
-    console.log(`${Math.abs(degreesLat)}°${Math.abs(minutesLat)}'${secondsLat}"${latDirection}+${Math.abs(degreesLng)}°${Math.abs(minutesLng)}'${secondsLng}"${lngDirection}`)
-
-    return `${Math.abs(degreesLat)}°${Math.abs(minutesLat)}'${secondsLat}"${latDirection}+${Math.abs(degreesLng)}°${Math.abs(minutesLng)}'${secondsLng}"${lngDirection}`;
-  };
-
   const toggleAddingMarker = () => {
     if (isAddingMarker) {
-      handleCancel(); // 如果正在新增景點，則取消並重置狀態
+      handleCancel();
+      setGooglePlacesSearchForNewMarker(false); // 如果正在新增景點，則取消並重置狀態
     } else {
       setIsAddingMarker(true); // 否則，開始新增景點
     }
   };
   
-  // cancel adding sites
+  // cancel Adding
   const handleCancel = () => {
     setIsAddingMarker(false);
     setNewMarker(null);
@@ -196,22 +227,20 @@ const MapDemoPage: React.FC = () => {
     });
   } 
 
+  // DELETE: Images
   const handleRemoveImage = async (index: number, imageSrc: string) => {
-
     if (typeof previewImages[index] === 'string') {
       const imageUrl = previewImages[index];
       if (imageUrl.startsWith('blob:')) {
         URL.revokeObjectURL(imageUrl); // 釋放 Blob URL
       }
-      // 移除對應的檔案物件
       setImages(images.filter((_, i) => i !== index));
-      // 移除對應的預覽圖片
       setPreviewImages(previewImages.filter((_, i) => i !== index));
     }
 
-    // 移除對應的檔案物件
     const newImages = [...images];
     newImages.splice(index, 1);
+
     setImages(newImages);
   };
 
@@ -357,11 +386,8 @@ const MapDemoPage: React.FC = () => {
         }
       }
     }
-      
     // });
-    
     // await Promise.all(deletePromises);
-
     setIsEditing(false);
     setSelectedPlace(null);
     setNewMarker(null);
@@ -369,13 +395,12 @@ const MapDemoPage: React.FC = () => {
     setPreviewImages([]);
   };
 
-  // 儲存使用者的新地點
+  // CREATE : place
   const createNewPlace = async ()=> {
     if (!userId || !newMarker) return;
 
     try {
       const imageUrls = await Promise.all(images.map(file => uploadImage(file, userId, newMarker.name)));
-
       const newPlace =  {
         name: newMarker.name,
         description: newMarker.description,
@@ -400,22 +425,20 @@ const MapDemoPage: React.FC = () => {
       showAlert("新增景點失敗");
       console.error("Error adding document: ", e);
     }
-
     setPreviewImages([]);
     setImages([]);
   };
 
+
   const handleSubmit = async() => {
     if (!newMarker || !userId) return;
 
-    // 檢查文字欄位是否有效（不僅僅是空格）
     const isFieldValid = (field) => field && field.trim().length > 0;
-
     if (!isFieldValid(newMarker.name)){
       showAlert('請填寫標題');
       return;
     } else if (!isFieldValid(newMarker.description)) {
-      showAlert('請填寫內容');
+      showAlert('請填寫內容與選擇類別');
       return;
     } else if (!isFieldValid(newMarker.category)) {
       showAlert('請選擇類別');
@@ -424,8 +447,7 @@ const MapDemoPage: React.FC = () => {
       showAlert('確定有在地圖上標記位置嗎？');
       return;
     }
-
-    console.log('提交景點信息：', newMarker);
+    console.log("提交景點信息：", newMarker);
 
     if (isEditing && selectedPlace) {
       await updatePlace(selectedPlace.id);
@@ -452,21 +474,16 @@ const MapDemoPage: React.FC = () => {
     return () => unsubscribe();
   }, [userId]);
 
-  const filteredPlaces = places?.filter(place =>
-    (place.name.toLowerCase().includes(searchTerm.trim().toLowerCase()) ||
-    place.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))) &&
-    (place.category === selectedCategory || selectedCategory === '')
-  );
 
-  const formatCoordinates = (lat, lng) => {
-    const latText = Math.round(lat * 10000) / 10000;
-    const lngText = Math.round(lng * 10000) / 10000;
+  // const formatCoordinates = (lat, lng) => {
+  //   const latText = Math.round(lat * 10000) / 10000;
+  //   const lngText = Math.round(lng * 10000) / 10000;
   
-    // const latText = roundedLat >= 0 ? `${roundedLat} N` : `${Math.abs(roundedLat)} S`;
-    // const lngText = roundedLng >= 0 ? `${roundedLng} E` : `${Math.abs(roundedLng)} W`;
+  //   // const latText = roundedLat >= 0 ? `${roundedLat} N` : `${Math.abs(roundedLat)} S`;
+  //   // const lngText = roundedLng >= 0 ? `${roundedLng} E` : `${Math.abs(roundedLng)} W`;
   
-    return `${latText}, ${lngText}`;
-  };
+  //   return `${latText}, ${lngText}`;
+  // };
   const handlePublishClick = () => {
     if (places.length === 0) { // 假設 places 陣列儲存著所有景點
       showAlert('你還沒有新增景點');
@@ -480,21 +497,31 @@ const MapDemoPage: React.FC = () => {
   const showAddingMarkerAction = () => {
     setHideAddingMarker(false);
   }
-  const handleGooglePlaces = (lat, lng) => {
-    setLatitude(selectedPlace.coordinates.lat);
-    setLongitude(selectedPlace.coordinates.lng);
-    setGooglePlacesSearch(true);
+  const handleGooglePlaces = (lat: number, lng: number) => {
+  if(selectedPlace){
+      setLatitude(selectedPlace.coordinates.lat);
+      setLongitude(selectedPlace.coordinates.lng)
+      toggleGooglePlacesSearch(true);
+    }
   }
 
-  useEffect(() => {
-    setGooglePlacesSearch(false);
-  }, [selectedPlace]);
+  // 清除 Google Places 事件
+  // useEffect(() => {
+  //   setGooglePlacesSearch(false);
+    
+  // }, [selectedPlace, newMarker]);
 
+  // setGooglePlacesSearchForNewMarker(false);
 
   // // 回調函數
   const handleSelectPlace = (googlePlaceMigrate) => {
-  //   setSelectedPlace(googlePlaceMigrate);
+    // setSelectedPlace(googlePlaceMigrate);
   };
+
+  const closeGooglePlacesSearch = () => {
+    setGooglePlacesSearch(false);
+    setGooglePlacesSearchForNewMarker(false);
+  }
 
   return (
     <div className="flex flex-col md:flex-row h-screen-without-navbar text-black bg-gray-200">
@@ -533,10 +560,14 @@ const MapDemoPage: React.FC = () => {
             </div>
           )}
         </button>
-        <button onClick={() => setIsRoutingMode(!isRoutingMode)}>
-              {isRoutingMode ? "離開路徑模式" : "規劃路徑"}
+        <button title="route-mode"
+                className={`my-5 lg:mt-16 ${RainbowButtonModule.rainbowButton}`}
+                onClick={() => setIsRoutingMode(!isRoutingMode)}
+                // @ts-ignore
+                alt= {`${isRoutingMode ? "離開路徑模式" : "規劃路徑"}`}
+                >
         </button>
-        <div className={`mt-12 transition-all duration-500 ease-in-out ${isCollapsed ? 'max-h-0' : 'max-h-32'} overflow-hidden`}>
+        <div className={`transition-all duration-500 ease-in-out ${isCollapsed ? 'max-h-0' : 'max-h-32'} overflow-hidden`}>
           <h1 className="text-2xl font-bold text-gray-800 mb-4"> {user?.name} 的個人地圖</h1>
           <div className="text-gray-600 text-sm"> 
             點選地圖上的<span className="ml-1 mr-1">
@@ -569,8 +600,9 @@ const MapDemoPage: React.FC = () => {
                 className="relative h-16 w-16 lg:h-24 lg:w-24 rounded-full mb-5 mt-5 m-2 flex-column justify-center items-center border-2 border-dashed border-gray-300 cursor-pointer hover:border-gray-500 hover:bg-green-300"
               >
                 <i className={`fas ${isAddingMarker ? 'fa-minus' : 'fa-location-dot'}`}></i>
-                <div className="text-sm hidden lg:block">{isAddingMarker ? '取消景點' : '新增景點'}</div>
+                <div className="text-sm hidden lg:block">{isAddingMarker ? '取消新增' : '新增景點'}</div>
               </button>
+              <div> {isAddingMarker && !newMarker && '在地圖上點選位置以新增景點'}</div>
             </>
           )}
 
@@ -625,24 +657,52 @@ const MapDemoPage: React.FC = () => {
                 <p className="text-center">找不到符合條件的景點</p>
                 ) : (
                 <>
-                {filteredPlaces.map(place => (
+                {/* {filteredPlaces.map(place => (
                     <div key={place.id} className="hover:bg-yellow-50 place-item flex justify-between items-center p-2 border border-gray-300 rounded m-2 cursor-pointer" 
                         onClick={() => handlePlaceSelect(place)}>
                         {place.name}
                     </div>
+                  ))} */}
+                {currentPlaces.map((place) => (
+                  <div key={place.id} className="hover:bg-green-100 place-item flex justify-between items-center p-2 border border-gray-300 rounded m-2 cursor-pointer"
+                      onClick={() => handlePlaceSelect(place)}>
+                    {place.name}
+                  </div>
+                ))}
+                <div className="pagination">
+                  {Array.from({ length: totalPages }, (_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => paginate(index + 1)}
+                      className={`px-3 py-1 m-1 ${currentPage === index + 1 ? 'bg-blue-500 text-white' : 'bg-white text-black'}`}
+                    >
+                      {index + 1}
+                    </button>
                   ))}
+                </div>
                 </>
                 )}
               </>
               ) : (
               <>
                 <h2 className="text-lg font-semibold mb-2">景點列表</h2>
-                {places.map((place) => (
-                  <div key={place.id} className="hover:bg-green-100 place-item flex justify-between items-center p-2 border border-gray-300 rounded m-2 cursor-pointer"
-                      onClick={() => handlePlaceSelect(place)}>
-                    {place.name}
-                  </div>
+                {currentPlaces.map((place) => (
+                    <div key={place.id} className="hover:bg-green-100 place-item flex justify-between items-center p-2 border border-gray-300 rounded m-2 cursor-pointer"
+                        onClick={() => handlePlaceSelect(place)}>
+                      {place.name}
+                    </div>
                 ))}
+                  <div className="pagination">
+                    {Array.from({ length: totalPages }, (_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => paginate(index + 1)}
+                        className={`px-3 py-1 m-1 ${currentPage === index + 1 ? 'bg-blue-500 text-white' : 'bg-white text-black'}`}
+                      >
+                        {index + 1}
+                      </button>
+                    ))}
+                  </div>
               </>
               )
             }
@@ -686,21 +746,27 @@ const MapDemoPage: React.FC = () => {
                   />
                 </div>
               ))}
+              <div className="mb-3">{formatCoordinates(selectedPlace.coordinates.lat, selectedPlace.coordinates.lng)}</div>
             </div>
             <div className="flex">
               <Link href={`https://www.google.com/maps/place/?q=place_name:${selectedPlace.name}`} target="_blank" passHref>
-                <button className="flex items-center mr-3 bg-blue-100 text-black p-2 rounded hover:bg-blue-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-300">
-                  <i className="fab fa-google mr-1"></i><i className="fa-solid fa-magnifying-glass mr-1.5"></i><span className="hidden lg:flex"> 名稱</span>
+                <button className="flex items-center mr-3 bg-blue-100 text-black px-3 py-2  rounded hover:bg-blue-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-300">
+                  <i className="fab fa-google mr-1"></i>
+                  <i className="fa-solid fa-magnifying-glass mr-1"></i>
+                  <i className="fas fa-external-link mr-1.5"></i>
+                  <div className="hidden lg:flex"> 名稱</div>
                 </button>
               </Link>
               <Link href={`https://www.google.com/maps/place/${decimalToDms(selectedPlace.coordinates.lat, selectedPlace.coordinates.lng)}`} target="_blank" passHref>
                 <button className="flex items-center mr-3 bg-blue-100 text-black p-2 rounded hover:bg-blue-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-300">
-                  <i className="fab fa-google mr-1"></i><i className="fa-solid fa-globe mr-1.5"></i><span className="hidden lg:flex"> 經緯</span>
+                  <i className="fab fa-google mr-1"></i>
+                  <i className="fa-solid fa-globe mr-1.5"></i>
+                  <i className="fas fa-external-link mr-1.5"></i>
+                  <span className="hidden lg:flex"> 經緯</span>
                 </button>
               </Link>
               <button className="flex items-center mr-3 bg-blue-100 text-black p-2 rounded hover:bg-blue-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-300"
                       onClick={handleGooglePlaces}>
-                <i className="fab fa-google mr-1"></i>
                 <i className="fa-solid fa-directions mr-1.5"></i>
                 <span className="hidden lg:flex"> 附近景點</span>
               </button>
@@ -722,17 +788,8 @@ const MapDemoPage: React.FC = () => {
               <i className="fas fa-trash-alt"></i>
             </button> 
           </div>
-          {googlePlacesSearch && (
-            <GooglePlaces 
-            latitude={latitude} 
-            longitude={longitude}
-            isFetchingAPI={googlePlacesSearch} 
-            onSelectPlace={handleSelectPlace}
-            />
-          )}
         </>
       )}
-      <div> {isAddingMarker && !newMarker && '在地圖上點選位置以新增景點'}</div>
       {newMarker && (
         <div className="p-4 bg-white rounded shadow-md">
           <h3 className="text-lg font-semibold mb-2 text-black">{isEditing ? '編輯景點' : '新增景點'}</h3>
@@ -791,7 +848,6 @@ const MapDemoPage: React.FC = () => {
             ))}
           </div>
           <div> 
-
             <span>{formatCoordinates(newMarker.coordinates.lat, newMarker.coordinates.lng)}</span>
             <div className="flex mt-2">
               <Link href={`https://www.google.com/maps/place/?q=place_name:${newMarker.name}`} target="_blank" passHref>
@@ -804,6 +860,15 @@ const MapDemoPage: React.FC = () => {
                   <i className="fab fa-google mr-1"></i><i className="fa-solid fa-globe mr-1.5"></i><span className="hidden lg:flex"> 經緯</span>
                 </button>
               </Link>
+              <button className={`${RainbowButtonModule.rainbowButton} flex items-center mr-3 bg-blue-100 text-black p-2 rounded hover:bg-blue-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-300`}
+                      onClick={handleGooglePlacesForNewMarker}
+                      // @ts-ignore
+                      alt={`附近景點`}
+                      >
+                {/* <i className="fab fa-google mr-1"></i> */}
+                {/* <i className="fa-solid fa-directions mr-1.5"></i> */}
+                {/* <span className="hidden lg:flex"> 附近景點</span> */}
+              </button>
             </div>
           </div>
           <button
@@ -833,7 +898,35 @@ const MapDemoPage: React.FC = () => {
           )}
         </div>
       )}
+      { (googlePlacesSearch || googlePlacesSearchForNewMarker) ? ( 
+        <div className="flex justify-center">
+          <button title="close-search" 
+                  // tailwind beautiful buttons
+                  className="button px-4 py-3 bg-slate-300 rounded-full mt-3 " 
+                  onClick={closeGooglePlacesSearch}> 
+                  關閉 Google Places        
+          </button>   
+        </div> ):''}
+        
+      {googlePlacesSearch && (
+        <GooglePlaces 
+          latitude={latitude} 
+          longitude={longitude}
+          isFetchingAPI={googlePlacesSearch} 
+          onSelectPlace={handleSelectPlace}
+          placeName={selectedPlace?.name}
+        />
+      )}
+      {googlePlacesSearchForNewMarker && (
+        <GooglePlaces 
+          latitude={latitude} 
+          longitude={longitude}
+          isFetchingAPI={googlePlacesSearchForNewMarker} 
+          onSelectPlace={handleSelectPlaceForNewMarker}
+        />
+      )}
     </div>
+    
     <AlertModal 
       isOpen={showDeleteConfirm}
       onClose={() => setShowDeleteConfirm(false)}
