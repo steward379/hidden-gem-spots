@@ -2,17 +2,20 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import L from 'leaflet';
+import 'leaflet-minimap';
+import 'leaflet-routing-machine';
+import { GeoSearchControl, OpenStreetMapProvider } from 'leaflet-geosearch';
 import 'leaflet/dist/leaflet.css';
-// npm install @types/leaflet-geosearch
 import 'leaflet-geosearch/dist/geosearch.css'; // geosearch_css
 import 'leaflet-minimap/dist/Control.MiniMap.min.css'; // minimap_css
-
-// routing machine
-import 'leaflet-routing-machine';
 import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
 
-import { GeoSearchControl, OpenStreetMapProvider } from 'leaflet-geosearch';
-import 'leaflet-minimap';
+// function
+import { decimalToDms } from '../utils/decimalCoordinates'
+// conponents
+import AlertModal from './AlertModal';
+// zustand
+import useGooglePlacesStore from '../store/googlePlacesStore';
 
 import { categoryMapping } from '../constants';
 
@@ -29,6 +32,15 @@ L.Icon.Default.mergeOptions({
   shadowSize: [20, 20] 
 });
 
+const formatCoordinates = (lat, lng) => {
+  const latText = Math.round(lat * 10000) / 10000;
+  const lngText = Math.round(lng * 10000) / 10000;
+
+  // const latText = roundedLat >= 0 ? `${roundedLat} N` : `${Math.abs(roundedLat)} S`;
+  // const lngText = roundedLng >= 0 ? `${roundedLng} E` : `${Math.abs(roundedLng)} W`;
+
+  return `${latText}, ${lngText}`;
+};
 
 // TypeScript Options
 
@@ -39,19 +51,21 @@ L.Icon.Default.mergeOptions({
 
 // const MapComponent: React.FC<MapComponentProps> = ({ 
 const MapComponent = ({ 
+  // places
   places = [], 
+  selectedPlace = null,
+  // interaction
+  onMapClick = undefined, 
   onMarkerPlaced  = undefined, 
   isAddingMarker = false, 
-  onCancel = undefined, 
   onMarkerClick = undefined, 
-  onMapClick = undefined, 
-  selectedPlace = null,
+  onCancel = undefined, 
+  // status
   isEditing = false, 
-  // publishing
   isPublishing = false,
   onAddToPublish = undefined,
-  onRemoveFromPublish = undefined,
-  publishedPlaces = [],
+  // onRemoveFromPublish = undefined,
+  // publishedPlaces = [],
   // like and duplicate
   allowLikes = false, 
   allowDuplicate = false,
@@ -59,14 +73,27 @@ const MapComponent = ({
   handlePlaceLikeClick = (string) => {},
   handlePlaceDuplicate = (string) => {},
   // routing machine mode
-  isRoutingMode = false,
   setIsRoutingMode = null,
+  isRoutingMode = false,
   isFreeMode = false,
-  onRouteCalculated = undefined
+  onRouteCalculated = undefined,
+  onModeChange = undefined
 }) => {
+
+  // zustand
+  const { googlePlace, clearGooglePlace } = useGooglePlacesStore();
+
   // Taipei as default
   const defaultLat = 25.0330;
   const defaultLng = 121.5654;
+
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
+  const [ showDeleteConfirm, setShowDeleteConfirm ] = useState(false);
+  const showAlert = (message) => {
+    setAlertMessage(message);
+    setIsAlertOpen(true);
+  };
 
   const mapRef = useRef(null);
   const [map, setMap] = useState(null)
@@ -98,12 +125,6 @@ const MapComponent = ({
     }
   }, [routeWaypoints, routingControl, isRoutingPaused]);
 
-  //alert component, should be separated
-  const [alertMessage, setAlertMessage] = useState('');
-  const showAlert = (message) => {
-    setAlertMessage(message);
-  };
-
   // kill new markers while canceling
   useEffect(() => {
     if (!isAddingMarker && newMarker ) {
@@ -112,6 +133,99 @@ const MapComponent = ({
     }
   }, [isAddingMarker, newMarker, map]);
 
+  const customFreeIcon = useMemo(() => {
+    return new L.Icon({
+      iconUrl: '/images/marker-free.png', 
+      iconRetinaUrl: '/images/marker-free.png',
+      shadowUrl: '/images/marker-shadow.png',
+      
+      // iconSize: [25, 41], 
+      iconSize: [25, 35], 
+      iconAnchor: [12, 35],
+      popupAnchor: [-3, -36], 
+      shadowSize: [41, 41] 
+    });
+  }, []); 
+
+  const customGoogleIcon = useMemo(() => {
+    return new L.Icon({
+      iconUrl: '/images/marker-icon-2x.png', 
+      iconRetinaUrl: '/images/marker-icon-2x.png',
+      shadowUrl: '/images/marker-shadow.png',
+      
+      // iconSize: [25, 41], 
+      iconSize: [25, 35], 
+      iconAnchor: [12, 35],
+      popupAnchor: [-3, -36], 
+      shadowSize: [41, 41] 
+    });
+  }, []); 
+
+  // const [googleMarkers, setGoogleMarkers] = useState([]);
+
+  // const removeGoogleMarker = (markerToRemove) => {
+  //   setGoogleMarkers(prevMarkers => {
+  //     const updatedMarkers = prevMarkers.filter(marker => marker !== markerToRemove);
+  //     markerToRemove.remove(); 
+  //     return updatedMarkers; 
+  //   });
+  // };
+
+    // const clearGoogleMarkers = () => {
+  //   googleMarkers.forEach(marker => marker.remove());
+  //   setGoogleMarkers([]);
+  // };
+
+  useEffect(() => {
+    if (map && googlePlace) {
+      const tempMarker = L.marker([googlePlace.coordinates.lat, googlePlace.coordinates.lng], {
+        icon: customGoogleIcon,
+      }).addTo(map);
+  
+      const popupContent = `
+        <div class="text-center z-20" style="width:150px">
+          <b class="text-lg">${googlePlace.name}</b>
+          <p>${googlePlace.description == undefined ? '' : googlePlace.description }</p>
+          <div class="${categoryMapping[googlePlace.category]?.color || 'bg-gray-200'} p-2 rounded mb-4 w-full">
+            ${categoryMapping[googlePlace.category]?.text || '不明'}
+          </div>
+          <div class="coordinates-container p-2">
+            <span>${formatCoordinates(googlePlace.coordinates.lat, googlePlace.coordinates.lng)}</span>
+          </div>
+          <button id="delete-temp-marker-btn" class="mt-2 bg-red-500 text-white py-1 px-2 rounded hover:bg-red-600 focus:outline-none">刪除標記</button>
+        </div>
+      `;
+  
+      // tempMarker.bindPopup(popupContent).openPopup();
+      tempMarker.bindPopup(popupContent);
+
+      // setTimeout(() => {
+      //   const deleteButton = document.getElementById('delete-marker-btn');
+      //   if (deleteButton) {
+      //     deleteButton.addEventListener('click', () => {
+      //       tempMarker.remove();
+      //     });
+      //   }
+      // }, 0);
+
+      tempMarker.on('popupopen', () => {
+        const deleteButton = document.getElementById('delete-temp-marker-btn');
+        if (deleteButton) {
+          deleteButton.onclick = () => {
+            tempMarker.remove();
+            clearGooglePlace();
+          };
+        }
+      });
+
+      // setGoogleMarkers(prevMarkers => [...prevMarkers, tempMarker]);
+  
+      // 清理效果
+      return () => {
+        tempMarker.remove();
+      };
+    }
+  }, [map, googlePlace, customGoogleIcon, clearGooglePlace]);
 
   // fetch user location while permitted
   const fetchLocation = () => {
@@ -232,20 +346,27 @@ const MapComponent = ({
             <p class="font-bold">${locationName}</p> <!-- 顯示位置名稱 -->
             <p>經度: ${marker.getLatLng().lng.toFixed(5)}</p>
             <p>緯度: ${marker.getLatLng().lat.toFixed(5)}</p>
+
+            <a href=${`https://www.google.com/maps/place/${decimalToDms(marker.getLatLng().lat, marker.getLatLng().lng)}`} target="_blank" passHref>
+              <button className="bg-blue-100 text-black p-2 rounded hover:bg-blue-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-300">
+                在 G 中查看
+              </button>
+            </a>
             <button id="delete-marker-btn" class="mt-2 bg-red-500 text-white py-1 px-2 rounded hover:bg-red-600 focus:outline-none">刪除標記</button>
           </div>
         `;
 
-        marker.bindPopup(popupContent).openPopup();  
+        // marker.bindPopup(popupContent).openPopup();
+        marker.bindPopup(popupContent);
 
-        setTimeout(() => {
-          const deleteButton = document.getElementById('delete-marker-btn');
+        marker.on('popupopen', () => {
+          const deleteButton = marker.getPopup().getElement().querySelector('#delete-marker-btn');
           if (deleteButton) {
-            deleteButton.addEventListener('click', () => {
+            deleteButton.onclick = () => {
               marker.remove();
-            });
+            };
           }
-        }, 0);
+        });
       });
 
       // 初始化迷你地圖
@@ -268,7 +389,7 @@ const MapComponent = ({
     }
   }, [map, isEditing, customIcon]);
 
-  const [placesUpdated, setPlacesUpdated] = useState(false);
+  // const [placesUpdated, setPlacesUpdated] = useState(false);
 
   // 'places' rendering
   useEffect(() => {
@@ -291,22 +412,12 @@ const MapComponent = ({
           </div>`
       ).join('');
 
-      const formatCoordinates = (lat, lng) => {
-        const latText = Math.round(lat * 10000) / 10000;
-        const lngText = Math.round(lng * 10000) / 10000;
-      
-        // const latText = roundedLat >= 0 ? `${roundedLat} N` : `${Math.abs(roundedLat)} S`;
-        // const lngText = roundedLng >= 0 ? `${roundedLng} E` : `${Math.abs(roundedLng)} W`;
-      
-        return `${latText}, ${lngText}`;
-      };
-
-      function copyCoordinates(elementId) {
-        const coords = document.getElementById(elementId).innerText;
-        navigator.clipboard.writeText(coords)
-          .then(() => alert('座標已複製到剪貼簿'))
-          .catch(err => console.error('無法複製座標:', err));
-      }
+      // function copyCoordinates(elementId) {
+      //   const coords = document.getElementById(elementId).innerText;
+      //   navigator.clipboard.writeText(coords)
+      //     .then(() => showAlert('座標已複製到剪貼簿'))
+      //     .catch(err => console.error('無法複製座標:', err));
+      // }
 
       const popupContent = `
       <div key=${place.id} class="text-center z-20" style="width:150px">
@@ -403,9 +514,9 @@ const MapComponent = ({
         if (likeIcon) {
           if (place.isLiked) {
             likeIcon.classList.remove('far', 'fa-heart');
-            likeIcon.classList.add('fas', 'fa-heart', 'text-red-500');
+            likeIcon.classList.add('fas', 'fa-heart', 'text-red-200');
           } else {
-            likeIcon.classList.remove('fas', 'fa-heart', 'text-red-500');
+            likeIcon.classList.remove('fas', 'fa-heart', 'text-red-200');
             likeIcon.classList.add('far', 'fa-heart');
           }
           popup.setContent(doc.documentElement.innerHTML);
@@ -496,19 +607,28 @@ const MapComponent = ({
   }, [isEditing, map, newMarker]);
 
   // MapLink routing machine
-  const updateFreeModeRoute = useCallback(() => {
-    const waypoints = freeModeMarkers.map(marker => marker.getLatLng());
-    if (routingControl && !isRoutingPaused) {
-      routingControl.setWaypoints(waypoints);
+  const updateFreeModeRoute = useCallback((freeMarkers) => {
+    if (!isRoutingPaused) {
+      // const waypoints = freeModeMarkers.map(marker => marker.getLatLng());
+      const waypoints = freeMarkers.map(freeMarker => freeMarker.getLatLng());
+
+      if (routingControl) {
+        routingControl.setWaypoints(waypoints);
+      }
     }
-  }, [freeModeMarkers, routingControl, isRoutingPaused]);
+  }, [routingControl, isRoutingPaused]);
 
   // 自由模式下移除標記的函數，未使用
   const removeMarker = useCallback((marker) => {
     marker.remove();
-    setFreeModeMarkers(prev => prev.filter(m => m !== marker));
-    updateFreeModeRoute();
-  }, [updateFreeModeRoute]);
+    setFreeModeMarkers(prev => {
+      const updatedMarkers = prev.filter(m => m !== marker);
+      if (!isRoutingPaused) {
+        updateFreeModeRoute(updatedMarkers); // 只有當不在暫停模式時才更新路徑
+      }
+      return updatedMarkers;
+    });
+  }, [updateFreeModeRoute, isRoutingPaused]);
 
   // 自由模式下添加標記的函數，未使用
   const onRouteMapClick = useCallback((event) => {
@@ -543,10 +663,14 @@ const MapComponent = ({
       //     onRouteCalculated([startMarker.getLatLng(), marker.getLatLng()]);
       //   }
       // }
-    } else if (isFreeMode){
+    } else if (isFreeMode && !isRoutingPaused){
+    // } else if (isFreeMode){
 
+      const existingMarker = freeModeMarkers.find(marker => marker.getLatLng().equals(event.latlng));
+
+      if (!existingMarker) {
       const newMarker = L.marker(event.latlng, {
-        icon: customIcon,
+        icon: customFreeIcon,
         draggable: true
       }).addTo(map);
 
@@ -568,10 +692,18 @@ const MapComponent = ({
 
       newMarker.bindPopup(tempDiv);
 
-      setFreeModeMarkers(prev => [...prev, newMarker]);
-      updateFreeModeRoute();
+      // setFreeModeMarkers(prev => [...prev, newMarker]);
+      // updateFreeModeRoute();
+      setFreeModeMarkers(prev => {
+        const updatedMarkers = [...prev, newMarker];
+
+        updateFreeModeRoute(updatedMarkers); // 立即更新路徑
+
+        return updatedMarkers;
+      });
+    }
     }     
-  }, [map, customIcon, isRoutingMode, isFreeMode, updateFreeModeRoute, removeMarker, isRoutingPaused]);
+  }, [map, isRoutingMode, isFreeMode, updateFreeModeRoute, removeMarker, isRoutingPaused, freeModeMarkers, customFreeIcon]);
 
 
   useEffect(() => {
@@ -628,7 +760,7 @@ const MapComponent = ({
         onMapClick(); // 確保 onMapClick 存在且是一個函數
       }
 
-      if (isAddingMarker) {
+      if (isAddingMarker && !isFreeMode) {
         if (newMarker) {
           newMarker.setLatLng(e.latlng); // 改變位置
         } else {
@@ -661,7 +793,7 @@ const MapComponent = ({
     return () => {
       map.off('click', onClick);
     };
-  }, [map, onMarkerPlaced, isAddingMarker, newMarker, onMapClick, isEditing, onCancel]);
+  }, [map, onMarkerPlaced, isAddingMarker, newMarker, onMapClick, isEditing, onCancel, isFreeMode]);
 
 
   //  search marker
@@ -680,17 +812,21 @@ const MapComponent = ({
     }
   }, [map, selectedPlace, markers]);
 
-  useEffect(() => {
-    if(isLoading) {
-      showAlert('Loading');
-    }
-  }, [isLoading]); 
+  // useEffect(() => {
+  //   if(isLoading) {
+  //     showLoadingAlert('Loading');
+  //   }
+  // }, [isLoading]); 
 
   // routing machine
-  const eraseRouting = () => {
-    confirm("erase routing?");
+  const confirmEraseRouting = () => {
 
+    if (isFreeMode) {
+      freeModeMarkers.forEach(marker => marker.remove()); // 移除所有自由模式的標記
+      setFreeModeMarkers([]); // 清空標記數組
+    }
     setRouteWaypoints([]);
+    setShowDeleteConfirm(false);
 
     if (onRouteCalculated) {
       onRouteCalculated([]);
@@ -698,15 +834,10 @@ const MapComponent = ({
   };
 
   const pauseRouting = () => {
-    setIsRoutingPaused(prev => !prev); 
-    // if (isRoutingMode && !isRoutingPaused) {
-    //   // 如果是路徑模式且未暫停，則暫停路徑模式
-    //   setIsRoutingPaused(true);
-    // } else {
-    //   // 如果路徑模式暫停或非路徑模式，則啟動或繼續路徑模式
-    //   setIsRoutingMode(true);
-    //   setIsRoutingPaused(false);
-    // }
+    setIsRoutingPaused(prev => !prev);
+    if (isFreeMode && !isRoutingPaused) {
+      setFreeModeMarkers([]); // 清空自由模式的標記數組
+    } 
   };
 
   useEffect(() => {
@@ -735,9 +866,37 @@ const MapComponent = ({
     }
   }, [isRoutingMode, routingControl, startMarker, endMarker, onRouteCalculated]);
 
+  const clearMarkersAndRoute = useCallback(() => {
+    freeModeMarkers.forEach(marker => marker.remove());
+    setFreeModeMarkers([]);
+    if (routingControl) {
+      routingControl.setWaypoints([]);
+    }
+  }, [freeModeMarkers, routingControl]);
+
+
+// 模式切換函數
+const toggleMode = () => {
+  setIsRoutingMode(prev => !prev);
+  // setIsFreeMode(prev => !prev);
+  clearMarkersAndRoute(); // 切換模式時清除自由模式的標記和路徑
+};
+
+  // useEffect(() => {
+  //   if (!isFreeMode && !isRoutingMode) {
+  //     clearMarkersAndRoute();
+  //   }
+  // }, [isFreeMode, isRoutingMode, clearMarkersAndRoute]);
+
   return (
     <div className="relative h-full w-full min-h-[600px] text-black">
-      {isLoading && <AlertModal message={alertMessage} />}
+      {isLoading && 
+      <AlertModal
+        isOpen={isLoading}
+        message= "Loading"
+        isALoadingAlert={true}
+      />
+      }
       <div ref={mapRef} className="z-10 h-full w-full min-h-[600px] flex-1" />
         <div className="absolute top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2">
           <Image src="/images/marker.png" alt="Marker" 
@@ -750,37 +909,45 @@ const MapComponent = ({
         >
           <Image src="/images/map-cursor.png" alt="Fetch-Location" className="h-7 w-7" width="30" height="30" />
         </button>
-        {isRoutingMode && (
-          <>
+        { (isRoutingMode || isFreeMode) && (
+          <div className="">
             <button 
               title="stop-routing"
-              className="absolute top-0 left-20 z-10 m-3 border-b bg-white text-black py-4 px-1 rounded hover:bg-green-300 shadow"
+              className="flex-column absolute top-0 left-20 z-10 m-3 border-b bg-white text-black py-2 px-1 rounded hover:bg-green-300 shadow"
               onClick={pauseRouting}>
-                {isRoutingPaused ? "繼續路線" : "暫停路線"}
+                <i className="fas fa-pause"></i>
+                <div className="text-sm">{isRoutingPaused ? "繼續路線" : "暫停路線"}</div>
             </button>
             <button 
               title="stop-routing"
-              className="absolute top-0 left-40 z-10 m-3 border-b bg-white text-black py-4 px-1 rounded hover:bg-green-300 shadow"
-              onClick={eraseRouting}>
-              清除路線
+              className="flex-column absolute top-0 left-40 z-10 m-3 border-b bg-white text-black py-2 px-2 rounded hover:bg-green-300 shadow"
+              onClick={()=>setShowDeleteConfirm(true)}>
+                <i className="fas fa-trash"></i>
+                <div className="text-sm">清除路線</div>
             </button>
-          </>
-        )}
+            <button
+              title="toggle-mode"
+              className="flex-column absolute top-0 left-60 z-10 m-3 border-b bg-white text-black py-2 px-2 rounded hover:bg-green-300 shadow"
+              onClick={toggleMode}
+            >
+              <i className={`fas ${isRoutingMode ? 'fa-fire' : 'fa-road'}`}></i>
+              <div className="text-sm">{isRoutingMode ? '自由模式' : '路線模式'}</div>
+            </button>
+          </div>
+        )} 
+        <AlertModal
+          isOpen={isAlertOpen}
+          onClose={() => setIsAlertOpen(false)}
+          message={alertMessage}
+        />
+        <AlertModal 
+          isOpen={showDeleteConfirm}
+          onClose={() => setShowDeleteConfirm(false)}
+          onConfirm={confirmEraseRouting}
+          message="您確定要清除路線嗎？"
+          showConfirmButton={true}
+        />
     </div>
   );
 };
-
-const AlertModal = ({ message }) => {
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-30 z-50 flex justify-center items-center">
-      <div className="bg-white p-6 rounded-lg shadow-xl">
-        <p className="text-black">{message}</p>
-        <div className="progress-bar w-32 h-2 bg-gray-200 relative">
-            <div className="progress w-0 h-2 bg-black absolute border rounded"></div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 export default MapComponent;
