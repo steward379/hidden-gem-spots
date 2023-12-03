@@ -1,36 +1,44 @@
 // pages/edit-map/[userId]/[mapId].tsx
-import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
 import { useRouter } from 'next/router';
+import Image from 'next/image';
 import dynamic from 'next/dynamic';
+import React, { useState, useEffect } from 'react';
+// redux
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState } from  '../../../store/store';
+import { setMapDataRedux } from '../../../store/slices/mapSlice';
+// firebase
 import { doc, getDoc, updateDoc, collection, getDocs } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import firebaseServices from  '../../../utils/firebase';
-const { db, auth, storage } = firebaseServices;
+const { db, storage } = firebaseServices;
 import { useAuth } from '../../../context/AuthContext';
-
+// component, dnd
 import DropzoneImage from '../../../components/DropzoneImage';
-
+import LoadingIndicator from '@/src/components/LoadingIndicator';
+// static
 import 'react-quill/dist/quill.snow.css'; 
 
 const MapComponentWithNoSSR = dynamic(
     () => import('../../../components/MapComponent'),
     { ssr: false }
 );
-
 const ReactQuill = dynamic(() => import('react-quill'), {
     ssr: false,
     loading: () => <p>Loading...</p>,
 });
-
 const EditMap = () => {
+
   const router = useRouter();
 
   const { user } = useAuth();
 
   const { mapId } = router.query;
+
+  const reduxMapData = useSelector((state: RootState) => state.map.mapDataRedux);
   
-  const [mapData, setMapData] = useState({ title: '', content: '', coverImage: '',authorName: '', publishedPlaces: [] });
+  const [mapData, setMapData] = useState(null);
+
   const [coverImageFile, setCoverImageFile] = useState(null);
   const [coverImagePreview, setCoverImagePreview] = useState('');
   const [showSourceCode, setShowSourceCode] = useState(false);
@@ -39,7 +47,12 @@ const EditMap = () => {
 
   useEffect(() => {
     const fetchMapData = async () => {
-        if (typeof mapId === "string" && typeof user.uid === "string") {
+      if (reduxMapData) {
+
+        setMapData(reduxMapData);
+        setCoverImagePreview(reduxMapData.coverImage || '');
+
+      } else if (typeof mapId === "string" && typeof user.uid === "string") {
         const mapRef = doc(db, `publishedMaps/${user.uid}/maps`, mapId);
         const docSnap = await getDoc(mapRef);
 
@@ -52,20 +65,18 @@ const EditMap = () => {
             authorName: '', // 初始化 authorName
             publishedPlaces: [] // 初始化 publishedPlaces
           };
-  
           const authorRef = doc(db, 'users', user.uid);
           const authorSnap = await getDoc(authorRef);
           if (authorSnap.exists()) {
             mapDetails.authorName = authorSnap.data().name || '未知';
           }
-  
           const placesRef = collection(db, `publishedMaps/${user.uid}/maps/${mapId}/places`);
           const placesSnap = await getDocs(placesRef);
           mapDetails.publishedPlaces = placesSnap.docs.map(doc => ({
             ...doc.data(),
             id: doc.id 
           }));
-  
+
           setMapData(mapDetails); 
           setCoverImagePreview(data.coverImage || '');
         } else {
@@ -75,7 +86,8 @@ const EditMap = () => {
     };
 
     fetchMapData();
-  }, [mapId, user.uid]);
+
+  }, [mapId, user.uid, reduxMapData]);
 
   const toggleSourceCode = () => {
     setShowSourceCode(!showSourceCode);
@@ -106,16 +118,7 @@ const EditMap = () => {
   };
 
   if (!mapData) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="text-center">
-          <span className="block text-black mb-2">載入中...</span>
-          <div className="progress-bar w-32 h-2 bg-gray-200 relative">
-            <div className="progress w-0 h-2 bg-black absolute border rounded"></div>
-          </div>
-        </div>
-      </div>
-    );
+    return <LoadingIndicator />;
   }
 
   const  uploadImageToStorage = async (file) => {
@@ -166,14 +169,14 @@ const EditMap = () => {
 
   return (
     <div className="flex flex-col h-screen-without-navbar md:flex-row text-black bg-gray-200">
-        <div className="md:w-2/3 w-full lg:m-10 md:m-5 m-0 border">
+        <div className="lg:w-2/3 md:w-1/2 w-full lg:m-10 md:m-5 m-0 border">
           <MapComponentWithNoSSR 
               places={mapData.publishedPlaces}
               onMarkerClick={handleMarkerClick}
           />
         </div>
         
-        <div className="lg:overflow-auto md:overflow-auto md:w-1/3 w-full lg:mb-10 lg:mt-10 md:mt-5 mt-7 lg:mr-10 md:mr-5 lg:p-8 md:p-4 p-10 bg-white shadow rounded">
+        <div className="lg:overflow-auto md:overflow-auto lg:w-1/3 md:w-1/2 w-full lg:mb-10 lg:mt-10 md:mt-5 mt-7 lg:mr-10 md:mr-5 lg:p-8 md:p-4 p-10 bg-white shadow rounded">
             <form onSubmit={handleSubmit}>
                     <div> 標題更改 </div>
                     <input
