@@ -7,8 +7,19 @@ const { db } = firebaseServices;
 import { useAuth } from '../../context/AuthContext';
 import Image from 'next/image';
 import Link from 'next/link';
+import AlertModal from '@/src/components/AlertModal';
 
 const UserMapsPage = () => {
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [selectedMapId, setSelectedMapId] = useState(null);
+
+  const showAlert = (message) => {
+    setAlertMessage(message);
+    setIsAlertOpen(true);
+  }
+
   const [maps, setMaps] = useState([]);
   const [likedMaps, setLikedMaps] = useState([]); 
   const [mapMaker, setMapMaker] = useState(null);
@@ -115,19 +126,23 @@ const UserMapsPage = () => {
 
   const handleDeleteMap = async (event, mapId) => {
     event.stopPropagation(); 
+    setSelectedMapId(mapId); 
+    setShowDeleteConfirm(true);
+  };
 
-    if (confirm("您確定要刪除這張地圖嗎？")) {
+  const confirmDelete = async () => {
+    if (selectedMapId) { 
       event.stopPropagation(); 
 
       try {
-        await deleteMapAndPlaces(mapId);
-        alert("刪除成功");
+        await deleteMapAndPlaces(selectedMapId);
+        showAlert("刪除成功");
 
-        const updatedMaps = maps.filter(map => map.id !== mapId);
+        const updatedMaps = maps.filter(map => map.id !== selectedMapId);
         setMaps(updatedMaps);
   
         // 如果刪除的地圖在喜愛列表中，從喜愛列表中移除
-        const updatedLikedMaps = likedMaps.filter(map => map.id !== mapId);
+        const updatedLikedMaps = likedMaps.filter(map => map.id !== selectedMapId);
         setLikedMaps(updatedLikedMaps);
 
         const likesCount = updatedMaps.reduce((sum, map) => sum + (map.likes || 0), 0);
@@ -138,9 +153,12 @@ const UserMapsPage = () => {
         setTotalDuplicates(duplicatesCount);
         setTotalPlaceLikes(placesLikesCount);
 
+        setShowDeleteConfirm(false); // 隱藏刪除確認對話框
+        setSelectedMapId(null); // 清除選中的地圖 ID
+
       } catch (error) {
         console.error("刪除失敗: ", error);
-        alert("刪除過程中出現錯誤");
+        showAlert("刪除過程中出現錯誤");
       }
     }
   };
@@ -246,6 +264,18 @@ const UserMapsPage = () => {
           </div>
         </div>
       </div>
+      <AlertModal 
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={confirmDelete}
+        message="您確定要刪除此張地圖嗎？"
+        showConfirmButton={true}
+      />
+      <AlertModal
+        isOpen={isAlertOpen}
+        onClose={() => setIsAlertOpen(false)}
+        message={alertMessage}
+      />
   </div>
   );
 };
