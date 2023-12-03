@@ -1,0 +1,585 @@
+{
+  "kml": {
+    "$": {
+      "xmlns": "http://www.opengis.net/kml/2.2"
+    },
+    "Document": [
+      {
+        "name": [
+          "Wehelp 社群小聚 😆"
+        ],
+        "description": [
+          ""
+        ],
+        "Style": [
+          {
+            "$": {
+              "id": "icon-1899-0288D1-normal"
+            },
+            "IconStyle": [
+              {
+                "scale": [
+                  "1"
+                ],
+                "Icon": [
+                  {
+                    "href": [
+                      "images/icon-2.png"
+                    ]
+                  }
+                ],
+                "hotSpot": [
+                  {
+                    "$": {
+                      "x": "32",
+                      "xunits": "pixels",
+                      "y": "64",
+                      "yunits": "insetPixels"
+                    }
+                  }
+                ]
+              }
+            ],
+            "LabelStyle": [
+              {
+                "scale": [
+                  "0"
+                ]
+              }
+            ]
+          },
+          {
+            "$": {
+              "id": "icon-1899-0288D1-highlight"
+            },
+            "IconStyle": [
+              {
+                "scale": [
+                  "1"
+                ],
+                "Icon": [
+                  {
+                    "href": [
+                      "images/icon-2.png"
+                    ]
+                  }
+                ],
+                "hotSpot": [
+                  {
+                    "$": {
+                      "x": "32",
+                      "xunits": "pixels",
+                      "y": "64",
+                      "yunits": "insetPixels"
+                    }
+                  }
+                ]
+              }
+            ],
+            "LabelStyle": [
+              {
+                "scale": [
+                  "1"
+                ]
+              }
+            ]
+          },
+          {
+            "$": {
+              "id": "icon-1899-0288D1-nodesc-normal"
+            },
+            "IconStyle": [
+              {
+                "scale": [
+                  "1"
+                ],
+                "Icon": [
+                  {
+                    "href": [
+                      "images/icon-2.png"
+                    ]
+                  }
+                ],
+                "hotSpot": [
+                  {
+                    "$": {
+                      "x": "32",
+                      "xunits": "pixels",
+                      "y": "64",
+                      "yunits": "insetPixels"
+                    }
+                  }
+                ]
+              }
+            ],
+            "LabelStyle": [
+              {
+                "scale": [
+                  "0"
+                ]
+              }
+            ],
+            "BalloonStyle": [
+              {
+                "text": [
+                  "<h3>$[name]</h3>"
+                ]
+              }
+            ]
+          },
+          {
+            "$": {
+              "id": "icon-1899-0288D1-nodesc-highlight"
+            },
+            "IconStyle": [
+              {
+                "scale": [
+                  "1"
+                ],
+                "Icon": [
+                  {
+                    "href": [
+                      "images/icon-2.png"
+                    ]
+                  }
+                ],
+                "hotSpot": [
+                  {
+                    "$": {
+                      "x": "32",
+                      "xunits": "pixels",
+                      "y": "64",
+                      "yunits": "insetPixels"
+                    }
+                  }
+                ]
+              }
+            ],
+            "LabelStyle": [
+              {
+                "scale": [
+                  "1"
+                ]
+              }
+            ],
+            "BalloonStyle": [
+              {
+                "text": [
+                  "<h3>$[name]</h3>"
+                ]
+              }
+            ]
+          },
+          {
+            "$": {
+              "id": "icon-1899-E65100-normal"
+            },
+            "IconStyle": [
+              {
+                "scale": [
+                  "1"
+                ],
+                "Icon": [
+                  {
+                    "href": [
+                      "images/icon-1.png"
+                    ]
+                  }
+                ],
+                "hotSpot": [
+                  {
+                    "$": {
+                      "x": "32",
+                      "xunits": "pixels",
+                      "y": "64",
+                      "yunits": "insetPixels"
+                    }
+                  }
+                ]
+              }
+            ],
+            "LabelStyle": [
+              {
+                "scale": [
+                  "0"
+                ]
+              }
+            ]
+          },
+          {
+            "$": {
+              "id": "icon-1899-E65100-highlight"
+            },
+            "IconStyle": [
+              {
+                "scale": [
+                  "1"
+                ],
+                "Icon": [
+                  {
+                    "href": [
+                      "images/icon-1.png"
+                    ]
+                  }
+                ],
+                "hotSpot": [
+                  {
+                    "$": {
+                      "x": "32",
+                      "xunits": "pixels",
+                      "y": "64",
+                      "yunits": "insetPixels"
+                    }
+                  }
+                ]
+              }
+            ],
+            "LabelStyle": [
+              {
+                "scale": [
+                  "1"
+                ]
+              }
+            ]
+          },
+          {
+            "$": {
+              "id": "icon-1899-F9A825-normal"
+            },
+            "IconStyle": [
+              {
+                "scale": [
+                  "1"
+                ],
+                "Icon": [
+                  {
+                    "href": [
+                      "images/icon-3.png"
+                    ]
+                  }
+                ],
+                "hotSpot": [
+                  {
+                    "$": {
+                      "x": "32",
+                      "xunits": "pixels",
+                      "y": "64",
+                      "yunits": "insetPixels"
+                    }
+                  }
+                ]
+              }
+            ],
+            "LabelStyle": [
+              {
+                "scale": [
+                  "0"
+                ]
+              }
+            ]
+          },
+          {
+            "$": {
+              "id": "icon-1899-F9A825-highlight"
+            },
+            "IconStyle": [
+              {
+                "scale": [
+                  "1"
+                ],
+                "Icon": [
+                  {
+                    "href": [
+                      "images/icon-3.png"
+                    ]
+                  }
+                ],
+                "hotSpot": [
+                  {
+                    "$": {
+                      "x": "32",
+                      "xunits": "pixels",
+                      "y": "64",
+                      "yunits": "insetPixels"
+                    }
+                  }
+                ]
+              }
+            ],
+            "LabelStyle": [
+              {
+                "scale": [
+                  "1"
+                ]
+              }
+            ]
+          }
+        ],
+        "StyleMap": [
+          {
+            "$": {
+              "id": "icon-1899-0288D1"
+            },
+            "Pair": [
+              {
+                "key": [
+                  "normal"
+                ],
+                "styleUrl": [
+                  "#icon-1899-0288D1-normal"
+                ]
+              },
+              {
+                "key": [
+                  "highlight"
+                ],
+                "styleUrl": [
+                  "#icon-1899-0288D1-highlight"
+                ]
+              }
+            ]
+          },
+          {
+            "$": {
+              "id": "icon-1899-0288D1-nodesc"
+            },
+            "Pair": [
+              {
+                "key": [
+                  "normal"
+                ],
+                "styleUrl": [
+                  "#icon-1899-0288D1-nodesc-normal"
+                ]
+              },
+              {
+                "key": [
+                  "highlight"
+                ],
+                "styleUrl": [
+                  "#icon-1899-0288D1-nodesc-highlight"
+                ]
+              }
+            ]
+          },
+          {
+            "$": {
+              "id": "icon-1899-E65100"
+            },
+            "Pair": [
+              {
+                "key": [
+                  "normal"
+                ],
+                "styleUrl": [
+                  "#icon-1899-E65100-normal"
+                ]
+              },
+              {
+                "key": [
+                  "highlight"
+                ],
+                "styleUrl": [
+                  "#icon-1899-E65100-highlight"
+                ]
+              }
+            ]
+          },
+          {
+            "$": {
+              "id": "icon-1899-F9A825"
+            },
+            "Pair": [
+              {
+                "key": [
+                  "normal"
+                ],
+                "styleUrl": [
+                  "#icon-1899-F9A825-normal"
+                ]
+              },
+              {
+                "key": [
+                  "highlight"
+                ],
+                "styleUrl": [
+                  "#icon-1899-F9A825-highlight"
+                ]
+              }
+            ]
+          }
+        ],
+        "Folder": [
+          {
+            "name": [
+              "[台北] 捷運萬隆景美區"
+            ],
+            "Placemark": [
+              {
+                "name": [
+                  "CBC SPACE 景美咖啡圖書館 Cafe Boven Co-working"
+                ],
+                "description": [
+                  "早上就開 Cowork space 適合工作  人可以多一些 平日 8-18 假日 8-21 東西便宜好喝 附近商圈食物多"
+                ],
+                "styleUrl": [
+                  "#icon-1899-E65100"
+                ],
+                "Point": [
+                  {
+                    "coordinates": [
+                      "\n            121.5442589,24.9923871,0\n          "
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": [
+                  "秘徑咖啡Alley's cafe"
+                ],
+                "description": [
+                  "快中午開 11-21 每天開 可以坐很多人 有點吵 插座足夠"
+                ],
+                "styleUrl": [
+                  "#icon-1899-E65100"
+                ],
+                "Point": [
+                  {
+                    "coordinates": [
+                      "\n            121.5384752,25.0016877,0\n          "
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": [
+                  "金福咖啡 JinfuCoffee"
+                ],
+                "description": [
+                  "13~21 點 人可以多一點 疑似每天開"
+                ],
+                "styleUrl": [
+                  "#icon-1899-0288D1"
+                ],
+                "Point": [
+                  {
+                    "coordinates": [
+                      "\n            121.5389805,24.9997783,0\n          "
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": [
+                  "河童家 かっぱや"
+                ],
+                "description": [
+                  "早上有開 10-18 六日 10-20 沒開晚上 咖啡好喝  人不能太多 疑似每天開"
+                ],
+                "styleUrl": [
+                  "#icon-1899-0288D1"
+                ],
+                "Point": [
+                  {
+                    "coordinates": [
+                      "\n            121.5384399,25.000075,0\n          "
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": [
+                  "Sunday Morning 星期天早上"
+                ],
+                "description": [
+                  "早上反而沒開 人不能太多  盡量要訂位三日休息 下午 2點開到晚上 11 點"
+                ],
+                "styleUrl": [
+                  "#icon-1899-0288D1"
+                ],
+                "Point": [
+                  {
+                    "coordinates": [
+                      "\n            121.539276,24.999737,0\n          "
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": [
+                  "咖啡異象 Coffee Vision"
+                ],
+                "styleUrl": [
+                  "#icon-1899-0288D1-nodesc"
+                ],
+                "Point": [
+                  {
+                    "coordinates": [
+                      "\n            121.5421346,24.9973879,0\n          "
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": [
+              "[新北] 環狀線景安"
+            ],
+            "Placemark": [
+              {
+                "name": [
+                  "STARBUCKS 星巴克 (中和景安門市)"
+                ],
+                "description": [
+                  "對面有 3小時 150 的便宜社區會議室 熟了之後可以約 外面則是圖書館不能講話"
+                ],
+                "styleUrl": [
+                  "#icon-1899-F9A825"
+                ],
+                "Point": [
+                  {
+                    "coordinates": [
+                      "\n            121.5052791,24.9951563,0\n          "
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": [
+                  "景安捷運站"
+                ],
+                "description": [
+                  "高級社區會議室 景安附近"
+                ]
+              },
+              {
+                "name": [
+                  "景安"
+                ],
+                "description": [
+                  "高級社區會議室 景安附近"
+                ],
+                "styleUrl": [
+                  "#icon-1899-0288D1"
+                ],
+                "Point": [
+                  {
+                    "coordinates": [
+                      "\n            121.5048261,24.9938269,0\n          "
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": [
+              "[新北] 捷運新店區"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
