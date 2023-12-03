@@ -2,24 +2,22 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import Router from 'next/router';
-
-import DropzoneImage from '../../components/DropzoneImage';
-
-import { onAuthStateChanged } from "firebase/auth";
-import { collection, query, onSnapshot, getDocs, updateDoc, getDoc, addDoc, where, doc, setDoc, deleteDoc, arrayRemove } from 'firebase/firestore';
-import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
-import firebaseServices from '../../utils/firebase'; 
-const { db, auth, storage } = firebaseServices; 
-
-import { useAuth } from '../../context/AuthContext';
-
-import { categoryMapping } from '../../constants'
-
 import Image from 'next/image';
 import Link from 'next/link';
+import { collection, query, onSnapshot, getDocs, updateDoc, getDoc, 
+  addDoc, where, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
+import firebaseServices from '../../utils/firebase'; 
+const { db, storage } = firebaseServices; 
+import { useAuth } from '../../context/AuthContext';
+import AlertModal from '../../components/AlertModal'
+import DropzoneImage from '../../components/DropzoneImage';
+import GooglePlaces from '../../components/GooglePlaces';
+import { useDispatch } from 'react-redux';
+import { setPlacesRedux } from '../../store/slices/placesSlice';
+import { categoryMapping } from '../../constants'
 // import { Place } from '../../types/Place';
-import { NewMarkerData } from '../../types/NewMarkerData';
-
+// import { NewMarkerData } from '../../types/NewMarkerData';
 export interface Place {
   id: string;
   name: string;
@@ -36,39 +34,19 @@ export interface Place {
   duplicates?: number;
   duplicatedBy?: string[];
 }
-
-const AlertModal = ({ isOpen, onClose, onConfirm = () => {}, message, showConfirmButton = false }) => {
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-30 z-50 flex justify-center items-center">
-      <div className="bg-white bg-opacity-60 p-6 rounded-lg shadow-xl backdrop-blur-sm">
-        <p className="text-black">{message}</p>
-        <div className="flex justify-end space-x-4">
-          {showConfirmButton && (
-            <button onClick={onConfirm} className="mt-4 bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600">
-              確認刪除
-            </button>
-          )}
-          <button onClick={onClose} className="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">
-            {showConfirmButton ? '取消' : '確定'}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-
-// import L from 'leaflet';
-// import MapComponent from '../../components/MapComponent';
-
 const MapComponentWithNoSSR = dynamic(
   () => import('../../components/MapComponent'),
   { ssr: false }
 );
-
 const MapDemoPage: React.FC = () => {
+
+  const [hideAddingMarker, setHideAddingMarker] = useState(false);
+  const [latitude, setLatitude] = useState('');
+  const [longitude, setLongitude] = useState('');
+  const [googlePlacesSearch, setGooglePlacesSearch] = useState(false);
+  const dispatch = useDispatch();
+  const [isRoutingMode, setIsRoutingMode] = useState(false);
+
   const [places, setPlaces] = useState([]);
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [images, setImages] = useState<File[]>([]);
@@ -81,31 +59,26 @@ const MapDemoPage: React.FC = () => {
   const [showPlacesList, setShowPlacesList] = useState(false);
 
   const [isEditing, setIsEditing] = useState(false);
-
   // alert&confirm
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  // search and filter
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
 
-  //show hint
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-    // const [userId, setUserId] = useState<string | null>(null);
-  // userAuth
   const { user } = useAuth();
   let userId = user?.uid;
-
+  
   const showAlert = (message) => {
     setAlertMessage(message);
     setIsAlertOpen(true);
   };
-
   const handlePlaceSelect = (place: Place) => {
     setSelectedPlace(place);
+    setGooglePlacesSearch(false);
   };
   const handlePlaceClose = () => {
     setSelectedPlace(null);
@@ -116,20 +89,30 @@ const MapDemoPage: React.FC = () => {
     const placesQuery = query(collection(db, `users/${userId}/places`));
     const querySnapshot = await getDocs(placesQuery);
     setPlaces(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   }, [userId]); 
 
   // 更新 places 資料
+  // useEffect(() => {
+  //   if (userId) {
+  //     fetchPlaces();
+  //   }
+  // }, [userId, fetchPlaces]);
+
+  // Redux
   useEffect(() => {
     if (userId) {
-      fetchPlaces();
+      fetchPlaces().then((fetchedPlaces) => {
+        dispatch(setPlacesRedux(fetchedPlaces));
+      });
     }
-  }, [userId, fetchPlaces]);
+  }, [userId, fetchPlaces, dispatch]);
+
 
   const handleMarkerPlaced = (coordinates) => {
     setNewMarker({ coordinates, name: '', description: '', tags: '', category: '', images: [] });
   };
 
-  
   const handleDeletePlace = async () => {
     if (selectedPlace) {
       setShowDeleteConfirm(true);
@@ -156,14 +139,25 @@ const MapDemoPage: React.FC = () => {
     setImages([...images, file]);
   };
 
-  // const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-  //   if (event.target.files) {
-  //     const selectedFiles = Array.from(event.target.files);
-  //     setImages(selectedFiles); 
-  //     const selectedFilesUrls = selectedFiles.map(file => URL.createObjectURL(file))
-  //     setPreviewImages(selectedFilesUrls); 
-  //   }
-  // };
+  const decimalToDms = (decimalLat: number, decimalLng: number): string => {
+    // 緯度轉換
+    const degreesLat = parseInt(decimalLat.toString());
+    const minutesLat = parseInt(((decimalLat - degreesLat) * 60).toString());
+    const secondsLat = (((decimalLat - degreesLat) * 3600) % 60).toFixed(1);
+
+    // 經度轉換
+    const degreesLng = parseInt(decimalLng.toString());
+    const minutesLng = parseInt(((decimalLng - degreesLng) * 60).toString());
+    const secondsLng = (((decimalLng - degreesLng) * 3600) % 60).toFixed(1);
+
+    // 組合成度分秒格式
+    const latDirection = decimalLat >= 0 ? "N" : "S";
+    const lngDirection = decimalLng >= 0 ? "E" : "W";
+
+    console.log(`${Math.abs(degreesLat)}°${Math.abs(minutesLat)}'${secondsLat}"${latDirection}+${Math.abs(degreesLng)}°${Math.abs(minutesLng)}'${secondsLng}"${lngDirection}`)
+
+    return `${Math.abs(degreesLat)}°${Math.abs(minutesLat)}'${secondsLat}"${latDirection}+${Math.abs(degreesLng)}°${Math.abs(minutesLng)}'${secondsLng}"${lngDirection}`;
+  };
 
   const toggleAddingMarker = () => {
     if (isAddingMarker) {
@@ -289,6 +283,16 @@ const MapDemoPage: React.FC = () => {
     return decodedPath.split('?')[0];
   }
 
+  // useEffect(() => {
+  //   const unsubscribe = onAuthStateChanged(auth, user => {
+  //     if (user) {
+  //       setUserId(user.uid); 
+  //     }
+  //   });
+
+  //   return () => unsubscribe();
+  // }, []);
+
   const updatePlace = async (placeId: string) => {
 
     if (!newMarker || !userId || !selectedPlace) return;
@@ -325,8 +329,8 @@ const MapDemoPage: React.FC = () => {
     await setDoc(placeRef, updatedPlaceData, { merge: true });
 
     setPlaces(prevPlaces => prevPlaces.map(place => 
-    // place.id === selectedPlace.id ? { ...place, ...updatedPlaceData } : place
-    place.id === placeId ? { ...place, ...updatedPlaceData } : place
+      // place.id === selectedPlace.id ? { ...place, ...updatedPlaceData } : place
+      place.id === placeId ? { ...place, ...updatedPlaceData } : place
     )); 
 
     const imagesToDelete = originalImageUrls.filter(url => !previewImages.includes(url));
@@ -345,8 +349,10 @@ const MapDemoPage: React.FC = () => {
         await removeImageFromFirestore(placeId, url, userId);
       } catch (error) {
         if (error.code === 'storage/object-not-found') {
+          showAlert("圖片不存在，可能原始位置已刪除")
           console.warn(`Image not found in storage, might be already deleted: ${storagePath}`);
         } else {
+          showAlert("刪除圖片發生未知錯誤")
           console.error(`Error deleting image from storage: ${error}`);
         }
       }
@@ -390,8 +396,8 @@ const MapDemoPage: React.FC = () => {
 
       setIsAddingMarker(false);
       setIsEditing(false);
-      console.log('提交景點資訊：', newPlace);
     } catch (e) {
+      showAlert("新增景點失敗");
       console.error("Error adding document: ", e);
     }
 
@@ -461,7 +467,6 @@ const MapDemoPage: React.FC = () => {
   
     return `${latText}, ${lngText}`;
   };
-
   const handlePublishClick = () => {
     if (places.length === 0) { // 假設 places 陣列儲存著所有景點
       showAlert('你還沒有新增景點');
@@ -469,7 +474,28 @@ const MapDemoPage: React.FC = () => {
     } 
     Router.push('/publish-map');
   };
-  
+  const hideAddingMarkerAction = () => {
+    setHideAddingMarker(true);
+  }
+  const showAddingMarkerAction = () => {
+    setHideAddingMarker(false);
+  }
+  const handleGooglePlaces = (lat, lng) => {
+    setLatitude(selectedPlace.coordinates.lat);
+    setLongitude(selectedPlace.coordinates.lng);
+    setGooglePlacesSearch(true);
+  }
+
+  useEffect(() => {
+    setGooglePlacesSearch(false);
+  }, [selectedPlace]);
+
+
+  // // 回調函數
+  const handleSelectPlace = (googlePlaceMigrate) => {
+  //   setSelectedPlace(googlePlaceMigrate);
+  };
+
   return (
     <div className="flex flex-col md:flex-row h-screen-without-navbar text-black bg-gray-200">
       <div className="lg:w-2/3 md:w-1/2 w-full lg:m-10 md:m-5 m-0 border">
@@ -483,9 +509,10 @@ const MapDemoPage: React.FC = () => {
           onMapClick={() => setSelectedPlace(null)}
           selectedPlace={selectedPlace}
           showInteract = {false}
+          isRoutingMode={isRoutingMode}
+          setIsRoutingMode={setIsRoutingMode}
         />
       </div>
-    
       <div className="relative lg:w-1/3 md:w-1/2 w-full lg:overflow-auto md:overflow-auto lg:mb-10 lg:mt-10 md:mt-5 mt-7
       lg:mr-10 md:mr-5 lg:p-8 md:p-4 p-10 bg-white shadow rounded ">
         <button
@@ -506,6 +533,9 @@ const MapDemoPage: React.FC = () => {
             </div>
           )}
         </button>
+        <button onClick={() => setIsRoutingMode(!isRoutingMode)}>
+              {isRoutingMode ? "離開路徑模式" : "規劃路徑"}
+        </button>
         <div className={`mt-12 transition-all duration-500 ease-in-out ${isCollapsed ? 'max-h-0' : 'max-h-32'} overflow-hidden`}>
           <h1 className="text-2xl font-bold text-gray-800 mb-4"> {user?.name} 的個人地圖</h1>
           <div className="text-gray-600 text-sm"> 
@@ -525,14 +555,24 @@ const MapDemoPage: React.FC = () => {
             <div className="hidden lg:flex">發佈</div>
           </button>
 
-          <button
-            // onClick={() => setIsAddingMarker(!isAddingMarker)}
-            onClick={toggleAddingMarker} 
-            className="h-16 w-16 lg:h-24 lg:w-24 rounded-full mb-5 mt-5 m-2 flex-column justify-center items-center border-2 border-dashed border-gray-300 cursor-pointer hover:border-gray-500 hover:bg-green-300"
-          >
-            <i className={`fas ${isAddingMarker ? 'fa-minus' : 'fa-location-dot'}`}></i>
-            <div className="text-sm hidden lg:block">{isAddingMarker ? '取消景點' : '新增景點'}</div>
-          </button>
+          { hideAddingMarker ? (
+            <i className={`absolute left-1 top-40 text-3xl fas fa-location-dot`}
+                onClick={showAddingMarkerAction}
+            ></i>
+          ):(
+            <>
+              <button className="absolute top-60 left-4 text-sm bg-red-100 border rounded-full w-6 h-6"
+              onClick={hideAddingMarkerAction}> { hideAddingMarker ? '' : <i className="fas fa-minus"></i>}</button>
+              <button
+                // onClick={() => setIsAddingMarker(!isAddingMarker)}
+                onClick={toggleAddingMarker} 
+                className="relative h-16 w-16 lg:h-24 lg:w-24 rounded-full mb-5 mt-5 m-2 flex-column justify-center items-center border-2 border-dashed border-gray-300 cursor-pointer hover:border-gray-500 hover:bg-green-300"
+              >
+                <i className={`fas ${isAddingMarker ? 'fa-minus' : 'fa-location-dot'}`}></i>
+                <div className="text-sm hidden lg:block">{isAddingMarker ? '取消景點' : '新增景點'}</div>
+              </button>
+            </>
+          )}
 
           <div className="absolute top-5 right-24 lg:right-40 flex items-center justify-center mb-5 mt-5">
             <label htmlFor="toggle" className="flex items-center cursor-pointer">
@@ -552,25 +592,24 @@ const MapDemoPage: React.FC = () => {
           </div>
 
           { !newMarker && showPlacesList && (
-             <div className="places-list mt-4">
-             {/* 搜尋和篩選 UI */}
-            <div className="search-and-filter">
-            <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-2 mb-4">
-              <div className="flex-1">
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="搜尋景點名稱或標籤"
-                  className="p-2 w-full border border-gray-300 rounded-md text-black focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-              <div>
-                <select
-                  title="category-select"
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="p-2 w-full border border-gray-300 rounded-md text-black focus:ring-blue-500 focus:border-blue-500"
+            <div className="places-list mt-4">
+              <div className="search-and-filter">
+                <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-2 mb-4">
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      placeholder="搜尋景點名稱或標籤"
+                      className="p-2 w-full border border-gray-300 rounded-md text-black focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <select
+                      title="category-select"
+                      value={selectedCategory}
+                      onChange={(e) => setSelectedCategory(e.target.value)}
+                      className="p-2 w-full border border-gray-300 rounded-md text-black focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="">搜尋類別</option>
                   {Object.entries(categoryMapping).map(([key, { text }]) => (
@@ -616,16 +655,12 @@ const MapDemoPage: React.FC = () => {
       {selectedPlace && !isEditing && (
         <>
           <div className="relative p-4 bg-white rounded shadow-md">
-            {/* 標題部分 */}
             <h2 className="text-2xl font-bold text-gray-800 border-b border-gray-300 pb-2 mb-4">{selectedPlace.name}</h2>
             <p className="absolute right-0 top-0 text-black cursor-pointer p-5" onClick={handlePlaceClose} >
               <i className="fas fa-times"></i>
             </p>
 
-            {/* 描述 */}
             <h3 className="text-lg text-gray-600 mb-4">{selectedPlace.description}</h3>
-
-            {/* 標籤 */}
             {selectedPlace.tags && selectedPlace.tags.filter(tag => tag.trim().length > 0).length > 0 && (
             <div className="mb-4">
               <div className="flex flex-wrap gap-2">
@@ -635,15 +670,12 @@ const MapDemoPage: React.FC = () => {
               </div>
             </div>
             )}
-
-            {/* 類別 */}
             <div className={`${categoryMapping[selectedPlace.category]?.color || 'bg-gray-200'} p-2 rounded mb-4 w-24`}>
               {categoryMapping[selectedPlace.category]?.text || '不明'}
             </div>
             
-            {/* 圖片 */}
             <div className="mt-5">
-              {selectedPlace.images.map((url, index) => (
+              {selectedPlace.images?.map((url, index) => (
                 <div key={index} className="image-preview mb-2 relative" 
                                  style={{ width: 300, height: 300 }}>
                   <Image 
@@ -655,14 +687,32 @@ const MapDemoPage: React.FC = () => {
                 </div>
               ))}
             </div>
+            <div className="flex">
+              <Link href={`https://www.google.com/maps/place/?q=place_name:${selectedPlace.name}`} target="_blank" passHref>
+                <button className="flex items-center mr-3 bg-blue-100 text-black p-2 rounded hover:bg-blue-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-300">
+                  <i className="fab fa-google mr-1"></i><i className="fa-solid fa-magnifying-glass mr-1.5"></i><span className="hidden lg:flex"> 名稱</span>
+                </button>
+              </Link>
+              <Link href={`https://www.google.com/maps/place/${decimalToDms(selectedPlace.coordinates.lat, selectedPlace.coordinates.lng)}`} target="_blank" passHref>
+                <button className="flex items-center mr-3 bg-blue-100 text-black p-2 rounded hover:bg-blue-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-300">
+                  <i className="fab fa-google mr-1"></i><i className="fa-solid fa-globe mr-1.5"></i><span className="hidden lg:flex"> 經緯</span>
+                </button>
+              </Link>
+              <button className="flex items-center mr-3 bg-blue-100 text-black p-2 rounded hover:bg-blue-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-300"
+                      onClick={handleGooglePlaces}>
+                <i className="fab fa-google mr-1"></i>
+                <i className="fa-solid fa-directions mr-1.5"></i>
+                <span className="hidden lg:flex"> 附近景點</span>
+              </button>
+            </div>
             <button
               title="edit-place"
-              className=" h-12 w-12  absolute right-14 top-0 mb-5 mt-5 m-2 bg-blue-100 flex-column justify-center items-center border-2 border-dashed border-gray-300 rounded-full cursor-pointer hover:border-gray-500 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className=" h-12 w-12  absolute right-14 top-0 mb-5 mt-5 m-2 bg-blue-100 flex-column justify-center items-center border-2 border-dashed border-gray-300 rounded-full cursor-pointer
+               hover:border-gray-500 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
               onClick={() => handleEditClick(selectedPlace)}
             >
               <i className="fas fa-edit"></i>
             </button>
-
             <button
               title="delete-place"
               // className="m-2 px-4 py-2 bg-red-100 text-black border border-black rounded hover:bg-red-400 hover:text-white hover:border-white focus:outline-none focus:ring-2 focus:ring-blue-300"
@@ -672,6 +722,14 @@ const MapDemoPage: React.FC = () => {
               <i className="fas fa-trash-alt"></i>
             </button> 
           </div>
+          {googlePlacesSearch && (
+            <GooglePlaces 
+            latitude={latitude} 
+            longitude={longitude}
+            isFetchingAPI={googlePlacesSearch} 
+            onSelectPlace={handleSelectPlace}
+            />
+          )}
         </>
       )}
       <div> {isAddingMarker && !newMarker && '在地圖上點選位置以新增景點'}</div>
@@ -731,22 +789,22 @@ const MapDemoPage: React.FC = () => {
                 </div>
               ) : null
             ))}
-            {/* {images.length < 3 && ( */}
-              {/* <label className="image-input-label">
-                  <div className="image-input-button text-black"> 
-                    <input 
-                      type="file" 
-                      accept="image/*" 
-                      multiple 
-                      onChange={handleImageChange} 
-                    /> 
-                    <span> + </span>
-                  </div>
-              </label> */}
-            {/* )} */}
           </div>
           <div> 
-            {formatCoordinates(newMarker.coordinates.lat, newMarker.coordinates.lng)}
+
+            <span>{formatCoordinates(newMarker.coordinates.lat, newMarker.coordinates.lng)}</span>
+            <div className="flex mt-2">
+              <Link href={`https://www.google.com/maps/place/?q=place_name:${newMarker.name}`} target="_blank" passHref>
+                <button className="flex items-center bg-blue-100 mr-2 text-black p-2 rounded hover:bg-blue-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-300">
+                  <i className="fab fa-google mr-1"></i><i className="fa-solid fa-magnifying-glass mr-1.5"></i><span className="hidden lg:flex"> 名稱</span>
+                </button>
+              </Link>
+              <Link href={`https://www.google.com/maps/place/${decimalToDms(newMarker.coordinates.lat, newMarker.coordinates.lng)}`} target="_blank" passHref>
+                <button className="flex items-center bg-blue-100 mr-2 text-black p-2 rounded hover:bg-blue-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-300">
+                  <i className="fab fa-google mr-1"></i><i className="fa-solid fa-globe mr-1.5"></i><span className="hidden lg:flex"> 經緯</span>
+                </button>
+              </Link>
+            </div>
           </div>
           <button
             onClick={handleSubmit}
@@ -777,20 +835,18 @@ const MapDemoPage: React.FC = () => {
       )}
     </div>
     <AlertModal 
-          isOpen={showDeleteConfirm}
-          onClose={() => setShowDeleteConfirm(false)}
-          onConfirm={confirmDelete}
-          message="您確定要刪除此景點嗎？"
-          showConfirmButton={true}
-        />
+      isOpen={showDeleteConfirm}
+      onClose={() => setShowDeleteConfirm(false)}
+      onConfirm={confirmDelete}
+      message="您確定要刪除此景點嗎？"
+      showConfirmButton={true}
+    />
     <AlertModal
-        isOpen={isAlertOpen}
-        onClose={() => setIsAlertOpen(false)}
-        message={alertMessage}
-        showConfirmButton={false}
-      />
+      isOpen={isAlertOpen}
+      onClose={() => setIsAlertOpen(false)}
+      message={alertMessage}
+    />
   </div>
   );
 };
-
 export default MapDemoPage;
