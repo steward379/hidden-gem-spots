@@ -66,12 +66,12 @@ const Navbar: React.FC = () => {
                     </Link>
                     <Link href={`/user-maps/${user.uid}`}>
                       <div className="mt-4 sm:mt-0 sm:ml-4 lg:ml-5 md:ml-3">
-                        我的地圖
+                        地圖列表
                       </div>
                     </Link>
                     <Link href="/map">
                       <div className="mt-4 sm:mt-0 sm:ml-4 lg:ml-5 md:ml-3">
-                        管理景點
+                        個人地圖
                         </div>
                     </Link>
                     <button title="logout" onClick={logout} className="mt-4 sm:mt-0 sm:ml-4">
