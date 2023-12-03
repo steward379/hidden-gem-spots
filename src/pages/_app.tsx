@@ -7,15 +7,20 @@ import Layout from '../layouts/layout';
 import { MapNotificationProvider } from '../context/MapNotificationContext';
 import { LastUpdateProvider } from '../context/LastUpdateContext';
 
+import { Provider } from 'react-redux';
+import { store } from '../store/store';
+
 const MyApp = ({ Component, pageProps }: AppProps) => {
   return (
-    <AuthProvider>
-      <LastUpdateProvider>
-        <Layout>
-          <Component {...pageProps} />
-        </Layout>
-      </LastUpdateProvider>
-    </AuthProvider>
+    <Provider store={store}>
+      <AuthProvider>
+        <LastUpdateProvider>
+          <Layout>
+            <Component {...pageProps} />
+          </Layout>
+        </LastUpdateProvider>
+      </AuthProvider>
+    </Provider>
   );
 }
 
