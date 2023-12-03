@@ -167,8 +167,23 @@ button {
   opacity: 1; /* 初始透明度 */
   height: auto; /* 初始高度 */
 }
-
 .custom-transition-container.custom-hidden {
   opacity: 0; /* 完全透明 */
   height: 0; /* 高度為0 */
+}
+/* matrix */
+.matrix-flip {
+  transition: transform 0.2s ease-in-out, mix-blend-mode 0.2s ease-in-out;
+}
+.matrix-flip:hover {
+  mix-blend-mode: hard-light;
+  transform: matrix(0, 1, 1, 0, 0, 0);
+}
+/* rotate */
+.rotate-flip {
+  transition: transform 0.2s ease-in-out, mix-blend-mode 0.2s ease-in-out;
+}
+.rotate-flip:hover {
+  mix-blend-mode: hard-light;
+  transform: rotate(90deg);
 }
