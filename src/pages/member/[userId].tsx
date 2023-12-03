@@ -252,7 +252,7 @@ const MemberPage = () => {
     setTempAvatar(null);
   }
 
-  const isCurrentlyFollowing = memberData.followers.includes(user.uid);
+  const isCurrentlyFollowing = memberData.followers.includes(user?.uid);
 
   // 渲染追蹤和被追蹤列表
   const renderFollowList = (list, title) => {
