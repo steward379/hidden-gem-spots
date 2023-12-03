@@ -55,6 +55,7 @@ const TestAPI = () => {
   }
 
   return (
+
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Test Google Places API</h1>
       <div className="flex space-x-2 mb-4">
@@ -78,8 +79,9 @@ const TestAPI = () => {
           Fetch Places
         </button>
       </div>
-
       {error && <p className="text-red-500">{error}</p>}
+
+      {data && <pre>{JSON.stringify(data, null, 2)}</pre>} 
 
       <div className="space-y-4">
         {data && data.status === 'ZERO_RESULTS' && <p>No results found</p>}
@@ -94,6 +96,7 @@ const TestAPI = () => {
             <a 
                 // href={`https://www.google.com/maps/search/?api=1&query=${place.geometry.location.lat},${place.geometry.location.lng}`} 
                 href={`https://www.google.com/maps/place/?q=place_id:${place.place_id}`}
+                // href={`https://www.google.com/maps/place/?q=place_name:${place.name}`}
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="inline-block bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 mt-2">
