@@ -1,30 +1,53 @@
-// pages/member/[userId].tsx
-import { useAuth } from '../../context/AuthContext';
-import { useRef } from 'react';
-import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
-import Image from 'next/image';
-import ImageUploader from '@/src/components/ImageUploader';
-import DropzoneImage from '@/src/components/DropzoneImage';
-import Link from 'next/link';
+// member/[userId].tsx
+import { useEffect, useState, useRef  } from 'react';
 
+import { useRouter } from 'next/router';
+import Link from 'next/link';
+import Image from 'next/image';
+// auth
+import { useAuth } from '@/src/context/AuthContext';
+// firebase
 import { getAuth, updateProfile } from 'firebase/auth';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import firebaseServices from '../../utils/firebase'; 
-const { db, auth, storage } = firebaseServices; 
-import { doc, updateDoc, getDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
-
+import { doc,  getDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import firebaseServices from '@/src/utils/firebase'; 
+// notifications hook
 import useAuthListeners  from '@/src/hooks/useAuthListeners';
+// components
+import DropImagePreview from '@/src/components/DropImagePreview';
+import LoadingIndicator from '@/src/components/LoadingIndicator';
 
-type AuthListener = (message: any) => void | {};
+import RainbowButtonModule from '@/src/styles/rainbowButton.module.css';
+
+const { db, storage } = firebaseServices; 
+
+type AuthListener = (message: string) => void | {};
 
 const MemberPage = () => {
+  const router = useRouter();
+  const { userId } = router.query;
+
+  const { user, logout, loading } = useAuth();
+  const { updateUserProfile } = useAuth();
+
+
+  // edit profile
+  const [isEditing, setIsEditing] = useState(false);
+  // name 
+  const [name, setName] = useState(null);
+  const [tempName, setTempName] = useState('');
+  // avatar
+  const [avatar, setAvatar] = useState(null);
+  const [tempAvatar, setTempAvatar] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(null);
+
+  const [userDetails, setUserDetails] = useState({});
+  const [isFollowingState, setIsFollowingState] = useState(false);
 
   const [notifications, setNotifications] = useState([]);
 
   const handleNewNotification = (message) => {
     setNotifications((prevNotifications) => [...prevNotifications, message]);
-
     return {}; //avoid type error
   };
 
@@ -33,8 +56,8 @@ const MemberPage = () => {
   const checkForNewFollowersRef = useRef(null);
   const checkForNewMapsRef = useRef(null);
 
-  useAuthListeners(handleNewNotification, (fn) => checkForNewFollowersRef.current = fn, (fn) => checkForNewMapsRef.current = fn);
-
+  useAuthListeners(handleNewNotification, (fn) => checkForNewFollowersRef.current = fn, 
+                                          (fn) => checkForNewMapsRef.current = fn);
   const sendNotifyBtn = async () =>{
     if (checkForNewFollowersRef.current) {
       await checkForNewFollowersRef.current();
@@ -43,20 +66,6 @@ const MemberPage = () => {
       await checkForNewMapsRef.current();
     }
   }
-
-  const router = useRouter();
-
-  const { userId } = router.query;
-  
-  const { user, logout, loading } = useAuth();
-  const { updateUserProfile } = useAuth();
-
-  const [name, setName] = useState(null);
-  const [avatar, setAvatar] = useState(null);
-
-  const [userDetails, setUserDetails] = useState({});
-
-  const [isFollowingState, setIsFollowingState] = useState(false);
 
   const [memberData, setMemberData] = useState({
     id: null,
@@ -80,6 +89,7 @@ const MemberPage = () => {
         followers: data.followers || []
       });
     } else {
+      // alert('找不到會員資料');
       console.log('找不到會員資料');
     } 
   };
@@ -96,19 +106,78 @@ const MemberPage = () => {
       }
       return details;
     };
-  
+
     fetchDetails(memberData.following).then((details) => setUserDetails((prev) => ({ ...prev, ...details })));
     fetchDetails(memberData.followers).then((details) => setUserDetails((prev) => ({ ...prev, ...details })));
+
   }, [memberData.following, memberData.followers]);
 
-  const handleNameChange = async (newName) => {
-    const userRef = doc(db, 'users', userId as string);
-    await updateDoc(userRef, { name: newName });
-    updateProfile(getAuth().currentUser, { displayName: newName });
 
-    setMemberData(prev => ({ ...prev, name: newName })); 
-    setName(newName);
-    updateUserProfile({ name: newName });
+  const handleNameChange = async () => {
+  // const handleNameChange = async (newName) => {
+    if (tempName) {
+      // await handleNameChange(tempName);
+      try {
+      const userRef = doc(db, 'users', userId as string);
+      await updateDoc(userRef, { name: tempName });
+      updateProfile(getAuth().currentUser, { displayName: tempName });
+      
+      setMemberData(prev => ({ ...prev, name: tempName }));
+
+      updateUserProfile({ name: tempName });
+      } catch (error) {
+        // alert('更新名稱失敗');
+        console.log(error);
+      }
+      setTempName('');
+    }
+    // const userRef = doc(db, 'users', userId as string);
+    // await updateDoc(userRef, { name: newName });
+    // updateProfile(getAuth().currentUser, { displayName: newName });
+    // setMemberData(prev => ({ ...prev, name: newName })); 
+
+    // setName(newName);
+  
+  };
+
+  // const handleFileUpload = (file) => {
+  //   setTempAvatar(file);
+  //   setAvatarPreview(URL.createObjectURL(file));
+  // };
+
+  const handleAvatarChange = async () => {
+  // const handleAvatarChange = async (files) => {
+    // if (files.length > 0) {
+    if (tempAvatar) {
+      try {
+      // const file = files[0];
+        const avatarRef = ref(storage, `avatars/${userId}`);
+        // await uploadBytes(avatarRef, file);
+        await uploadBytes(avatarRef, tempAvatar);
+        const avatarURL = await getDownloadURL(avatarRef) 
+
+        const userRef = doc(db, 'users', userId as string);
+        await updateDoc(userRef, { avatar: avatarURL });
+
+        updateProfile(getAuth().currentUser, { photoURL: avatarURL });
+        
+        setMemberData(prev => ({ ...prev, avatar: avatarURL }));
+
+        updateUserProfile({ avatar: avatarURL });
+
+      } catch (error) {
+        // alert('更新頭像失敗');
+        console.log(error);
+      }
+      setTempAvatar(null);
+    } 
+  };
+
+  const handleSaveChanges = async () => {
+    await handleNameChange();
+    await handleAvatarChange();
+
+    setIsEditing(false);
   };
 
   useEffect(() => {
@@ -117,43 +186,11 @@ const MemberPage = () => {
     }
   }, [user, memberData]);
 
-
-  const handleAvatarChange = async (files) => {
-    if (files.length > 0) {
-      const file = files[0];
-      const avatarRef = ref(storage, `avatars/${userId}`);
-      await uploadBytes(avatarRef, file);
-      const avatarURL = await getDownloadURL(avatarRef);
-
-      const userRef = doc(db, 'users', userId as string);
-      await updateDoc(userRef, { avatar: avatarURL });
-
-      updateProfile(getAuth().currentUser, { photoURL: avatarURL });
-      setMemberData(prev => ({ ...prev, avatar: avatarURL }));
-
-      setAvatar(avatarURL);
-      updateUserProfile({ avatar: avatarURL });
-    }
-  };
-
   useEffect(() => {
     if (userId) {
       fetchMemberData(userId);
     }
   }, [userId]);
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="text-center">
-          <span className="block text-black mb-2">載入中...</span>
-          <div className="progress-bar w-32 h-2 bg-gray-200 relative">
-            <div className="progress w-0 h-2 bg-black absolute border rounded"></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   // 檢查是否為當前用戶
   const isCurrentUser = user && user.uid === userId; 
@@ -162,30 +199,24 @@ const MemberPage = () => {
     return memberData.followers.includes(user.uid);
     // return user && user.following && user.following.includes(targetUserId);
   };  
-
   const followUser = async (targetUserId) => {
     if (!user || !targetUserId || isFollowing(targetUserId)) {
       console.error('Invalid action');
       return;
     }
-
     const currentUserRef = doc(db, 'users', user.uid);
     const targetUserRef = doc(db, 'users', targetUserId);
   
     await updateDoc(currentUserRef, {
       following: arrayUnion(targetUserId),
     });
-  
     await updateDoc(targetUserRef, {
       followers: arrayUnion(user.uid),
     });
-
-    // 更新本地狀態
     setMemberData(prevData => ({
       ...prevData,
       followers: [...prevData.followers, user.uid] 
     }));
-
     setIsFollowingState(true); 
   };
 
@@ -194,39 +225,34 @@ const MemberPage = () => {
       console.error('Invalid action');
       return;
     }  
-
     const currentUserRef = doc(db, 'users', user.uid);
     const targetUserRef = doc(db, 'users', targetUserId);
   
     await updateDoc(currentUserRef, {
       following: arrayRemove(targetUserId),
     });
-  
     await updateDoc(targetUserRef, {
       followers: arrayRemove(user.uid),
     });
-
-    // 更新本地狀態
     setMemberData(prevData => ({
       ...prevData,
       followers: prevData.followers.filter((id) => id !== user.uid) 
     }));
-
     setIsFollowingState(false);
   };
 
-  const renderFollowButton = () => {
-    if (!user || user.uid === userId || !memberData.id) return null;
+  if (loading) {
+    return <LoadingIndicator />;
+  }
 
-    const isCurrentlyFollowing = memberData.followers.includes(user.uid);
-  
-    return (
-      <button className="m-5 bg-amber-500 button text-black rounded-lg p-2" 
-              onClick={() => isFollowing(memberData.id) ? unFollowUser(memberData.id) : followUser(memberData.id)}>
-        {isCurrentlyFollowing  ? '取消追蹤' : '追蹤'}
-      </button>
-    );
-  };
+  const toggleEditing = () => {
+    setIsEditing(!isEditing);
+
+    setTempName('');
+    setTempAvatar(null);
+  }
+
+  const isCurrentlyFollowing = memberData.followers.includes(user.uid);
 
   // 渲染追蹤和被追蹤列表
   const renderFollowList = (list, title) => {
@@ -259,65 +285,113 @@ const MemberPage = () => {
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-5">會員中心</h1>
+    <div className="container mx-auto p-4 flex-column">
+      <h1 className="w-full text-2xl font-bold mb-5 ">會員中心</h1>
+         {/* <button className="bg-blue-500 text-white py-2 px-4 rounded" onClick={sendNotifyBtn}>接收通知</button> */}
 
-      <button className="bg-blue-500 text-white py-2 px-4 rounded" onClick={sendNotifyBtn}>接收通知</button>
-
-      <div className="notifications">
+      {/* <div className="mt-4 mb-4 notifications space-y-2">
         {notifications.map((notification, index) => (
-          <div key={index} className="notification">{notification}</div>
+          <div 
+            key={index} 
+            className="notification rounded-full p-4 border border-gray-200 mb-4 shadow-sm bg-white text-gray-800"
+          >
+            {notification}
+          </div>
         ))}
-      </div>
-      {/* {memberData.avatar && ( */}
-        <Image className="w-24 h-24 mb-5 rounded-full" 
-              alt="profile-image" 
-              src={memberData.avatar ? memberData.avatar : '/images/marker-icon.png' } width="100" height="100" />
-      {/* )} */}
-    
-      <h3 className="mb-4 text-lg font-semibold">
-        {user && user.uid === userId ? <span>歡迎，</span> : <span>你正在造訪：</span>} 
-        {memberData.name}
-      </h3>
-      <Link href={`/user-maps/${userId}`} className="flex items-center">
-        <button className="mb-4 bg-blue-500 text-white py-2 px-4 rounded" >
-          查看地圖
-        </button>
-      </Link>
-  
-      {isCurrentUser && (
-        <>
-          <h4 className="mb-4 text-md">{user.email}</h4>
-          <div className="mb-4"> 
-            <ImageUploader onImageUpload={handleAvatarChange} />
-            <div className="mb-4"> 
-              <DropzoneImage onFileUploaded={handleAvatarChange} />
+      </div> */}
+      <div className="lg:flex flex-col md:flex-row space-y-4 md:space-y-0">
+        <div className="flex-2 min-h-[500px] w-full md-1/3 bg-white border-lg rounded-3xl p-7">
+          <div className="flex min-h-[500px] flex-col justify-between space-y-3">
+            <div className="flex-col items-center justify-center space-y-3">
+              <div className="rotate-flip w-24 h-24 bg-yellow-500 rounded-full">
+                <Image className="w-24 h-24 mb-5 rounded-full matrix-flip" 
+                    alt="profile-image" 
+                    src={memberData.avatar ? memberData.avatar : '/images/marker-icon.png' } width="100" height="100" />
+              </div>
+              <h3 className="text-lg font-medium px-2">
+                  {user && user.uid === userId ? <span>歡迎，</span> : <span>你正在造訪：</span>} 
+                  {memberData.name}
+              </h3>
             </div>
+            <div>
+              <Link href={`/user-maps/${userId}`} className="flex items-center">
+                {/* @ts-ignore */}
+                <button title="rainbow-map" className={`${RainbowButtonModule.rainbowButton} mt-2 mb-3`} alt="查看地圖" >
+                </button>
+              </Link>
+              {/* lemmin codepen */}
+            </div>
+            <div>
+            { user && user.uid !== userId && memberData.id &&
+              <button className={` ${isCurrentlyFollowing  ? 'bg-gray-300' : 'bg-green-300'} transition-all button  text-black rounded-lg p-2`}
+                      onClick={() => isFollowing(memberData.id) ? unFollowUser(memberData.id) : followUser(memberData.id)}>
+                {isCurrentlyFollowing  ? '取消追蹤' : '追蹤'}
+              </button>
+            }
+            </div>
+            {isCurrentUser && (
+              <div className="space-y-4">
+                <h4 className="text-md font-medium">您的帳號信箱</h4>
+                <div className="flex items-center flex-grow-0 flex-wrap">
+                  <p className="border rounded-3xl border-orange-500 p-3 max-w-sm break-words">
+                    {user.email}
+                  </p>
+                </div>
+                <div>
+                  <button className={`${!isEditing  ? 'bg-green-300 text-teal-800' : 'bg-gray-300 text-amber-700'}  font-medium py-2 px-4 rounded w-32`}
+                          onClick={toggleEditing}>
+                  {!isEditing  ? '編輯個人檔案' : '取消編輯' }
+                  </button>
+                </div>
+                {isEditing && (
+                <>
+                <div className="mb-4"> 
+                  <label className="block mb-2">更改圖片</label>
+                  {/* <ImageUploader onImageUpload={handleAvatarChange} /> */}
+                  <div className="mb-4"> 
+                    {/* <DropzoneImage onFileUploaded={handleAvatarChange} />
+                    */}
+                    <div className="ml-2 ">
+                      <DropImagePreview onFileUploaded={(file)=> setTempAvatar(file)} circle={true} />
+                    </div>
+                  </div>
+                </div>
+                <div className="mb-4">
+                  <label className="block mb-2">更改名稱</label>
+                  <input
+                    title="name-change"
+                    className="p-2 border border-gray-300 rounded text-black"
+                    type="text"
+                    defaultValue={tempName || user.name}
+                    onBlur={(e) => setTempName(e.target.value)}
+                  />
+                </div>
+                <button className="bg-blue-500 text-white py-2 px-4 rounded" 
+                        onClick={handleSaveChanges}>保存變更</button>
+              </>
+                )}
+                <div className="mb-4">
+                  <button className="bg-red-500 text-white py-2 px-4 rounded" 
+                      onClick={() => getAuth().signOut()}>登出</button>
+                </div>
+              </div>
+              
+            )}
           </div>
-          <div className="mb-4">
-            <label className="block mb-2">更改名稱</label>
-            <input
-              title="name-change"
-              className="p-2 border border-gray-300 rounded text-black"
-              type="text"
-              defaultValue={user.name}
-              onBlur={(e) => handleNameChange(e.target.value)}
-            />
+        </div>
+        <div className="flex-2 lg:flex lg:space-x-4 w-full md:flex">
+          <div className="flex-1 lg:min-h-[500px] w-full md:w-1/2 lg:ml-5 ml-0 mb-6 md:mb-0 lg:mb-0 bg-teal-50 rounded-3xl p-6">
+            {renderFollowList(memberData.following, '已跟隨')}
           </div>
-          <button className="bg-red-500 text-white py-2 px-4 rounded" onClick={() => getAuth().signOut()}>登出</button>
-        </>
-      )}
-      {renderFollowButton()}
-      {renderFollowList(memberData.following, '追蹤中')}
-      {renderFollowList(memberData.followers, '追蹤者')}
+          <div className="flex-1 lg:min-h-[500px] w-full md:w-1/2 lg:ml-5 md:ml-5 ml-0 bg-sky-50 rounded-3xl p-6 ">
+            {renderFollowList(memberData.followers, '追蹤')}
+          </div>
+        </div>
+      </div>
   </div>
   );
+
+  
 };
 
 export default MemberPage;
-
-{/* <a href="https://iconscout.com/3d-illustrations/short" 
-class="text-underline font-size-sm" target="_blank">Short Hair Man With Bucket Hat</a> 
-by <a href="https://iconscout.com/contributors/moehzackbean" 
-class="text-underline font-size-sm">Big Marsȟa</a> 
-on <a href="https://iconscout.com" class="text-underline font-size-sm">IconScout</a> */}
