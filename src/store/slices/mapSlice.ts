@@ -11,6 +11,8 @@ interface Place {
         lng: number;
     };
     images: string[];
+    createdTime?: string;
+    updatedTine?: string;
     likes?: number;
     likedBy?: string[];
     duplicates?: number;
@@ -24,6 +26,8 @@ interface MapState {
         coverImage: string;
         authorName: string;
         publishedPlaces: Place[];
+        publishDate: string;
+        updatedDate: string;
     } | null;
 }
 
