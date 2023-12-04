@@ -1,10 +1,21 @@
 // store/googlePlacesStore.js
-import create from 'zustand';
+import { create } from 'zustand';
 
-const useGooglePlacesStore = create((set) => ({
-  googlePlace: null,
-  setGooglePlace: (place) => set({ googlePlace: place }),
-  clearGooglePlace: () => set({ googlePlace: null })
-}));
+interface GooglePlacesState {
+  googlePlace: any; // 暫時先用 any
+  setGooglePlace: (place: any) => void; // 暫時先用 any
+  clearGooglePlace: () => void;
+}
+
+const useGooglePlacesStore = create<GooglePlacesState>
+(
+  (set) => (
+    {
+      googlePlace: null,
+      setGooglePlace: (place) => set({ googlePlace: place }),
+      clearGooglePlace: () => set({ googlePlace: null })
+    }
+  )
+);
 
 export default useGooglePlacesStore;
