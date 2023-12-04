@@ -11,6 +11,8 @@ interface Place {
     lng: number;
   };
   images: string[];
+  createdTime?: string;
+  updatedTime?: string;
   likes?: number;
   likedBy?: string[];
   duplicates?: number;
