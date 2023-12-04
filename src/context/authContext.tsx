@@ -107,7 +107,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(null);
         setLoading(false);
         if (router.asPath.startsWith("/accounting") || router.asPath.startsWith("/map")) {
-          router.push({ pathname: "/", query: { message: "請先登入" } });
+          router.push({ pathname: "/home", query: { message: "請先登入" } });
         }
 
       }
