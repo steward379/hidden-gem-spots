@@ -1,16 +1,30 @@
 // components/PublishArea.tsx
-import React from 'react';
+import React, {useEffect} from 'react';
 import { useDrop } from 'react-dnd';
-import { Place } from '../types/Place';
+// import { Place } from '../types/Place';
+import useDragPlacesStore from '../store/dragPlacesStore';
 
 const PublishArea = ({ publishedPlaces, onAddToPublish = undefined, onRemoveFromPublish, onSelectPlace }) => {
+
+  const draggedPlace = useDragPlacesStore(state => (state as any).draggedPlace);
+
+  useEffect(() => {
+    if (draggedPlace && !publishedPlaces.some(p => p.id === draggedPlace.id)) {
+      onAddToPublish(draggedPlace);
+    }
+  }, [draggedPlace, publishedPlaces, onAddToPublish]);
+  
+
   const [, drop] = useDrop({
     accept: 'place',
-    drop: (item: Place, monitor) => {
+    // drop: (item: Place, monitor) => {
+    drop: (item, monitor)=>{
       const didDropInside = monitor.didDrop() && monitor.getDropResult();
+
       if (didDropInside) {
-        if (!publishedPlaces.some(p => p.id === item.id)) {
-          onAddToPublish && onAddToPublish(item);
+        if ( draggedPlace  && !publishedPlaces.some(p => p.id === (item as any).id)) {
+          // onAddToPublish && onAddToPublish(item);
+          onAddToPublish && onAddToPublish(draggedPlace);
         }
       }
     },
@@ -41,6 +55,5 @@ const PublishArea = ({ publishedPlaces, onAddToPublish = undefined, onRemoveFrom
       </div>
     );
 };
-
 
 export default PublishArea;
