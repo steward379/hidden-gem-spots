@@ -16,7 +16,7 @@ const AlertModal: React.FC<AlertModalProps> = ({ isOpen, onClose=()=>{}, onConfi
     <div className="fixed inset-0 bg-black bg-opacity-30 z-50 flex justify-center items-center">
       <div className="bg-white bg-opacity-60 p-6 rounded-lg shadow-xl backdrop-blur-sm">
         <p className="text-black">{message}</p>
-        <div className="flex justify-end space-x-4">
+        <div className="flex justify-center space-x-4">
           {isALoadingAlert && (
           <div className="progress-bar w-32 h-2 bg-gray-200 relative">
               <div className="progress w-0 h-2 bg-black absolute border rounded"></div>
@@ -24,7 +24,7 @@ const AlertModal: React.FC<AlertModalProps> = ({ isOpen, onClose=()=>{}, onConfi
           )}
           {showConfirmButton && (
             <button onClick={onConfirm} className="mt-4 bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600">
-              確認刪除
+              確認
             </button>
           )}
           {!isALoadingAlert && (
