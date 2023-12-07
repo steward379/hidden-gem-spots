@@ -1,6 +1,5 @@
 // member/[userId].tsx
 import { useEffect, useState, useRef  } from 'react';
-
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -30,7 +29,6 @@ const MemberPage = () => {
   const { user, logout, loading } = useAuth();
   const { updateUserProfile } = useAuth();
 
-
   // edit profile
   const [isEditing, setIsEditing] = useState(false);
   // name 
@@ -47,8 +45,14 @@ const MemberPage = () => {
   const [notifications, setNotifications] = useState([]);
 
   const handleNewNotification = (message) => {
-    setNotifications((prevNotifications) => [...prevNotifications, message]);
-    return {}; //avoid type error
+    setNotifications((prevNotifications) => {
+      // 檢查新通知是否已經在列表中
+      if (prevNotifications.includes(message)) {
+        return prevNotifications;
+      }
+      return [...prevNotifications, message];
+    });
+    return {}; // 避免型別錯誤
   };
 
   // useAuthListeners(handleNewNotification);
@@ -139,11 +143,6 @@ const MemberPage = () => {
     // setName(newName);
   
   };
-
-  // const handleFileUpload = (file) => {
-  //   setTempAvatar(file);
-  //   setAvatarPreview(URL.createObjectURL(file));
-  // };
 
   const handleAvatarChange = async () => {
   // const handleAvatarChange = async (files) => {
@@ -287,21 +286,9 @@ const MemberPage = () => {
   return (
     <div className="container mx-auto p-4 flex-column">
       <h1 className="w-full text-2xl font-bold mb-5 ">會員中心</h1>
-         {/* <button className="bg-blue-500 text-white py-2 px-4 rounded" onClick={sendNotifyBtn}>接收通知</button> */}
-
-      {/* <div className="mt-4 mb-4 notifications space-y-2">
-        {notifications.map((notification, index) => (
-          <div 
-            key={index} 
-            className="notification rounded-full p-4 border border-gray-200 mb-4 shadow-sm bg-white text-gray-800"
-          >
-            {notification}
-          </div>
-        ))}
-      </div> */}
-      <div className="lg:flex flex-col md:flex-row space-y-4 md:space-y-0">
-        <div className="flex-2 min-h-[500px] w-full md-1/3 bg-white border-lg rounded-3xl p-7">
-          <div className="flex min-h-[500px] flex-col justify-between space-y-3">
+      <div className="lg:flex flex-col md:flex-row space-y-6 md:space-y-0">
+        <div className="flex-2 md:mb-6 lg:mb-0 w-full bg-white border-lg rounded-3xl p-7">
+          <div className="flex flex-col justify-between space-y-3">
             <div className="flex-col items-center justify-center space-y-3">
               <div className="rotate-flip w-24 h-24 bg-yellow-500 rounded-full">
                 <Image className="w-24 h-24 mb-5 rounded-full matrix-flip" 
@@ -316,7 +303,8 @@ const MemberPage = () => {
             <div>
               <Link href={`/user-maps/${userId}`} className="flex items-center">
                 {/* @ts-ignore */}
-                <button title="rainbow-map" className={`${RainbowButtonModule.rainbowButton} mt-2 mb-3`} alt="查看地圖" >
+                <button title="rainbow-map" className={`${RainbowButtonModule.rainbowButton} mt-2 mb-3`} >
+                  <span>查看地圖</span>
                 </button>
               </Link>
               {/* lemmin codepen */}
@@ -379,19 +367,36 @@ const MemberPage = () => {
             )}
           </div>
         </div>
-        <div className="flex-2 lg:flex lg:space-x-4 w-full md:flex">
-          <div className="flex-1 lg:min-h-[500px] w-full md:w-1/2 lg:ml-5 ml-0 mb-6 md:mb-0 lg:mb-0 bg-teal-50 rounded-3xl p-6">
+        <div className="flex-2 lg:flex lg:space-x-6 w-full md:flex">
+          <div className="flex-1 w-full md:w-1/2 lg:ml-5 ml-0 mb-6 md:mb-0 lg:mb-0 bg-teal-50 rounded-3xl p-6">
             {renderFollowList(memberData.following, '已跟隨')}
           </div>
-          <div className="flex-1 lg:min-h-[500px] w-full md:w-1/2 lg:ml-5 md:ml-5 ml-0 bg-sky-50 rounded-3xl p-6 ">
+          <div className="flex-1 w-full md:w-1/2 lg:ml-5 md:ml-5 ml-0  md:mb-0 lg:mb-0 bg-sky-50 rounded-3xl p-6 ">
             {renderFollowList(memberData.followers, '追蹤')}
           </div>
         </div>
       </div>
-  </div>
-  );
+      <div>
 
-  
+    {isCurrentUser && (
+    <div>
+      {/* <button className="bg-blue-500 text-white py-2 px-4 rounded" onClick={sendNotifyBtn}>接收通知</button> */}
+        <div className="mt-4 mb-4 notifications space-y-2">
+          {notifications.map((notification, index) => (
+            <div 
+              dangerouslySetInnerHTML={{ __html: notification }}
+              key={index} 
+              className="notification rounded-full p-4 border border-gray-200 mb-4 shadow-sm bg-white text-gray-800"
+            >
+              {/* {notification} */}
+            </div>
+          ))}
+        </div>
+    </div>
+    )}
+      </div>
+    </div>
+  );  
 };
 
 export default MemberPage;
