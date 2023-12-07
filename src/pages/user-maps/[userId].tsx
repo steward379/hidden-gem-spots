@@ -218,7 +218,7 @@ const UserMapsPage = () => {
   return (
     <div className=" container mx-auto rounded-3xl p-20 ">
        {renderUserInfo()}
-       <div className=" grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 ">
+       <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10  ">
         {maps.map(map => (
         <div key={map.id} className="skew-card border bg-cover bg-center hover:bg-yellow-500 transition-btn rounded-3xl bg-purple-400" 
                style={{ backgroundImage: `url('${map.coverImage}')`, height: '300px', backgroundSize: 'cover', backgroundPosition: 'center', }} 
