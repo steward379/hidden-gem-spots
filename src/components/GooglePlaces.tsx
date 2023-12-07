@@ -1,3 +1,4 @@
+// components/GooglePlaces.tsx
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -95,8 +96,8 @@ const GooglePlaces = ({ latitude, longitude, isFetchingAPI = false,
 
   return (
     <div className="container mx-auto p-4">
-      {/* <h1 className="text-2xl font-bold mb-4">Test Google Places API</h1>
-      <div className="flex space-x-2 mb-4">
+      {/* <h1 className="text-xl font-bold mb-4"></h1> */}
+      {/* <div className="flex space-x-2 mb-4">
         <input
           className="p-2 border border-gray-300 rounded"
           type="text"
@@ -113,15 +114,14 @@ const GooglePlaces = ({ latitude, longitude, isFetchingAPI = false,
         />
         <button 
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-          onClick={fetchPlaces}>
+          onClick={isFetchingAPI}>
           Fetch Places
         </button>
       </div> */}
-
       {error && <p className="text-red-500">{error}</p>}
 
       <div className="space-y-4">
-        { placeName ? (<div><h3 className="text-lg"> {placeName} 附近有 </h3></div> ): ''}
+        { placeName ? (<div><h3 className="text-lg font-medium"> {placeName} 附近有以下 Google 景點 </h3></div> ): ''}
         {displayData && displayData.status === 'ZERO_RESULTS' && <p>No results found</p>}
         {displayData && displayData.results.map((place, index) => (
           <div key={index} className="p-4 border border-gray-300 rounded shadow space-y-1">
@@ -158,14 +158,14 @@ const GooglePlaces = ({ latitude, longitude, isFetchingAPI = false,
           </div>
         ))}
       </div>
-      <div className="pagination-controls mt-4">
+      <div className="pagination-controls mt-4 flex justify-center">
           {Array.from({ length: totalPages }, (_, i) => (
             <button
               key={i}
               onClick={() => setCurrentPage(i + 1)}
               className={`mx-1 px-3 py-1 rounded-3xl ml-2
                           ${currentPage === i + 1 
-                            ? 'bg-sky-500 text-white' 
+                            ? 'bg-red-400 text-white' 
                             : 'bg-white text-black border-gray-300'}`}
             >
               {i + 1}
