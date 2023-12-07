@@ -1,6 +1,12 @@
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
-## Getting Started
+# About Hidden Gem Spot
+
+`/map `provides you a leafet map allow you to create, edit, delete places related to the marker.
+it also provides numberous plug-ins such as mini-map, search console and routing machine.
+Routing machine allow you to create routes between markers (places, in this context).
+
+## Getting Started with Next
 
 `npm install `  or use `yarn`  to install packages first.
 
@@ -19,13 +25,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 You can start editing the pages by modifying everything under `src/pages `
  The page auto-updates as you edit the file since it's a Next App
 
-# About Hidden Gem Spot
-
-`/map `provides you a leafet map allow you to create, edit, delete places related to the marker.
-it also provides numberous plug-ins such as mini-map, search console and routing machine.
-Routing machine allow you to create routes between markers (places, in this context).
-
-## Learn More
+# Learn More
 
 To learn more about Next.js, take a look at the following resources:
 
@@ -34,7 +34,7 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
 
-## Deploy on Vercel 
+## Deploy on Vercel
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
