@@ -20,7 +20,7 @@ const KmzPlacesList = ({ places = '',  onPlaceClick = (e)=>{} }) => {
       <div className="shadow-lg p-3 rounded-xl">
         <p className="bg-green-100 p-1 shadow-md w-48"> 可收起或重新整理較為方便編輯</p>
         <ul className="mt-4">
-          {places.map((place, index) => (
+          {(places as any).map((place, index) => (
             <li key={index} className="mt-2 border-b border-gray-200 pb-2 " onClick={() => onPlaceClick(place)}>
               <h3 className="font-semibold text-gray-800">{place.name}</h3>
               <p className="text-gray-600">{place.description}</p>
