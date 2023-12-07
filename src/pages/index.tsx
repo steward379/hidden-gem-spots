@@ -3,6 +3,12 @@ import Link from 'next/link';
 import React from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
+// import { Inter } from "next/font/google";
+// const inter = Inter({ subsets: ["latin"] });
+
+// import Header from "./components/Header";
+// import Footer from "./components/Footer";
+// import Main from "./components/Main";
 
 const LandingPage = () => {
   const router = useRouter();
