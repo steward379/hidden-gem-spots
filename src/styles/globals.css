@@ -26,7 +26,9 @@ body {
     rgb(var(--background-start-rgb)); */
     background-color: rgb(186, 245, 255);
 }
-
+button:disabled {
+  cursor: not-allowed;
+}
 button {
   transition: ease-in-out 0.3s;
 }
@@ -186,4 +188,16 @@ button {
 .rotate-flip:hover {
   mix-blend-mode: hard-light;
   transform: rotate(90deg);
+}
+
+/* 調整 Routing Machine 介面位置 */
+@media screen and (max-width: 840px) {
+  .leaflet-routing-container {
+      top: 40px !important;
+      width: 93% !important;
+  }
+}
+/* quill 遮蓋問題 */
+.ql-tooltip {
+  left: 0px !important; 
 }
