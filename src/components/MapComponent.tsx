@@ -11,12 +11,16 @@ import 'leaflet-minimap/dist/Control.MiniMap.min.css'; // minimap_css
 import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
 // function
 import { decimalToDms, formatCoordinates } from '../utils/decimalCoordinates'
-// conponents
+// components
 import AlertModal from './AlertModal';
 // zustand
 import useGooglePlacesStore from '../store/googlePlacesStore';
+import useKmzPlacesStore from '../store/kmzPlacesStore';
+import useDragPlacesStore from '../store/dragPlacesStore';
 
 import { categoryMapping } from '../constants';
+import { doc } from '@firebase/firestore';
+import { clear } from 'console';
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -30,7 +34,6 @@ L.Icon.Default.mergeOptions({
   shadowSize: [20, 20] 
 });
 
-
 const MapComponent = ({ 
   places = [], 
   selectedPlace = null,
@@ -43,9 +46,10 @@ const MapComponent = ({
 
   isEditing = false, 
   isPublishing = false,
+
   onAddToPublish = undefined,
-  // onRemoveFromPublish = undefined,
-  // publishedPlaces = [],
+  onRemoveFromPublish = undefined,
+  publishedPlaces = [],
   allowLikes = false, 
   allowDuplicate = false,
   showInteract = true,
@@ -54,11 +58,16 @@ const MapComponent = ({
   setIsRoutingMode = null,
   isRoutingMode = false,
   isFreeMode = false,
+  isDragModeEnabled=false,
   onRouteCalculated = undefined,
   onModeChange = undefined
 }) => {
+  console.log('isRoutingMode?', isRoutingMode);
+  console.log('isDragModeEnabled?', isDragModeEnabled);
+
   // zustand
   const { googlePlace, clearGooglePlace } = useGooglePlacesStore();
+  const { kmzPlace, clearKmzPlace } = useKmzPlacesStore();
   // Taipei 101
   const defaultLat = 25.0330;
   const defaultLng = 121.5654;
@@ -102,6 +111,19 @@ const MapComponent = ({
     }
   }, [routeWaypoints, routingControl, isRoutingPaused]);
 
+  const defaultIcon = useMemo(() => {
+    return new L.Icon({
+      iconUrl: '/images/marker-add.png', 
+      iconRetinaUrl: '/images/marker-add.png',
+      shadowUrl: '/images/marker-shadow.png',
+      // iconSize: [25, 41], 
+      iconSize: [25, 35], 
+      iconAnchor: [12, 35],
+      popupAnchor: [-3, -36], 
+      shadowSize: [20, 20] 
+    });
+  }, []);  
+
   const customFreeIcon = useMemo(() => {
     return new L.Icon({
       iconUrl: '/images/marker-free.png', 
@@ -129,6 +151,35 @@ const MapComponent = ({
       shadowSize: [41, 41] 
     });
   }, []); 
+
+  const customIcon = useMemo(() => {
+    return new L.Icon({
+      iconUrl: '/images/marker.png', 
+      iconRetinaUrl: '/images/marker.png',
+      shadowUrl: '/images/marker-shadow.png',
+      
+      // iconSize: [25, 41], 
+      iconSize: [25, 35], 
+      iconAnchor: [12, 35],
+      popupAnchor: [-3, -36], 
+      shadowSize: [41, 41] 
+    });
+  }, []); 
+
+  const customFreePurpleIcon = useMemo(() => {
+    return new L.Icon({
+      iconUrl: '/images/marker-free-purple.png', 
+      iconRetinaUrl: '/images/marker-free-purple.png',
+      shadowUrl: '/images/marker-shadow.png',
+      
+      // iconSize: [25, 41], 
+      iconSize: [25, 35], 
+      iconAnchor: [12, 35],
+      popupAnchor: [-3, -36], 
+      shadowSize: [41, 41] 
+    });
+  }, []); 
+
 
   // kill new markers while canceling
   useEffect(() => {
@@ -193,8 +244,8 @@ const MapComponent = ({
       }).addTo(newMap);
 
         // 設置路徑規劃控件但不設置路徑
-        // @ts-ignore
-      const newRoutingControl = L.Routing.control({
+  
+      const newRoutingControl = (L as any).Routing.control({
         waypoints: [],
         routeWhileDragging: true
       }).addTo(newMap);
@@ -209,20 +260,6 @@ const MapComponent = ({
     };
   }, [mapRef, map, userPosition]);
 
-  const customIcon = useMemo(() => {
-    return new L.Icon({
-      iconUrl: '/images/marker.png', 
-      iconRetinaUrl: '/images/marker.png',
-      shadowUrl: '/images/marker-shadow.png',
-      
-      // iconSize: [25, 41], 
-      iconSize: [25, 35], 
-      iconAnchor: [12, 35],
-      popupAnchor: [-3, -36], 
-      shadowSize: [41, 41] 
-    });
-  }, []); 
-
   const updateRoute = useCallback((place) => {
     if (isRoutingMode && !isRoutingPaused) {
       setRouteWaypoints(prev => [...prev, L.latLng(place.coordinates.lat, place.coordinates.lng)]);
@@ -234,10 +271,60 @@ const MapComponent = ({
     }
   }, [isRoutingMode, onRouteCalculated, routeWaypoints, onMarkerClick, isRoutingPaused]);
 
+  // dragged
+  const isMarkerInImageArea = useCallback((marker) => {
+    const imageElem = document.querySelector('.marker-bowl-image');
+    const imageRect = imageElem.getBoundingClientRect();
+    console.log(imageRect);
+  
+    const markerPos = map.latLngToContainerPoint(marker.getLatLng());
+    console.log(markerPos);
+  
+    return (
+      markerPos.x >= imageRect.left -200 &&
+      markerPos.x <= imageRect.right + 200 &&
+      markerPos.y >= imageRect.top -200 &&
+      markerPos.y <= imageRect.bottom +200
+    );
+  },[map]);
+
+  const setDraggedPlace = useDragPlacesStore(state => (state as any).setDraggedPlace);
+
+  const handleDragEnd = useCallback((originalPlace, tempMarker, originalMarker) => {
+    const newCoordinates = tempMarker.getLatLng();
+
+    if (isMarkerInImageArea(tempMarker)) {
+      onAddToPublish({ ...originalPlace, coordinates: newCoordinates });
+    }
+
+    tempMarker.remove(); // 移除臨時標記
+    setDraggedPlace(null);
+  }, [onAddToPublish, setDraggedPlace, isMarkerInImageArea]);
+
+  const handleDragStart = useCallback((place, originalMarker) => {
+    const tempMarker = L.marker(place.coordinates, {
+      icon: customFreeIcon,
+      draggable: true,
+    }).addTo(map);
+
+    tempMarker.on('dragend', () => handleDragEnd(place, tempMarker, originalMarker));
+  }, [map, customFreeIcon, handleDragEnd]);
+
+
+  useEffect(() => {
+
+    if (isPublishing) {
+      markers.forEach(marker => {
+        const isPublished = publishedPlaces.some(place => place.id === marker.options.id);
+        marker.setIcon(isPublished ? customGoogleIcon : defaultIcon);
+      });
+    }
+  }, [publishedPlaces, markers, defaultIcon, customGoogleIcon, isPublishing]);
+
+
   // 'places' rendering
   useEffect(() => {
     if (!map || !places) return;
-    // if (map && places) {
 
     // markers.forEach(marker => {
     //   marker.remove();
@@ -248,85 +335,84 @@ const MapComponent = ({
 
       const category = categoryMapping[place.category] || { color: 'bg-gray-200', text: '不明' }; 
 
-      const latestImages = place.images.slice(-2);
-      const imageElements = latestImages.map(image => 
+      const latestImages = place?.images?.slice(-2);
+      const imageElements = latestImages?.map(image => 
         `<div style="margin: 5px;">
             <img src=${image} alt="${place.name}" style="max-width:100%; max-height:100px;" />
           </div>`
-      ).join('');
+      ).join('') || '';
 
-      // function copyCoordinates(elementId) {
-      //   const coords = document.getElementById(elementId).innerText;
-      //   navigator.clipboard.writeText(coords)
-      //     .then(() => showAlert('座標已複製到剪貼簿'))
-      //     .catch(err => console.error('無法複製座標:', err));
-      // }
+      //   navigator.clipboard.writeText(coordinates)
 
-      const popupContent = `
+      const popupElement = document.createElement('div');
+      popupElement.innerHTML =`
       <div key=${place.id} class="text-center z-20" style="width:150px">
         <b class="text-lg">${place.name}</b>
         <p>${place.description}</p>
         ${imageElements}
-
-        <div class="mt-3 mb-3 text-sm text-gray-500 ${category.color} p-1 rounded">${category.text}</div>
+        <div class="mt-3 mb-3 text-sm text-gray-500 ${category.color} p-1 rounded">
+          ${category.text}
+        </div>
         <div class="flex flex-wrap gap-2" >
-        ${
-          place.tags && place.tags.filter(tag => tag.trim().length > 0).length > 0 
-          ? place.tags.map(tag => `<span class="text-xs bg-blue-200 px-2 py-1 rounded-full">${tag}</span>`).join(' ')
-          : ''
-        }
+          ${
+            place.tags && Array.isArray(place.tags) 
+            ? place.tags.filter(tag => tag.trim().length > 0).map(tag => `<span class="text-xs bg-blue-200 px-2 py-1 rounded-full">${tag}</span>`).join(' ')
+            : ''
+          }
         </div>
         ${!isPublishing && showInteract ? `
           <div class="flex items-center justify-center mt-2 ">
             <div class="like-section flex items-center justify-center mr-2">
               ${allowLikes ? `<button class="like-button" data-place-id="${place.id}">
                 <i class="fas fa-heart text-lg text-red-300 hover:text-red-500"></i>
+                <span class="like-count ml-2"> ${place.likes} 枚</span>
               </button>` : ''}
-              <span class="like-count ml-2"> ${place.likes} 枚</span>
+ 
             </div>
             <div class="duplicate-section flex items-center justify-center">
               ${allowDuplicate ? `<button class="duplicate-button mr-2" data-place-id="${place.id}">
                 <i class="fas fa-copy text-lg text-gray-600 hover:text-green-500"></i>
+                <span class="duplicate-count">${place.duplicates} 次</span>
               </button>` : ''}
-              <span class="duplicate-count">${place.duplicates} 次</span>
             </div>
           </div>` : ''
-      }
+        }
         <div class="coordinates-container p-2">
           <span id="coords-${place.id}">${formatCoordinates(place.coordinates.lat, place.coordinates.lng)}</span>
         </div>
-      </div>
-      `;
+        ${isDragModeEnabled ?
+        `<button id="add-to-publish-${place.id}" class="mt-2 bg-green-500 text-wh
+        ite py-2 px-3 rounded hover:bg-green-600 focus:outline-none  text-white">
+          加入發佈區
+        </button>` : ''
+        }
+        </div>`
+
+        if (isDragModeEnabled) {
+          const addToPublishButton = popupElement.querySelector(`#add-to-publish-${place.id}`);
+          addToPublishButton.addEventListener('click', () => {
+            onAddToPublish(place);
+          });
+        }
 
       const markerElement = L.marker(place.coordinates, {
         // @ts-ignore
               id: place.id,
-              draggable: isPublishing, // 如果在發佈模式，標記可拖動
+              draggable: false
       }).addTo(map)
-        .bindPopup(popupContent)
+        .bindPopup(popupElement)
 
-      if (isPublishing) {
-        // 如果處於發佈模式，則設置拖放事件監聽
-        markerElement.on('dragend', (event) => {
-          const marker = event.target;
-          const position = marker.getLatLng();
-          onAddToPublish({ ...place, coordinates: position });
-        });
-      } else {
-        // 如果不是發佈模式，綁定點擊事件或其他事件
-        markerElement.on('click', () => onMarkerClick(place));
-      }
-
+      markerElement.on('click', () => onMarkerClick(place));
       markerElement.on('click', () => updateRoute(place));
+
+      if (isDragModeEnabled) {
+        markerElement.on('mouseup', () => handleDragStart(place, markerElement));
+      }
       return markerElement;
     })
     // }).filter(marker => marker !== null);
     
     // setMarkers(newMarkers); 
-
-    // return () => {
-    //   newMarkers.forEach(marker => marker.remove()); 
-    // };
 
     setMarkers(prevMarkers => {
       // 移除舊的標記
@@ -335,10 +421,14 @@ const MapComponent = ({
           marker.remove();
         }
       });
+    // return () => {
+    //   newMarkers.forEach(marker => marker.remove()); 
+    // };
       return newMarkers;
     });
-  
-  }, [map, places, allowDuplicate, allowLikes, freeModeMarkers, isPublishing, onMarkerClick, onAddToPublish, showInteract, updateRoute]);
+    
+  }, [map, places, allowDuplicate, allowLikes, freeModeMarkers, isPublishing, onMarkerClick, onAddToPublish, showInteract, updateRoute, handleDragStart, isDragModeEnabled]);
+
 
   //search bar & mini map 
   useEffect(() => {
@@ -356,7 +446,7 @@ const MapComponent = ({
         showPopup: false,
         marker: {
           icon: customIcon,
-          draggable: true,
+          draggable: false,
         },
         maxMarkers: 1,
         retainZoomLevel: false,
@@ -401,14 +491,16 @@ const MapComponent = ({
       });
 
       // 初始化迷你地圖
+      const isMobile = window.innerWidth <= 768; // 假設手機版為寬度小於或等於 768px
       const miniMap = new (L as any).Control.MiniMap(
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'), 
         {
           toggleDisplay: true,
-          minimized: false,
+          minimized: isMobile, // 根據螢幕尺寸設置迷你地圖是否最小化
           position: 'bottomright'
         }
       ).addTo(map);
+
 
       return () => {
         map.removeControl(searchControl);
@@ -422,7 +514,9 @@ const MapComponent = ({
 
   // google marker
   useEffect(() => {
-    if (map && googlePlace) {
+    if (map && googlePlace ) {
+      const { lat, lng, name, description } = googlePlace.coordinates;
+
       const tempMarker = L.marker([googlePlace.coordinates.lat, googlePlace.coordinates.lng], {
         icon: customGoogleIcon,
       }).addTo(map);
@@ -440,18 +534,11 @@ const MapComponent = ({
           <button id="delete-temp-marker-btn" class="mt-2 bg-red-500 text-white py-1 px-2 rounded hover:bg-red-600 focus:outline-none">刪除標記</button>
         </div>
       `;
+
   
       // tempMarker.bindPopup(popupContent).openPopup();
-      tempMarker.bindPopup(popupContent);
-
-      // setTimeout(() => {
-      //   const deleteButton = document.getElementById('delete-marker-btn');
-      //   if (deleteButton) {
-      //     deleteButton.addEventListener('click', () => {
-      //       tempMarker.remove();
-      //     });
-      //   }
-      // }, 0);
+      tempMarker.bindPopup(popupContent).openPopup();
+      map.setView([lat, lng]);
 
       tempMarker.on('popupopen', () => {
         const deleteButton = document.getElementById('delete-temp-marker-btn');
@@ -463,6 +550,16 @@ const MapComponent = ({
         }
       });
 
+
+      // setTimeout(() => {
+      //   const deleteButton = document.getElementById('delete-marker-btn');
+      //   if (deleteButton) {
+      //     deleteButton.addEventListener('click', () => {
+      //       tempMarker.remove();
+      //     });
+      //   }
+      // }, 0);
+
       // setGoogleMarkers(prevMarkers => [...prevMarkers, tempMarker]);
       
       return () => {
@@ -470,6 +567,67 @@ const MapComponent = ({
       };
     }
   }, [map, googlePlace, customGoogleIcon, clearGooglePlace]);
+
+  // kmz marker
+  useEffect(() => {
+    if (map && kmzPlace ) {
+      const { lat, lng, name, description } = kmzPlace.coordinates;
+
+      const tempMarker = L.marker([kmzPlace.coordinates.lat, kmzPlace.coordinates.lng], {
+        icon: customGoogleIcon,
+      }).addTo(map);
+  
+      const popupContent = `
+        <div class="text-center z-20" style="width:150px">
+          <b class="text-lg">${kmzPlace.name}</b>
+          <p>${kmzPlace.description == undefined ? '' : kmzPlace.description }</p>
+          <div class="${categoryMapping[kmzPlace.category]?.color || 'bg-gray-200'} p-2 rounded mb-4 w-full">
+            ${categoryMapping[kmzPlace.category]?.text || '不明'}
+          </div>
+          <div> 
+          ${
+            kmzPlace.tags && Array.isArray(kmzPlace.tags) 
+            ? kmzPlace.tags.filter(tag => tag.trim().length > 0).map(tag => `<span class="text-xs bg-blue-200 px-2 py-1 rounded-full">${tag}</span>`).join(' ')
+            : ''
+          }
+          </div>
+          <div class="coordinates-container p-2">
+            <span>${formatCoordinates(kmzPlace.coordinates.lat, kmzPlace.coordinates.lng)}</span>
+          </div>
+        </div>
+      `;
+  
+      // tempMarker.bindPopup(popupContent).openPopup();
+      tempMarker.bindPopup(popupContent).openPopup();
+      map.setView([lat, lng]);
+
+      tempMarker.on('popupopen', () => {
+        const deleteButton = document.getElementById('delete-temp-marker-btn');
+        if (deleteButton) {
+          deleteButton.onclick = () => {
+            tempMarker.remove();
+            clearKmzPlace();
+          };
+        }
+      });
+
+
+      // setTimeout(() => {
+      //   const deleteButton = document.getElementById('delete-marker-btn');
+      //   if (deleteButton) {
+      //     deleteButton.addEventListener('click', () => {
+      //       tempMarker.remove();
+      //     });
+      //   }
+      // }, 0);
+
+      // setGoogleMarkers(prevMarkers => [...prevMarkers, tempMarker]);
+      
+      return () => {
+        tempMarker.remove();
+      };
+    }
+  }, [map, kmzPlace, customGoogleIcon, clearKmzPlace]);
 
 
   // const [placesUpdated, setPlacesUpdated] = useState(false);
@@ -507,7 +665,8 @@ const MapComponent = ({
   //     onAddToPublish({ ...place, coordinates: position });
   //   }
   // };
-  
+
+
   const isInsidePublishArea = (markerPos, areaRect) => {
     if (!areaRect) return false;
     return (
@@ -649,8 +808,8 @@ const MapComponent = ({
         draggable: true
       }).addTo(map);
 
-      // @ts-ignore
-      // newMarker._leaflet_id = L.Util.stamp(newMarker); // 給新標記一個唯一ID
+   
+     // newMarker._leaflet_id = L.Util.stamp(newMarker); // 給新標記一個唯一ID
 
       const popupContent = `
       <p>經度: ${event.latlng.lng.toFixed(5)}</p>
@@ -781,7 +940,7 @@ const MapComponent = ({
 
       if (relevantMarker) {
         // 如果找到了相關聯的標記，則移動地圖視圖並打開其彈出窗口
-        map.setView([selectedPlace.coordinates.lat, selectedPlace.coordinates.lng], 13);
+        map.setView([selectedPlace.coordinates.lat, selectedPlace.coordinates.lng]);
         relevantMarker.openPopup();
       }
     }
@@ -864,7 +1023,7 @@ const toggleMode = () => {
   // }, [isFreeMode, isRoutingMode, clearMarkersAndRoute]);
 
   return (
-    <div className="relative h-full w-full min-h-[600px] text-black">
+    <div className="relative w-full h-[350px] md:h-full text-black">
       {isLoading && 
       <AlertModal
         isOpen={isLoading}
@@ -872,44 +1031,51 @@ const toggleMode = () => {
         isALoadingAlert={true}
       />
       }
-      <div ref={mapRef} className="z-10 h-full w-full min-h-[600px] flex-1" />
+      <div ref={mapRef} className="z-10 h-full w-full flex-1" />
         <div className="absolute top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2">
-          <Image src="/images/marker.png" alt="Marker" 
-                  className="h-9 w-6" width="25" height="35" />
+          <Image src="/images/marker-star.png" alt="Marker" 
+                  width="60" height="100" />
         </div>
         <button
           title="location-fetch" 
-          className="absolute top-0 left-10 z-10 m-3 border-b bg-white text-black py-4 px-1 rounded hover:bg-green-300 shadow"
+          className="absolute left-0 bottom-0 z-10 m-3 border-b bg-white text-black py-2 px-2 rounded hover:bg-green-300 shadow"
           onClick={handleFetchLocationClick}
         >
-          <Image src="/images/map-cursor.png" alt="Fetch-Location" className="h-7 w-7" width="30" height="30" />
+
+          <i className='fa fa-location'></i>
+          <div className="text-sm hidden md:block"> 取得定位 </div>
+          {/* <Image src="/images/map-cursor.png" alt="Fetch-Location" className="h-7 w-7" width="30" height="30" /> */}
         </button>
         { (isRoutingMode || isFreeMode) && (
           <div className="">
             <button 
               title="stop-routing"
-              className="flex-column absolute top-0 left-20 z-10 m-3 border-b bg-white text-black py-2 px-1 rounded hover:bg-green-300 shadow"
+              className="flex-column absolute top-16 left-0 z-10 m-3 border-b bg-white text-black py-2 px-2.5 rounded hover:bg-green-300 shadow"
               onClick={pauseRouting}>
-                <i className="fas fa-pause"></i>
-                <div className="text-sm">{isRoutingPaused ? "繼續路線" : "暫停路線"}</div>
+                {isRoutingPaused ? <i className="fas fa-play"></i> : <i className="fas fa-pause"></i> }
+                <div className="text-sm hidden lg:block">{isRoutingPaused ? "繼續路線" : "暫停路線"}</div>
             </button>
             <button 
               title="stop-routing"
-              className="flex-column absolute top-0 left-40 z-10 m-3 border-b bg-white text-black py-2 px-2 rounded hover:bg-green-300 shadow"
+              className="flex-column absolute md:top-32 top-28 left-0 z-10 m-3 border-b bg-white text-black py-2 px-2 rounded hover:bg-green-300 shadow"
               onClick={()=>setShowDeleteConfirm(true)}>
                 <i className="fas fa-trash"></i>
-                <div className="text-sm">清除路線</div>
+                <div className="hidden lg:block text-sm">清除路線</div>
             </button>
-            <button
+            {/* <button
               title="toggle-mode"
-              className="flex-column absolute top-0 left-60 z-10 m-3 border-b bg-white text-black py-2 px-2 rounded hover:bg-green-300 shadow"
+              className="flex-column absolute bottom-16 left-0 z-10 m-3 border-b bg-white text-black py-2 px-2 rounded hover:bg-green-300 shadow"
               onClick={toggleMode}
             >
               <i className={`fas ${isRoutingMode ? 'fa-fire' : 'fa-road'}`}></i>
-              <div className="text-sm">{isRoutingMode ? '自由模式' : '路線模式'}</div>
-            </button>
+              <div className="text-sm hidden md:block">{isRoutingMode ? '自由模式' : '路線模式'}</div>
+            </button> */}
           </div>
-        )} 
+        )}
+        { isDragModeEnabled && (
+          <Image src="/images/marker-bowl.png" alt="star-bowl" width={70} height={70}
+                className="marker-bowl-image absolute bottom-1/3 right-0 z-10" />
+        )}
         <AlertModal
           isOpen={isAlertOpen}
           onClose={() => setIsAlertOpen(false)}
