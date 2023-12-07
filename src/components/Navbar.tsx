@@ -5,6 +5,11 @@ import GoogleLogComponent from './GoogleLogComponent';
 import { useAuth } from '../context/AuthContext';
 import Image from 'next/image';
 
+// clerk
+import { SignInButton } from "@clerk/nextjs";
+import { SignOutButton } from "@clerk/nextjs";
+// import { SignInWithMetamaskButton } from "@clerk/nextjs";
+
 const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -83,9 +88,13 @@ const Navbar: React.FC = () => {
                 <div className={`mt-4 sm:mt-0 ${isMenuOpen ? 'flex' : 'hidden'} sm:flex flex-col sm:flex-row`}>
                   <EmailLogComponent />
                   <GoogleLogComponent />
+                  {/* <SignInWithMetamaskButton /> */}
+                  <SignInButton />
+                  <SignOutButton />
                 </div>
               )}
             </div>
+            
             
           </div>
           {/* )} */}
