@@ -151,7 +151,8 @@ const EditMap = () => {
         title: mapData.title,
         content: mapData.content,
         coverImage: coverImageURL,
-        publishDate: new Date().toISOString()
+        publishDate: mapData.publishDate,
+        updatedDate : new Date().toISOString()
       });
 
       router.push(`/publishedMaps/${user.uid}/maps/${mapId}`);
