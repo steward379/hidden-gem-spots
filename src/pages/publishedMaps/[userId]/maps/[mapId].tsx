@@ -1,35 +1,46 @@
 // pages/publishedMaps/[userId]/maps/[mapId].tsx
-import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
-import dynamic from 'next/dynamic';
-import Link from 'next/link';
-import Image from 'next/image';
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/router";
+import dynamic from "next/dynamic";
+import Link from "next/link";
+import Image from "next/image";
 // firebase
-import { doc, getDoc, updateDoc, setDoc, deleteDoc, arrayUnion, arrayRemove, runTransaction, collection, addDoc, getDocs } from 'firebase/firestore';
-import firebaseServices from '../../../../utils/firebase';
+import {
+    doc,
+    getDoc,
+    updateDoc,
+    setDoc,
+    deleteDoc,
+    arrayUnion,
+    arrayRemove,
+    runTransaction,
+    collection,
+    addDoc,
+    getDocs,
+} from "firebase/firestore";
+import firebaseServices from "../../../../utils/firebase";
 const { db } = firebaseServices;
 // context
-import { useAuth } from '../../../../context/AuthContext';
+import { useAuth } from "../../../../context/AuthContext";
 // function
-import { decimalToDms }  from '../../../../utils/decimalCoordinates';
+import { decimalToDms } from "../../../../utils/decimalCoordinates";
 // components
-import AlertModal from '../../../../components/AlertModal';
-import LoadingIndicator from '@/src/components/LoadingIndicator';
+import AlertModal from "../../../../components/AlertModal";
+import LoadingIndicator from "@/src/components/LoadingIndicator";
 // Redux
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '../../../../store/store';
-import { setMapDataRedux } from '../../../../store/slices/mapSlice';
+import { useSelector, useDispatch } from "react-redux";
+import { RootState } from "../../../../store/store";
+import { setMapDataRedux } from "../../../../store/slices/mapSlice";
 // css&json
-import 'react-quill/dist/quill.snow.css'; 
-import { categoryMapping } from '@/src/constants';
-
-
+import RainbowButtonModule from "@/src/styles/RainbowButton.module.css";
+import "react-quill/dist/quill.snow.css";
+import { categoryMapping } from "@/src/constants";
 
 const MapComponentWithNoSSR = dynamic(
-    () => import('../../../../components/MapComponent'),
+    () => import("../../../../components/MapComponent"),
     { ssr: false }
 );
-const ReactQuill = dynamic(() => import('react-quill'), {
+const ReactQuill = dynamic(() => import("react-quill"), {
     ssr: false,
     loading: () => <p>Loading...</p>,
 });
@@ -144,19 +155,19 @@ const PublishedMapDetail = () => {
 
                     // redux
                     const transformedMapDetails = {
-                        title: mapDetails.title || "", // 這裡提供默認值以防數據缺失
-                        content: mapDetails.content || "",
-                        coverImage: mapDetails.coverImage || "",
-                        authorName: authorSnap.data().name || "",
+                        title: mapDetails.title,
+                        content: mapDetails.content,
+                        coverImage: mapDetails.coverImage,
+                        authorName: authorSnap.data().name,
                         publishedPlaces: placesSnap.docs.map((doc) => {
                             const placeData = doc.data();
                             return {
                                 id: doc.id,
                                 // 確保包括 Place 類型所需的所有屬性
-                                name: placeData.name || "",
-                                description: placeData.description || "",
+                                name: placeData.name,
+                                description: placeData.description,
                                 tags: placeData.tags || [],
-                                category: placeData.category || "",
+                                category: placeData.category,
                                 coordinates: placeData.coordinates || {
                                     lat: 0,
                                     lng: 0,
@@ -168,6 +179,8 @@ const PublishedMapDetail = () => {
                                 duplicatedBy: placeData.duplicatedBy || [],
                             };
                         }),
+                        publishDate: mapDetails.publishDate,
+                        updatedDate: mapDetails.updatedDate || ''
                     };
 
                     dispatch(setMapDataRedux(transformedMapDetails));
@@ -338,8 +351,8 @@ const PublishedMapDetail = () => {
                                     : place.likes + 1;
                                 const updatedLikedBy = alreadyLiked
                                     ? place.likedBy.filter(
-                                          (uid) => uid !== user.uid
-                                      )
+                                        (uid) => uid !== user.uid
+                                    )
                                     : [...place.likedBy, user.uid];
                                 return {
                                     ...place,
@@ -466,6 +479,8 @@ const PublishedMapDetail = () => {
                     category: placeData.category,
                     coordinates: placeData.coordinates,
                     images: placeData.images,
+                    createdTime: new Date().toISOString(),
+                    updatedTime: "",
                 };
                 // delete placeDataToDuplicate.id; // 移除原有的 id
                 await transaction.set(doc(userPlacesRef), placeDataForUserMap);
@@ -496,9 +511,9 @@ const PublishedMapDetail = () => {
                                     place.duplicatedBy.includes(user.uid)
                                         ? place.duplicatedBy
                                         : [
-                                              ...(place.duplicatedBy || []),
-                                              user.uid,
-                                          ];
+                                            ...(place.duplicatedBy || []),
+                                            user.uid,
+                                        ];
                                 return {
                                     ...place,
                                     duplicates: updatedDuplicates,
@@ -604,484 +619,531 @@ const PublishedMapDetail = () => {
 
             <div
                 className="relative lg:overflow-auto md:overflow-auto lg:w-1/3 md:w-1/2 w-full lg:mb-10
-      lg:mt-10 md:mt-5 mt-7 lg:mr-10 md:mr-5 lg:p-8 md:p-4 p-10 bg-white shadow rounded"
+      lg:mt-10 md:mt-5 mt-7 lg:mr-10 md:mr-5  bg-white shadow rounded"
             >
-                <div className="">
-                    <div className="absolute top-0 right-5 flex items-center justify-center mb-5 mt-5">
-                        <label htmlFor="toggle-like"  className="flex items-center cursor-pointer">
-                            <div className="relative">  
-                                <input
-                                    title="all"
-                                    type="checkbox"
-                                    id="toggle-like"
-                                    className="sr-only"
-                                    onChange={() => {
-                                        setShowPlacesList(!showPlacesList);
-                                        setShowLikedPlacesList(false);
-                                    }}
-                                    checked={showPlacesList}
-                                />
-                                <div className={`flex items-center w-16 h-9 rounded-full transition-colors ${
-                                    showPlacesList
-                                        ? "bg-sky-500"
-                                        : "bg-gray-400"
-                                }`}
-                            >
-                                <i
-                                    className={`fas ${
-                                        showPlacesList
-                                            ? "fa-eye-slash ml-2 text-white "
-                                            : "fa-eye ml-9 text-gray-900"
-                                    } text-center`}
-                                ></i>
-                            </div>
-                            <div
-                                className={`dot absolute left-1 top-1 bg-white h-7 w-7 rounded-full transition transform ${
-                                    showPlacesList ? "translate-x-full" : ""
-                                }`}
-                            ></div>
-                        </div>
-                        <div className="ml-1.5 text-gray-700 font-medium  hidden lg:inline">
-                            <i className="fas fa-list ml-1 mr-1"></i>
-                            {showPlacesList ? "" : ""}
-                        </div>
-                        </label>
-                    </div>
-                    <div className="absolute top-0 right-30 flex items-center justify-center mb-5 mt-5">
-                      <label htmlFor="toggle" className="flex items-center cursor-pointer">
-                            <div className="relative">
-                                  <input title="show-like" type="checkbox" 
-                                        id="toggle" 
-                                        className="sr-only"
-                                        onChange={() => {
-                                              setShowLikedPlacesList(
-                                                  !showLikedPlacesList
-                                              );
-                                              setShowPlacesList(false);
-                                          }}
-                                          checked={showLikedPlacesList}
-                                  />
-                                  <div className={`flex items-center w-16 h-9 rounded-full transition-colors 
-                                              ${showLikedPlacesList ? "bg-red-400" : "bg-gray-400"}`}>
-                                      <i className={`fas ${showLikedPlacesList
-                                                  ? "fa-heart-broken ml-2.5 text-white "
-                                                  : "fa-heart ml-9 text-white"} 
-                                                  text-center`}
-                                      ></i>
-                                  </div>
-                                  <div className={`dot absolute left-1 top-1 bg-white h-7 w-7 rounded-full transition transform
-                                      ${showLikedPlacesList ? "translate-x-full" : ""}`}
-                                  ></div>
-                                </div>
-                                <div className="ml-1.5 text-gray-700 font-medium hidden lg:inline">
-                                    <i className="fas fa-list ml-1 mr-1"></i>
-                                    {showLikedPlacesList ? "" : ""}
-                                </div>
-                          </label>
-                    </div>
-                </div>
-
-                <div className="flex items-center justify-center mb-2 mt-6 md:mt-12">
-                    <h1 className="text-2xl font-bold  ">
-                        <i className="fas fa-map-location-dot mr-2 mt-5"></i>
-                        {mapData.title}
-                    </h1>
-                    <button
-                        className="rounded-2xl bg-sky-100 p-3 ml-3 lg:h-20"
-                        onClick={() => {
-                            setShowMapContent(!showMapContent);
-                        }}
-                    >
-                        {showMapContent ? (
-                            <>
-                                <div>
-                                    <i className="fas fa-eye-slash mr-2"></i>
-                                </div>
-                                <div className="hidden lg:inline text-sm">
-                                    {" "}
-                                    隱藏文章{" "}
-                                </div>
-                            </>
-                        ) : (
-                            <>
-                                <div>
-                                    <i className="fas fa-map-location mr-2"></i>
-                                </div>
-                                <div className="hidden lg:inline text-sm">
-                                    {" "}
-                                    地圖文章{" "}
-                                </div>
-                            </>
-                        )}
-                    </button>
-                    <button
-                        className="flex-column rounded-2xl bg-green-200 p-3 lg:h-20 ml-3 text-sm
-                             font-medium hover:bg-green-500 hover:text-white "
-                        onClick={() => setIsRoutingMode(!isRoutingMode)}
-                    >
-                        <div>
-                            <i className="fas fa-route"></i>
-                        </div>
-                        <div className="hidden lg:inline">
-                            {isRoutingMode ? "離開路徑模式" : "規劃路徑"}
-                        </div>
-                    </button>
-                </div>
-
-                <div className="flex items-center mb-4">
-                    <div className="flex items-center mr-2">
+                <div className="sticky top-0 bg-white shadow-lg z-50 flex items-center p-2">
+                    <div className="flex items-center justify-center">
                         <button
-                            title="favorite-button-map text-2xl"
-                            className="m-2 mr-1.5"
-                            onClick={handleLikeClick}
+                            className="rounded-full bg-sky-100 p-3 mr-2 "
+                            onClick={() => {
+                                setShowMapContent(!showMapContent);
+                            }}
                         >
-                            {isMapLiked ? (
-                                <i className="fas fa-heart text-red-500"></i>
-                            ) : (
-                                <i className="far fa-heart"></i>
-                            )}
-                        </button>
-                        <span className="">
-                            {mapData.likes == 0 ? (
+                            {showMapContent ? (
                                 <>
-                                    <span className="hidden lg:flex text-sm">
-                                        {" "}
-                                        還沒人喜歡，當第一個吧！{" "}
-                                    </span>
-                                    <span className="md:hidden lg:hidden flex">
-                                        {" "}
-                                        0{" "}
-                                    </span>
+                                    <div>
+                                        <i className="fas fa-eye-slash mr-2"></i>
+                                    </div>
+                                    <div className="hidden lg:inline text-sm">
+                                        地圖文
+                                    </div>
                                 </>
                             ) : (
-                                <div>{mapData.likes}</div>
+                                <>
+                                    <div>
+                                        <i className="fas fa-map-location mr-2"></i>
+                                    </div>
+                                    <div className="hidden lg:inline text-sm">
+                                        {" "}
+                                        地圖文{" "}
+                                    </div>
+                                </>
                             )}
-                        </span>
-                    </div>
+                        </button>
+                        <div className="inline-block">
+                            <button title="route-mode"
+                                className={`justify-center items-center relative`}>
+                                <button
+                                    className=" p-3 text-sm
+                            font-medium hover:bg-black bg-green-200 hover:text-green-500 rounded-full"
+                                    onClick={() => setIsRoutingMode(!isRoutingMode)}>
+                                    <div>
+                                        {isRoutingMode ? <i className="fas fa-door-open"></i> : <i className="fas fa-route"></i>}
+                                    </div>
+                                    <div className="hidden lg:inline">
+                                        {isRoutingMode ? "停止路徑" : "規劃路徑"}
+                                    </div>
+                                </button>
+                            </button>
+                            <div className="">
+                                <div className="absolute top-0 right-2 flex items-center justify-center mb-5 mt-5">
+                                    <label
+                                        htmlFor="toggle-like"
+                                        className="flex items-center cursor-pointer"
+                                    >
+                                        <div className="relative">
+                                            <input
+                                                title="all"
+                                                type="checkbox"
+                                                id="toggle-like"
+                                                className="sr-only"
+                                                onChange={() => {
+                                                    setShowPlacesList(!showPlacesList);
+                                                    setShowLikedPlacesList(false);
+                                                }}
+                                                checked={showPlacesList}
+                                            />
+                                            <div
+                                                className={`flex items-center w-16 h-9 rounded-full transition-colors ${showPlacesList
+                                                    ? "bg-sky-500"
+                                                    : "bg-gray-400"
+                                                    }`}
+                                            >
+                                                <i
+                                                    className={`fas ${showPlacesList
+                                                        ? "fa-eye-slash ml-2 text-white "
+                                                        : "fa-eye ml-9 text-gray-900"
+                                                        } text-center`}
+                                                ></i>
+                                            </div>
+                                            <div
+                                                className={`dot absolute left-1 top-1 bg-white h-7 w-7 rounded-full transition transform ${showPlacesList ? "translate-x-full" : ""
+                                                    }`}
+                                            ></div>
+                                        </div>
+                                        <div className="ml-1.5 text-gray-700 font-medium  hidden lg:inline">
+                                            <i className="fas fa-list ml-1 mr-1"></i>
+                                            {showPlacesList ? "" : ""}
+                                        </div>
+                                    </label>
+                                </div>
+                                <div className="absolute top-0 right-[100px] flex items-center justify-center mb-5 mt-5">
+                                    <label
+                                        htmlFor="toggle"
+                                        className="flex items-center cursor-pointer"
+                                    >
+                                        <div className="relative">
+                                            <input
+                                                title="show-like"
+                                                type="checkbox"
+                                                id="toggle"
+                                                className="sr-only"
+                                                onChange={() => {
+                                                    setShowLikedPlacesList(
+                                                        !showLikedPlacesList
+                                                    );
+                                                    setShowPlacesList(false);
+                                                }}
+                                                checked={showLikedPlacesList}
+                                            />
+                                            <div
+                                                className={`flex items-center w-16 h-9 rounded-full transition-colors 
+                                            ${showLikedPlacesList
+                                                        ? "bg-red-400"
+                                                        : "bg-gray-400"
+                                                    }`}
+                                            >
+                                                <i
+                                                    className={`fas ${showLikedPlacesList
+                                                        ? "fa-heart-broken ml-2.5 text-white "
+                                                        : "fa-heart ml-9 text-white"
+                                                        } 
+                                                text-center`}
+                                                ></i>
+                                            </div>
+                                            <div
+                                                className={`dot absolute left-1 top-1 bg-white h-7 w-7 rounded-full transition transform
+                                    ${showLikedPlacesList
+                                                        ? "translate-x-full"
+                                                        : ""
+                                                    }`}
+                                            ></div>
+                                        </div>
+                                        <div className="ml-1.5 text-gray-700 font-medium hidden lg:inline">
 
-                    <div className="border-2 p-1 rounded-3xl">
-                        <span className="text-sm ml-2"> 景點共 </span>
-                        <span className="ml-1 text-sm">
-                            {totalDuplicates} 次
-                            <i className="fas fa-copy ml-1 mr-1 text-black"></i>
-                        </span>
-                        <span className="ml-1 text-sm">
-                            {totalPlacesLikes} 次
-                            <i className="fas fa-heart ml-1 mr-1 text-black"></i>
-                        </span>
+                                            {showLikedPlacesList ? "" : ""}
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
+                <div className="container lg:px-6 md:px-4 px-3 py-3">
 
-                {showMapContent && (
-                    <div className="relative border shadow p-3 rounded-3xl">
-                        <div className="flex-column items-center mb-4">
-                            <h1 className="text-2xl font-bold mb-3 mt-9">
-                                {mapData.title}
-                            </h1>
-                            <div className="mr-2 flex">
-                                {mapData.authorAvatar && (
-                                    <Link href={`/member/${mapData.userId}/`}>
-                                        <Image
-                                            src={mapData.authorAvatar}
-                                            alt="Author Avatar"
-                                            className="rounded-full w-12 h-12 mr-3"
-                                            width="50"
-                                            height="50"
-                                        />
-                                    </Link>
+                    <h1 className="text-2xl font-bold  ">
+                        <i className="fas fa-map-location-dot mr-2"></i>
+                        {mapData.title}
+                    </h1>
+
+
+                    <div className="flex items-center mb-4">
+                        <div className="flex items-center mr-2">
+                            <button
+                                title="favorite-button-map text-2xl"
+                                className="m-2 mr-1.5"
+                                onClick={handleLikeClick}
+                            >
+                                {isMapLiked ? (
+                                    <i className="fas fa-heart text-red-500"></i>
+                                ) : (
+                                    <i className="far fa-heart"></i>
                                 )}
-                                <p className="mt-3 text-lg font-semibold">
-                                    {mapData.authorName}
-                                </p>
-                            </div>
-                        </div>
-                        <p className="mb-4 text-sm">
-                            {new Date(mapData.publishDate).toLocaleString(
-                                "zh-TW",
-                                { hour12: true }
-                            )}
-                        </p>
-                        {mapData.coverImage && (
-                            <div className="w-full h-60 relative">
-                                <Image
-                                    src={mapData.coverImage}
-                                    alt="Cover Image"
-                                    fill
-                                    className="object-cover"
-                                />
-                            </div>
-                        )}
-                        <div className="bg-white text-black mt-4">
-                            <ReactQuill
-                                value={mapData.content}
-                                readOnly={true}
-                                theme="snow"
-                                modules={quillModules}
-                            />
-                        </div>
-                        {isMapCreator && (
-                            <Link href={`/edit-map/${user.uid}/${mapId}`}>
-                                <button
-                                    title="edit-map-content"
-                                    className=" h-12 w-12 absolute bg-sky-100 right-0 top-0 rounded-full mb-5 mt-5 m-2 flex-column justify-center items-center border-2 border-dashed border-gray-300 cursor-pointer hover:border-gray-500 hover:bg-green-300"
-                                >
-                                    <i className="fa fa-edit"></i>
-                                </button>
-                            </Link>
-                        )}
-                    </div>
-                )}
-                {selectedPlace && (
-                    <div
-                        className={`relative selected-place-detail mt-4 border rounded-3xl shadow p-5
-                          transition-all duration-300 
-                          ${detailsExpanded ? "max-h-full" : "max-h-12"}`}
-                    >
-                        <p
-                            className="absolute right-0 top-0 cursor-pointer p-5"
-                            onClick={handleMarkerClose}
-                        >
-                            <i className="fas fa-times"></i>
-                        </p>
-                        <button
-                            title="toggle-details"
-                            onClick={toggleDetails}
-                            className="absolute right-1/2 top-0 p-5"
-                        >
-                            <i
-                                className={`fas ${
-                                    detailsExpanded
-                                        ? "fa-chevron-up"
-                                        : "fa-chevron-down"
-                                }`}
-                            ></i>
-                        </button>
-                        <h3 className="text-xl font-bold ">
-                            {selectedPlace.name}
-                        </h3>
-                        {detailsExpanded && (
-                        <>
-                        <p className="text-gray-700 mt-2">
-                            {selectedPlace.description}
-                        </p>
-                        <div
-                            className={`text-sm ${
-                                categoryMapping[selectedPlace.category]
-                                    ?.color || "bg-gray-200"
-                            } p-1 rounded mt-2`}
-                        >
-                            {categoryMapping[selectedPlace.category]?.text ||
-                                "不明"}
-                        </div>
-                        {selectedPlace.tags &&
-                            selectedPlace.tags.filter(
-                                (tag) => tag.trim().length > 0
-                            ).length > 0 && (
-                                <div className="flex flex-wrap gap-2 mt-2">
-                                    {selectedPlace.tags.map((tag) => (
-                                        <span
-                                            key={tag}
-                                            className="text-xs bg-blue-200 px-2 py-1 rounded-full"
-                                        >
-                                            {tag}
+                            </button>
+                            <span className="">
+                                {mapData.likes == 0 ? (
+                                    <>
+                                        <span className="hidden lg:flex text-sm">
+                                            {" "}
+                                            還沒人喜歡，當第一個吧！{" "}
                                         </span>
-                                    ))}
+                                        <span className="md:hidden lg:hidden flex">
+                                            {" "}
+                                            0{" "}
+                                        </span>
+                                    </>
+                                ) : (
+                                    <div>{mapData.likes}</div>
+                                )}
+                            </span>
+                        </div>
+
+                        <div className="border-2 p-1 rounded-3xl">
+                            <span className="text-sm ml-2"> 景點共 </span>
+                            <span className="ml-1 text-sm">
+                                {totalDuplicates} 次
+                                <i className="fas fa-copy ml-1 mr-1 text-black"></i>
+                            </span>
+                            <span className="ml-1 text-sm">
+                                {totalPlacesLikes} 次
+                                <i className="fas fa-heart ml-1 mr-1 text-black"></i>
+                            </span>
+                        </div>
+                    </div>
+
+                    {showMapContent && (
+                        <div className="relative border shadow p-3 rounded-3xl">
+                            <div className="flex-column items-center mb-4">
+                                <h1 className="text-2xl font-bold mb-3 mt-9">
+                                    {mapData.title}
+                                </h1>
+                                <div className="mr-2 flex">
+                                    {mapData.authorAvatar && (
+                                        <Link href={`/member/${mapData.userId}/`}>
+                                            <Image
+                                                src={mapData.authorAvatar}
+                                                alt="Author Avatar"
+                                                className="rounded-full w-12 h-12 mr-3"
+                                                width="50"
+                                                height="50"
+                                            />
+                                        </Link>
+                                    )}
+                                    <p className="mt-3 text-lg font-semibold">
+                                        {mapData.authorName}
+                                    </p>
                                 </div>
-                            )}
-                        <div className="mt-4">
-                            {selectedPlace.images.map((url, index) => (
-                                <div
-                                    key={index}
-                                    className="image-preview mb-2 relative"
-                                    style={{ width: 300, height: 300 }}
-                                >
+                            </div>
+                            <p className="mb-4 text-sm">
+                                {new Date(mapData.publishDate).toLocaleString(
+                                    "zh-TW",
+                                    { hour12: true }
+                                )}
+                            </p>
+                            {mapData.coverImage && (
+                                <div className="w-full h-60 relative">
                                     <Image
-                                        src={url}
-                                        alt={`${selectedPlace.name} image ${index}`}
+                                        src={mapData.coverImage}
+                                        alt="Cover Image"
                                         fill
                                         className="object-cover"
                                     />
                                 </div>
-                            ))}
-                        </div>
-                        <div className="flex">
-                            <Link
-                                href={`https://www.google.com/maps/place/?q=place_name:${selectedPlace.name}`}
-                                target="_blank"
-                                passHref
-                            >
-                                <button className="flex items-center mr-3 bg-blue-100 text-black p-2 rounded hover:bg-blue-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-300">
-                                    <i className="fab fa-google mr-1"></i>
-                                    <i className="fa-solid fa-magnifying-glass mr-1.5"></i>
-                                    <span className="hidden lg:flex">
-                                        {" "}
-                                        名稱
-                                    </span>
-                                </button>
-                            </Link>
-                            <Link
-                                href={`https://www.google.com/maps/place/${decimalToDms(
-                                    selectedPlace.coordinates.lat,
-                                    selectedPlace.coordinates.lng
-                                )}`}
-                                target="_blank"
-                                passHref
-                            >
-                                <button className="flex items-center mr-3 bg-blue-100 text-black p-2 rounded hover:bg-blue-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-300">
-                                    <i className="fab fa-google mr-1"></i>
-                                    <i className="fa-solid fa-globe mr-1.5"></i>
-                                    <span className="hidden lg:flex">
-                                        {" "}
-                                        經緯
-                                    </span>
-                                </button>
-                            </Link>
-                        </div>
-                    </>
-                        )}
-                    </div>
-                )}
-                {(showPlacesList || showLikedPlacesList) && (
-                    <div className="places-list mt-4">
-                        <div className="search-and-filter">
-                            <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-2 mb-4">
-                                <div className="flex-1">
-                                    <input
-                                        type="text"
-                                        value={searchTerm}
-                                        onChange={(e) =>
-                                            setSearchTerm(e.target.value)
-                                        }
-                                        placeholder="搜尋景點名稱或標籤"
-                                        className="p-2 w-full border border-gray-300 rounded-md text-black focus:ring-blue-500 focus:border-blue-500"
-                                    />
-                                </div>
-                                <div>
-                                    <select
-                                        title="category-select"
-                                        value={selectedCategory}
-                                        onChange={(e) =>
-                                            setSelectedCategory(e.target.value)
-                                        }
-                                        className="p-2 w-full border border-gray-300 rounded-md text-black focus:ring-blue-500 focus:border-blue-500"
-                                    >
-                                        <option value="">搜尋類別</option>
-                                        {Object.entries(categoryMapping).map(
-                                            ([key, { text }]) => (
-                                                <option key={key} value={key}>
-                                                    {text}
-                                                </option>
-                                            )
-                                        )}
-                                    </select>
-                                </div>
+                            )}
+                            <div className="bg-white text-black mt-4">
+                                <ReactQuill
+                                    value={mapData.content}
+                                    readOnly={true}
+                                    theme="snow"
+                                    modules={quillModules}
+                                />
                             </div>
-
-                            {searchTerm || selectedCategory ? (
+                            {mapData.updatedDate && (
+                                <p className="text-sm mb-4">
+                                    最後更新時間: {new Date(mapData.updatedDate).toLocaleString("zh-TW", { hour12: true })}
+                                </p>
+                            )}
+                            {isMapCreator && (
+                                <Link href={`/edit-map/${user.uid}/${mapId}`}>
+                                    <button
+                                        title="edit-map-content"
+                                        className=" h-12 w-12 absolute bg-sky-100 right-0 top-0 rounded-full mb-5 mt-5 m-2 flex-column justify-center items-center border-2 border-dashed border-gray-300 cursor-pointer hover:border-gray-500 hover:bg-green-300"
+                                    >
+                                        <i className="fa fa-edit"></i>
+                                    </button>
+                                </Link>
+                            )}
+                        </div>
+                    )}
+                    {selectedPlace && (
+                        <div
+                            className={`relative selected-place-detail mt-4 border rounded-3xl shadow p-5
+                        transition-all duration-300 
+                        ${detailsExpanded ? "max-h-full" : "max-h-12"}`}
+                        >
+                            <p
+                                className="absolute right-0 top-0 cursor-pointer p-5"
+                                onClick={handleMarkerClose}
+                            >
+                                <i className="fas fa-times"></i>
+                            </p>
+                            <button
+                                title="toggle-details"
+                                onClick={toggleDetails}
+                                className="absolute right-1/2 top-0 p-5"
+                            >
+                                <i
+                                    className={`fas ${detailsExpanded
+                                        ? "fa-chevron-up"
+                                        : "fa-chevron-down"
+                                        }`}
+                                ></i>
+                            </button>
+                            <h3 className="text-xl font-bold ">
+                                {selectedPlace.name}
+                            </h3>
+                            {detailsExpanded && (
                                 <>
-                                    <h2 className="text-lg font-semibold mb-2">
-                                        {showPlacesList
-                                            ? "搜尋後景點列表"
-                                            : "搜尋後喜愛景點列表"}
-                                    </h2>
-                                    {(showPlacesList &&
-                                        filteredPlaces.length === 0) ||
-                                    (showLikedPlacesList &&
-                                        filteredLikesPlaces.length === 0) ? (
-                                        <p className="text-center">
-                                            找不到符合條件的景點
-                                        </p>
-                                    ) : (
-                                        <>
-                                            {(showPlacesList
-                                                ? filteredPlaces
-                                                : filteredLikesPlaces
-                                            ).map((place) => (
-                                                <div
-                                                    key={place.id}
-                                                    className="hover:bg-yellow-50 place-item flex justify-between items-center p-2 border border-gray-300 rounded m-2 cursor-pointer"
-                                                    onClick={() =>
-                                                        handleMarkerClick(place)
-                                                    }
-                                                >
-                                                    {place.name}
-                                                </div>
-                                            ))}
-                                        </>
-                                    )}
-                                </>
-                            ) : (
-                                <>
-                                    {showPlacesList && (
-                                        <>
-                                            <h2 className="text-lg font-semibold mb-2">
-                                                景點列表
-                                            </h2>
-                                            {mapData.publishedPlaces.map(
-                                                (place) => (
-                                                    <div
-                                                        key={place.id}
-                                                        className="hover:bg-green-100 place-item flex justify-between items-center p-2 border border-gray-300 rounded m-2 cursor-pointer"
-                                                        onClick={() =>
-                                                            handleMarkerClick(
-                                                                place
-                                                            )
-                                                        }
+                                    <p className="text-gray-700 mt-2">
+                                        {selectedPlace.description}
+                                    </p>
+                                    <div
+                                        className={`text-sm ${categoryMapping[selectedPlace.category]
+                                            ?.color || "bg-gray-200"
+                                            } p-1 rounded mt-2`}
+                                    >
+                                        {categoryMapping[selectedPlace.category]
+                                            ?.text || "不明"}
+                                    </div>
+                                    {selectedPlace.tags &&
+                                        selectedPlace.tags.filter(
+                                            (tag) => tag.trim().length > 0
+                                        ).length > 0 && (
+                                            <div className="flex flex-wrap gap-2 mt-2">
+                                                {selectedPlace.tags.map((tag) => (
+                                                    <span
+                                                        key={tag}
+                                                        className="text-xs bg-blue-200 px-2 py-1 rounded-full"
                                                     >
-                                                        {place.name}
-                                                        <button
-                                                            onClick={() =>
-                                                                handlePlaceLikeClick(
-                                                                    place.id
-                                                                )
-                                                            }
-                                                        >
-                                                            {place.isLiked ? (
-                                                                <i className="fas fa-heart text-red-500"></i>
-                                                            ) : (
-                                                                <i className="far fa-heart"></i>
-                                                            )}
-                                                        </button>
-                                                    </div>
-                                                )
-                                            )}
-                                        </>
+                                                        {tag}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+                                    <div className="mt-4">
+                                        {selectedPlace.images.map((url, index) => (
+                                            <div
+                                                key={index}
+                                                className="image-preview mb-2 relative w-[300px] h-[300px]"
+                                            >
+                                                <Image
+                                                    src={url}
+                                                    alt={`${selectedPlace.name} image ${index}`}
+                                                    fill
+                                                    className="object-cover"
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                    {selectedPlace?.createdTime && (
+                                        <p className="text-sm">
+                                            最初發佈時間:{" "}
+                                            {new Date(
+                                                selectedPlace.createdTime
+                                            ).toLocaleString("zh-TW", {
+                                                hour12: true,
+                                            })}
+                                        </p>
                                     )}
-                                    {showLikedPlacesList && (
-                                        <div className="liked-places-list mt-4">
-                                            <h2 className="text-lg font-semibold mb-2">
-                                                喜愛景點列表
-                                            </h2>
-                                            {likedPlaces.length === 0 ? (
-                                                <p className="text-center">
-                                                    您還沒有喜愛任何景點
-                                                </p>
-                                            ) : (
-                                                <>
-                                                    {likedPlaces.map(
-                                                        (place) => (
-                                                            <div
-                                                                key={place.id}
-                                                                className="hover:bg-yellow-50 place-item flex justify-between items-center p-2 border border-gray-300 rounded m-2 cursor-pointer"
-                                                                onClick={() =>
-                                                                    handleMarkerClick(
-                                                                        place
-                                                                    )
-                                                                }
-                                                            >
-                                                                {place.name}
-                                                            </div>
-                                                        )
-                                                    )}
-                                                </>
-                                            )}
-                                        </div>
+                                    {selectedPlace?.updatedTime && (
+                                        <p className="text-sm">
+                                            最後更新時間:{" "}
+                                            {new Date(
+                                                selectedPlace.updatedTime
+                                            ).toLocaleString("zh-TW", {
+                                                hour12: true,
+                                            })}
+                                        </p>
                                     )}
+                                    <div className="flex">
+                                        <Link
+                                            href={`https://www.google.com/maps/place/?q=place_name:${selectedPlace.name}`}
+                                            target="_blank"
+                                            passHref
+                                        >
+                                            <button className="flex items-center mr-3 bg-blue-100 text-black p-2 rounded hover:bg-blue-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-300">
+                                                <i className="fab fa-google mr-1"></i>
+                                                <i className="fa-solid fa-magnifying-glass mr-1.5"></i>
+                                                <span className="hidden lg:flex">
+                                                    {" "}
+                                                    名稱
+                                                </span>
+                                            </button>
+                                        </Link>
+                                        <Link
+                                            href={`https://www.google.com/maps/place/${decimalToDms(
+                                                selectedPlace.coordinates.lat,
+                                                selectedPlace.coordinates.lng
+                                            )}`}
+                                            target="_blank"
+                                            passHref
+                                        >
+                                            <button className="flex items-center mr-3 bg-blue-100 text-black p-2 rounded hover:bg-blue-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-300">
+                                                <i className="fab fa-google mr-1"></i>
+                                                <i className="fa-solid fa-globe mr-1.5"></i>
+                                                <span className="hidden lg:flex">
+                                                    {" "}
+                                                    經緯
+                                                </span>
+                                            </button>
+                                        </Link>
+                                    </div>
                                 </>
                             )}
                         </div>
-                    </div>
-                )}
+                    )}
+                    {(showPlacesList || showLikedPlacesList) && (
+                        <div className="places-list mt-4">
+                            <div className="search-and-filter">
+                                <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-2 mb-4">
+                                    <div className="flex-1">
+                                        <input
+                                            type="text"
+                                            value={searchTerm}
+                                            onChange={(e) =>
+                                                setSearchTerm(e.target.value)
+                                            }
+                                            placeholder="搜尋景點名稱或標籤"
+                                            className="p-2 w-full border border-gray-300 rounded-md text-black focus:ring-blue-500 focus:border-blue-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <select
+                                            title="category-select"
+                                            value={selectedCategory}
+                                            onChange={(e) =>
+                                                setSelectedCategory(e.target.value)
+                                            }
+                                            className="p-2 w-full border border-gray-300 rounded-md text-black focus:ring-blue-500 focus:border-blue-500"
+                                        >
+                                            <option value="">搜尋類別</option>
+                                            {Object.entries(categoryMapping).map(
+                                                ([key, { text }]) => (
+                                                    <option key={key} value={key}>
+                                                        {text}
+                                                    </option>
+                                                )
+                                            )}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {searchTerm || selectedCategory ? (
+                                    <>
+                                        <h2 className="text-lg font-semibold mb-2">
+                                            {showPlacesList
+                                                ? "搜尋後景點列表"
+                                                : "搜尋後喜愛景點列表"}
+                                        </h2>
+                                        {(showPlacesList &&
+                                            filteredPlaces.length === 0) ||
+                                            (showLikedPlacesList &&
+                                                filteredLikesPlaces.length === 0) ? (
+                                            <p className="text-center">
+                                                找不到符合條件的景點
+                                            </p>
+                                        ) : (
+                                            <>
+                                                {(showPlacesList
+                                                    ? filteredPlaces
+                                                    : filteredLikesPlaces
+                                                ).map((place) => (
+                                                    <div
+                                                        key={place.id}
+                                                        className="hover:bg-yellow-50 place-item flex justify-between items-center p-2 border border-gray-300 rounded m-2 cursor-pointer"
+                                                        onClick={() =>
+                                                            handleMarkerClick(place)
+                                                        }
+                                                    >
+                                                        {place.name}
+                                                    </div>
+                                                ))}
+                                            </>
+                                        )}
+                                    </>
+                                ) : (
+                                    <>
+                                        {showPlacesList && (
+                                            <>
+                                                <h2 className="text-lg font-semibold mb-2">
+                                                    景點列表
+                                                </h2>
+                                                {mapData.publishedPlaces.map(
+                                                    (place) => (
+                                                        <div
+                                                            key={place.id}
+                                                            className="hover:bg-green-100 place-item flex justify-between items-center p-2 border border-gray-300 rounded m-2 cursor-pointer"
+                                                            onClick={() =>
+                                                                handleMarkerClick(
+                                                                    place
+                                                                )
+                                                            }
+                                                        >
+                                                            {place.name}
+                                                            <button
+                                                                onClick={() =>
+                                                                    handlePlaceLikeClick(
+                                                                        place.id
+                                                                    )
+                                                                }
+                                                            >
+                                                                {place.isLiked ? (
+                                                                    <i className="fas fa-heart text-red-500"></i>
+                                                                ) : (
+                                                                    <i className="far fa-heart"></i>
+                                                                )}
+                                                            </button>
+                                                        </div>
+                                                    )
+                                                )}
+                                            </>
+                                        )}
+                                        {showLikedPlacesList && (
+                                            <div className="liked-places-list mt-4">
+                                                <h2 className="text-lg font-semibold mb-2">
+                                                    喜愛景點列表
+                                                </h2>
+                                                {likedPlaces.length === 0 ? (
+                                                    <p className="text-center">
+                                                        您還沒有喜愛任何景點
+                                                    </p>
+                                                ) : (
+                                                    <>
+                                                        {likedPlaces.map(
+                                                            (place) => (
+                                                                <div
+                                                                    key={place.id}
+                                                                    className="hover:bg-yellow-50 place-item flex justify-between items-center p-2 border border-gray-300 rounded m-2 cursor-pointer"
+                                                                    onClick={() =>
+                                                                        handleMarkerClick(
+                                                                            place
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    {place.name}
+                                                                </div>
+                                                            )
+                                                        )}
+                                                    </>
+                                                )}
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
             <AlertModal
                 isOpen={isAlertOpen}
