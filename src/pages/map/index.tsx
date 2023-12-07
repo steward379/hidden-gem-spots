@@ -13,6 +13,11 @@ import { useAuth } from '../../context/AuthContext';
 import AlertModal from '../../components/AlertModal'
 import DropzoneImage from '../../components/DropzoneImage';
 import GooglePlaces from '../../components/GooglePlaces';
+// import UploadKMZ from '../../components/UploadKMZ';
+import { KmzFileUploader } from '../../components/KmzFileUploader';
+import KmzPlacesList  from '../../components/KmzPlacesList';
+import { parseFile } from '@/src/utils/kmzKmlParser';
+
 import { useDispatch } from 'react-redux';
 import { setPlacesRedux } from '../../store/slices/placesSlice';
 import { categoryMapping } from '../../constants';
@@ -33,6 +38,7 @@ export interface Place {
   };
   images: string[];
   createdTime?: string;
+  updatedTime?: string;
   likes?: number;
   likedBy?: string[];
   duplicates?: number;
@@ -44,38 +50,48 @@ const MapComponentWithNoSSR = dynamic(
 );
 const MapDemoPage: React.FC = () => {
 
+  const [file, setFile] = useState(null);
+  const [kmzPlaces, setKmzPlaces] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handleFileSelected = (selectedFile) => {
+    setFile(selectedFile);
+  };
+  const handleUploadClick = async () => {
+    confirm("確定要匯入嗎？")
+    if (file) {
+      setIsProcessing(true);
+      try {
+        const extractedPlaces = await parseFile(file);
+        setKmzPlaces(extractedPlaces as any);
+  
+        const placesRef = collection(db, `users/${userId}/places`);
+        (extractedPlaces as any).forEach(async (place) => {
+          await addDoc(placesRef, place);
+        });
+
+        await fetchPlaces();
+        
+      } catch (error) {
+        console.error('Error parsing file:', error);
+      }
+      setIsProcessing(false);
+    }
+  };
+  
   const [googlePlacesSearchForNewMarker, setGooglePlacesSearchForNewMarker] = useState(false);
 
-  const toggleGooglePlacesSearch = (value: boolean, forNewMarker = false) => {
-    if (forNewMarker) {
-      setGooglePlacesSearchForNewMarker(value);
-      setGooglePlacesSearch(false);
-    } else {
-      setGooglePlacesSearch(value);
-      setGooglePlacesSearchForNewMarker(false);
-    }
-  };
-
-  const handleSelectPlaceForNewMarker = (place: Place) => {
-    // 處理新標記的選擇
-    // 例如，可以更新 newMarker 的狀態或進行其他處理
-    // setNewMarker(place);
-    // toggleGooglePlacesSearch(false);
-  };
-
-  const handleGooglePlacesForNewMarker = () => {
-    if (newMarker) {
-      setLatitude(newMarker.coordinates.lat.toString());
-      setLongitude(newMarker.coordinates.lng.toString());
-      toggleGooglePlacesSearch(true, true);
-    }
-  };
-
+  // 介面收起
   const [hideAddingMarker, setHideAddingMarker] = useState(false);
+  const [hideRoutingMode, setHideRoutingMode] = useState(false);
+  const [hideUploadGeo, setHideUploadGeo] = useState(false);
+
   const [latitude, setLatitude] = useState('');
   const [longitude, setLongitude] = useState('');
   const [googlePlacesSearch, setGooglePlacesSearch] = useState(false);
+  
   const dispatch = useDispatch();
+
   const [isRoutingMode, setIsRoutingMode] = useState(false);
 
   const [places, setPlaces] = useState([]);
@@ -108,16 +124,10 @@ const MapDemoPage: React.FC = () => {
     place.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))) &&
     (place.category === selectedCategory || selectedCategory === '')
   );
-
-  // 計算分頁
   const indexOfLastPlace = currentPage * itemsPerPage;
   const indexOfFirstPlace = indexOfLastPlace - itemsPerPage;
   const currentPlaces = filteredPlaces.slice(indexOfFirstPlace, indexOfLastPlace);
-
-  // 計算總頁數
   const totalPages = Math.ceil(filteredPlaces.length / itemsPerPage);
-
-  // 切換頁面函數
   const paginate = (pageNumber) => setCurrentPage(pageNumber)
 
   const { user } = useAuth();
@@ -133,7 +143,6 @@ const MapDemoPage: React.FC = () => {
   const handlePlaceClose = () => {
     setSelectedPlace(null);
   };
-
   const fetchPlaces = useCallback(async () => {
     if (!userId) return;
     const placesQuery = query(collection(db, `users/${userId}/places`));
@@ -141,13 +150,6 @@ const MapDemoPage: React.FC = () => {
     setPlaces(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   }, [userId]); 
-
-  // 更新 places 資料
-  // useEffect(() => {
-  //   if (userId) {
-  //     fetchPlaces();
-  //   }
-  // }, [userId, fetchPlaces]);
 
   // Redux
   useEffect(() => {
@@ -157,12 +159,10 @@ const MapDemoPage: React.FC = () => {
       });
     }
   }, [userId, fetchPlaces, dispatch]);
-
-
+  
   const handleMarkerPlaced = (coordinates) => {
     setNewMarker({ coordinates, name: '', description: '', tags: '', category: '', images: [] });
   };
-
   // Delete: Place
   const handleDeletePlace = async () => {
     if (selectedPlace) {
@@ -178,36 +178,35 @@ const MapDemoPage: React.FC = () => {
     }
     setShowDeleteConfirm(false);
   };
-
   const handleInputChange = (field, value) => {
     setNewMarker(prev => ({ ...prev, [field]: value }));
   };
-
   const handleFileUpload = (file) => {
     const newImageUrls = [...previewImages, URL.createObjectURL(file)];
     setPreviewImages(newImageUrls);
     setImages([...images, file]);
   };
-
   const toggleAddingMarker = () => {
     if (isAddingMarker) {
       handleCancel();
-      setGooglePlacesSearchForNewMarker(false); // 如果正在新增景點，則取消並重置狀態
+      setGooglePlacesSearchForNewMarker(false); 
+      setActiveTab('places');
     } else {
-      setIsAddingMarker(true); // 否則，開始新增景點
+      setIsAddingMarker(true); 
+      setActiveTab('content');
     }
   };
-  
-  // cancel Adding
+
   const handleCancel = () => {
     setIsAddingMarker(false);
     setNewMarker(null);
     setSelectedPlace(null);
   };
-
+  const cancelSelect = () => {
+    setSelectedPlace(null);
+  }
   const uploadImage = async (file: File, userId: string, placeName: string): Promise<string> => {
     const storageRef = ref(storage, `places/${userId}/${placeName}/${file.name}`);
-
     const uploadTask = uploadBytesResumable(storageRef, file);
   
     return new Promise((resolve, reject) => {
@@ -226,7 +225,6 @@ const MapDemoPage: React.FC = () => {
       );
     });
   } 
-
   // DELETE: Images
   const handleRemoveImage = async (index: number, imageSrc: string) => {
     if (typeof previewImages[index] === 'string') {
@@ -243,7 +241,6 @@ const MapDemoPage: React.FC = () => {
 
     setImages(newImages);
   };
-
   const handleEditClick = (place: Place) => {
     setNewMarker({
       coordinates: place.coordinates,
@@ -253,14 +250,14 @@ const MapDemoPage: React.FC = () => {
       category: place.category,
       images: place.images,
     });
-
     setOriginalImageUrls(place.images); 
     // setPreviewImages(place.images); 
     setPreviewImages(place.images);
     setIsEditing(true);
     setSelectedPlace(place);  // 設置當前選中地點
-  };
 
+    setActiveTab('content');
+  };
   const handleCancelEdit = () => {
     // setPreviewImages(originalImageUrls);
     setPreviewImages([]);
@@ -268,22 +265,20 @@ const MapDemoPage: React.FC = () => {
     setNewMarker(null);
     setIsEditing(false);
     // setSelectedPlace(null); 
-  };
 
-  //firestore 刪除圖片
+    setActiveTab('places');
+  };
   async function removeImageFromFirestore(placeId, imageUrl, userId) {
     console.log(`Removing image URL from Firestore: ${imageUrl}`);
   
     const placeRef = doc(db, `users/${userId}/places`, placeId);
   
-    // Get the document data before updating
     const placeSnap = await getDoc(placeRef);
 
     if (placeSnap.exists()) {
       const placeData = placeSnap.data();
       const imageUrls = placeData.images;
   
-      // Create a new images array that does not include the image URL
       const newImages = imageUrls.filter((url) => url !== imageUrl);
   
       await updateDoc(placeRef, { images: newImages });
@@ -292,7 +287,6 @@ const MapDemoPage: React.FC = () => {
       // Add a delay before fetching the updated document
       // await new Promise((resolve) => setTimeout(resolve, 1000));
   
-      // Fetch the document again and log the entire document
       const updatedPlaceSnap = await getDoc(placeRef);
       if (updatedPlaceSnap.exists()) {
         const updatedPlaceData = updatedPlaceSnap.data();
@@ -300,7 +294,6 @@ const MapDemoPage: React.FC = () => {
       }
     }
   }
-
   function extractStoragePathFromUrl(downloadUrl: string): string {
     const url = new URL(downloadUrl);
     const path = url.pathname;
@@ -311,21 +304,8 @@ const MapDemoPage: React.FC = () => {
     // Return the path without the token query parameter
     return decodedPath.split('?')[0];
   }
-
-  // useEffect(() => {
-  //   const unsubscribe = onAuthStateChanged(auth, user => {
-  //     if (user) {
-  //       setUserId(user.uid); 
-  //     }
-  //   });
-
-  //   return () => unsubscribe();
-  // }, []);
-
   const updatePlace = async (placeId: string) => {
-
     if (!newMarker || !userId || !selectedPlace) return;
-
       //  刪除原有圖片，包含 Storage 和 Firestore
       // const imagesToDelete = originalImageUrls.filter(originalUrl => !newMarker.imageUrls.includes(originalUrl));
       // async function removeImageFromFirestore(placeId, imageUrl, userId) {
@@ -348,10 +328,15 @@ const MapDemoPage: React.FC = () => {
       // const updatedImages = [...(newMarker.imageUrls || []), ...imageUrls];
     const updatedImages = [...(newMarker.images || []) , ...newImageUrls];
 
+    const currentTime = new Date().toISOString();
+
     const updatedPlaceData = {
       ...newMarker,
       images: updatedImages,
       tags: newMarker.tags.split(',').map(tag => tag.trim()) || [],
+      // new createdTime
+      createdTime: newMarker.createdTime ? newMarker.createdTime : currentTime,
+      updatedTime: currentTime
     };
 
     const placeRef = doc(db, `users/${userId}/places`, placeId);
@@ -394,13 +379,14 @@ const MapDemoPage: React.FC = () => {
     setImages([]);
     setPreviewImages([]);
   };
-
   // CREATE : place
   const createNewPlace = async ()=> {
     if (!userId || !newMarker) return;
-
     try {
       const imageUrls = await Promise.all(images.map(file => uploadImage(file, userId, newMarker.name)));
+
+      const currentTime = new Date().toISOString();
+
       const newPlace =  {
         name: newMarker.name,
         description: newMarker.description,
@@ -411,8 +397,10 @@ const MapDemoPage: React.FC = () => {
           lng: newMarker.coordinates.lng
         },
         images: imageUrls,
+        createdTime: currentTime, 
+        updatedTime: ''
       };
-       // const placesRef = doc(db, `users/${userId}/places`); 
+      //  const placesRef = doc(db, `users/${userId}/places`); 
       const placesRef = collection(db, `users/${userId}/places`); 
       const docRef = await addDoc(placesRef, newPlace);
 
@@ -428,8 +416,6 @@ const MapDemoPage: React.FC = () => {
     setPreviewImages([]);
     setImages([]);
   };
-
-
   const handleSubmit = async() => {
     if (!newMarker || !userId) return;
 
@@ -451,11 +437,12 @@ const MapDemoPage: React.FC = () => {
 
     if (isEditing && selectedPlace) {
       await updatePlace(selectedPlace.id);
+      setActiveTab('places');
     } else {
       await createNewPlace();
+      setActiveTab('places');
     }
   };
-
   // users mapping
   useEffect(() => {
     if (!userId) return;
@@ -470,20 +457,9 @@ const MapDemoPage: React.FC = () => {
       }));
       setPlaces(newPlaces);
     });
-  
     return () => unsubscribe();
   }, [userId]);
 
-
-  // const formatCoordinates = (lat, lng) => {
-  //   const latText = Math.round(lat * 10000) / 10000;
-  //   const lngText = Math.round(lng * 10000) / 10000;
-  
-  //   // const latText = roundedLat >= 0 ? `${roundedLat} N` : `${Math.abs(roundedLat)} S`;
-  //   // const lngText = roundedLng >= 0 ? `${roundedLng} E` : `${Math.abs(roundedLng)} W`;
-  
-  //   return `${latText}, ${lngText}`;
-  // };
   const handlePublishClick = () => {
     if (places.length === 0) { // 假設 places 陣列儲存著所有景點
       showAlert('你還沒有新增景點');
@@ -491,37 +467,67 @@ const MapDemoPage: React.FC = () => {
     } 
     Router.push('/publish-map');
   };
+
   const hideAddingMarkerAction = () => {
     setHideAddingMarker(true);
+  }
+  const hideIsRoutingMode = () => {
+    setHideRoutingMode(true);
+  }
+  const hideUploadGeoAction = () => {
+    setHideUploadGeo(true);
   }
   const showAddingMarkerAction = () => {
     setHideAddingMarker(false);
   }
-  const handleGooglePlaces = (lat: number, lng: number) => {
+  const showIsRoutingMode = () => {
+    setHideRoutingMode(false);
+  }
+  const showUploadGeoAction = () => {
+    setHideUploadGeo(false);
+  }
+  const toggleGooglePlacesSearch = (value: boolean, forNewMarker = false) => {
+    if (forNewMarker) {
+      setGooglePlacesSearchForNewMarker(value);
+      setGooglePlacesSearch(false);
+    } else {
+      setGooglePlacesSearch(value);
+      setGooglePlacesSearchForNewMarker(false);
+    }
+  };
+  const handleGooglePlaces = () => {
   if(selectedPlace){
       setLatitude(selectedPlace.coordinates.lat);
       setLongitude(selectedPlace.coordinates.lng)
       toggleGooglePlacesSearch(true);
     }
   }
-
-  // 清除 Google Places 事件
-  // useEffect(() => {
-  //   setGooglePlacesSearch(false);
-    
-  // }, [selectedPlace, newMarker]);
-
-  // setGooglePlacesSearchForNewMarker(false);
-
-  // // 回調函數
+  const handleGooglePlacesForNewMarker = () => {
+    if (newMarker) {
+      setLatitude(newMarker.coordinates.lat.toString());
+      setLongitude(newMarker.coordinates.lng.toString());
+      toggleGooglePlacesSearch(true, true);
+    }
+  };
+  // 回調函數
   const handleSelectPlace = (googlePlaceMigrate) => {
+    console.log('景點附近 Google 景點')
     // setSelectedPlace(googlePlaceMigrate);
   };
-
+  const handleSelectPlaceForNewMarker = (place: Place) => {
+    console.log('新圖標附近 Google 景點')
+    // 處理新標記的選擇
+    // 例如，可以更新 newMarker 的狀態或進行其他處理
+    // setNewMarker(place);
+    // toggleGooglePlacesSearch(false);
+  };
   const closeGooglePlacesSearch = () => {
     setGooglePlacesSearch(false);
     setGooglePlacesSearchForNewMarker(false);
   }
+
+  const [activeTab ,setActiveTab] = useState('places');
+  const [showPlaceInArticle, setShowPlaceInArticle] = useState(false);
 
   return (
     <div className="flex flex-col md:flex-row h-screen-without-navbar text-black bg-gray-200">
@@ -540,75 +546,66 @@ const MapDemoPage: React.FC = () => {
           setIsRoutingMode={setIsRoutingMode}
         />
       </div>
-      <div className="relative lg:w-1/3 md:w-1/2 w-full lg:overflow-auto md:overflow-auto lg:mb-10 lg:mt-10 md:mt-5 mt-7
-      lg:mr-10 md:mr-5 lg:p-8 md:p-4 p-10 bg-white shadow rounded ">
-        <button
-          className="absolute top-0 left-3"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-        >
-          {isCollapsed ? (
-            <div className="mb-3 mt-2">
-              <i className="fas fa-chevron-down"></i>
-              <i className="fas fa-question-circle ml-1"></i>
-              <span className="text-sm hidden lg:inline lg:ml-2 font-medium">顯示提示</span>
-            </div>
-          ): (
-            <div className="mb-3 mt-2">
-              <i className="fas fa-chevron-up"></i>
-              <i className="fas fa-question-circle ml-1"></i>
-              <span className="text-sm hidden lg:inline lg:ml-2 font-medium">隱藏提示</span>
-            </div>
-          )}
-        </button>
-        <button title="route-mode"
-                className={`my-5 lg:mt-16 ${RainbowButtonModule.rainbowButton}`}
-                onClick={() => setIsRoutingMode(!isRoutingMode)}
-                // @ts-ignore
-                alt= {`${isRoutingMode ? "離開路徑模式" : "規劃路徑"}`}
-                >
-        </button>
-        <div className={`transition-all duration-500 ease-in-out ${isCollapsed ? 'max-h-0' : 'max-h-32'} overflow-hidden`}>
-          <h1 className="text-2xl font-bold text-gray-800 mb-4"> {user?.name} 的個人地圖</h1>
-          <div className="text-gray-600 text-sm"> 
-            點選地圖上的<span className="ml-1 mr-1">
-              <i className="fas fa-location-pin text-red-500"></i>
-              </span>以閱讀、編輯或刪除景點，或點選新增來新增景點。你也可以點選眼睛圖示來隱藏或顯示景點列表並搜尋點選。
+      <div className="relative md:overflow-x-visible lg:overflow-x-visible md:overflow-y-auto
+        lg:w-1/3 md:w-1/2 w-full lg:mb-10 lg:mt-10 md:mt-5 mt-7 lg:mr-10 md:mr-5 
+         bg-white shadow rounded pb-5">
+       <div className="sticky top-0 bg-white shadow-lg z-50 flex items-center py-2 pl-3">
+          <div className="flex items-center space-x-1 mr-2">
+            <button
+                  title="add-marker"
+                  className="relative h-12 w-12 rounded-full flex justify-center items-center border-2 
+                              border-dashed border-gray-300 cursor-pointer hover:border-gray-500 hover:bg-green-300
+                            "
+              >
+              
+                <div className=" w-full h-full flex justify-center items-center rounded-full"
+                      onClick={toggleAddingMarker}>
+                      <i className={`fas ${isAddingMarker ? 'fa-times' : 'fa-location-dot'}`}></i>
+                </div>
+            </button>
+            <div className="text-sm hidden lg:block font-medium">{isAddingMarker ? '取消新增' : '新增座標'}</div>
           </div>
-        </div>
-        {!isEditing && (
-        <>
+
+          <div className="flex pr-3">
+             <button title="rainbow-route-btn" className="flex items-center space-x-1">
+                <button title="route-mode"
+                        className={`${RainbowButtonModule.rainbowButton} justify-center items-center relative`}
+                        style={{
+                          // @ts-ignore
+                          '--button-width': '45px',
+                          '--button-height': '50px',
+                          '--button-border-radius': '100px',
+                        }}> 
+                  <button
+                      className=" bg-white p-3 text-sm
+                            font-medium hover:bg-black hover:text-green-500 rounded-full"
+                      onClick={() => setIsRoutingMode(!isRoutingMode)}>
+                    <div>
+                    {isRoutingMode ?  <i className="fas fa-door-open"></i> :  <i className="fas fa-route"></i>}   
+                    </div>
+                  </button>
+                </button>
+                <div className="hidden lg:inline text-sm font-medium">
+                        {isRoutingMode ? "停止路徑" : "規劃路徑"}
+                </div>
+              </button>
+            </div>
 
           <button 
-            className="absolute top-6 right-5 flex items-center justify-center bg-teal-50 shadow-lg hover:bg-teal-600  py-2 px-4 rounded-lg hover:text-white"
+            className="flex items-center justify-center bg-teal-50 shadow-md hover:bg-teal-600  py-2 px-4 rounded-xl hover:text-white"
             onClick={handlePublishClick}
           >
-            <i className={`fas fa-upload p-2`}></i>
-            <div className="hidden lg:flex">發佈</div>
+            <i className={`fas fa-map p-1`}></i>
+            <div className="hidden lg:flex text-sm font-medium">發佈</div>
           </button>
-
-          { hideAddingMarker ? (
-            <i className={`absolute left-1 top-40 text-3xl fas fa-location-dot`}
-                onClick={showAddingMarkerAction}
-            ></i>
-          ):(
-            <>
-              <button className="absolute top-60 left-4 text-sm bg-red-100 border rounded-full w-6 h-6"
-              onClick={hideAddingMarkerAction}> { hideAddingMarker ? '' : <i className="fas fa-minus"></i>}</button>
-              <button
-                // onClick={() => setIsAddingMarker(!isAddingMarker)}
-                onClick={toggleAddingMarker} 
-                className="relative h-16 w-16 lg:h-24 lg:w-24 rounded-full mb-5 mt-5 m-2 flex-column justify-center items-center border-2 border-dashed border-gray-300 cursor-pointer hover:border-gray-500 hover:bg-green-300"
-              >
-                <i className={`fas ${isAddingMarker ? 'fa-minus' : 'fa-location-dot'}`}></i>
-                <div className="text-sm hidden lg:block">{isAddingMarker ? '取消新增' : '新增景點'}</div>
-              </button>
-              <div> {isAddingMarker && !newMarker && '在地圖上點選位置以新增景點'}</div>
-            </>
-          )}
-
-          <div className="absolute top-5 right-24 lg:right-40 flex items-center justify-center mb-5 mt-5">
+          <div className="tab-buttons flex">
+              <button className={`border ml-2 p-1 rounded-full mr-1 text-sm ${activeTab=='places' && 'bg-blue-300 text-base' }`} onClick={() => setActiveTab('places')}>景點</button>
+              <button className={`border p-1 rounded-full mr-1 text-sm ${activeTab=='content' && 'bg-green-300 text-base' }`} onClick={() => setActiveTab('content')}>文章</button>
+            </div>
+          <div className="place-list absolute right-5 flex items-center justify-center mb-5 mt-5">
             <label htmlFor="toggle" className="flex items-center cursor-pointer">
               <div className="relative">
+                {/*  */}
                 <input type="checkbox" id="toggle" className="sr-only" onChange={() => setShowPlacesList(!showPlacesList)} checked={showPlacesList} />
                 <div className={`flex items-center w-16 h-9 rounded-full transition-colors ${showPlacesList ? 'bg-green-500' : 'bg-gray-400'}`}>
                   <i className={`fas ${showPlacesList ? 'fa-eye-slash ml-2 text-stone-500 ' : 'fa-eye ml-9 text-gray-900'} text-center`} ></i>
@@ -618,31 +615,101 @@ const MapDemoPage: React.FC = () => {
               </div>
               <div className="ml-2 text-gray-700 font-medium text-sm hidden lg:flex">
                 <i className="fas fa-list-ul"></i>
-                {showPlacesList ? '' : ''}
               </div>
             </label>
           </div>
-
+      </div>
+      <div className="container lg:px-6 md:px-4 px-3 py-3">
+        <button
+          className=""
+          onClick={() => setIsCollapsed(!isCollapsed)}
+        >
+            <div className="cursor-pointer">
+              <i className="fas fa-chevron-down"></i>
+              <i className="fas fa-question-circle ml-1"></i>
+              <span className="text-sm hidden lg:inline lg:ml-2 font-medium">提示</span>
+            </div>
+        </button>
+        <div className={`mb-4 transition-all duration-500 ease-in-out mt-3 ${isCollapsed ? 'max-h-0' : 'max-h-40'} overflow-hidden`}>
+          <h1 className="text-xl font-bold text-gray-800 mb-2"> {user?.name} 的個人地圖</h1>
+          <div className="text-gray-600 text-sm max-w-md"> 
+              新增座標 <span className="ml-1 mr-1">
+              <i className="fas fa-location-dot text-red-500"></i>
+              </span> 並放置圖標至地圖上的任意位置，即可新增景點，送出後點選地圖上的 <span className="ml-1 mr-1">
+              <i className="fas fa-location-pin text-red-500"></i>
+              </span> 以閱讀、編輯或刪除景點。你也可以點選<span className="ml-1 mr-1">
+              <i className="fas fa-eye text-red-500"></i>
+              </span>  圖示來顯示/隱藏景點列表並搜尋、點選。你可以將 <i className="fab fa-google text-red-500"> </i> 地圖的地點轉移顯示在畫面上。
+              有地點之後點擊規劃路徑 <i className="fas fa-route text-green-600"></i> 圖示，點選兩點即可規劃路徑。
+              想分享給他人？沒問題！至少發佈一個景點，點選發佈地圖，選擇你的景點，寫下地圖標題跟內容分享吧！ ❤️
+          </div>
+        </div>
+        <div> {isAddingMarker && !newMarker && ( <div className="absolute top-[80px] bg-green-200 shadow-lg  p-2 rounded-2xl  right-[70px] max-w-[120px] text-sm text-black-600"> 🤌 在地圖上點選位置以新增景點</div>)} </div>
+        <div> {isRoutingMode && !selectedPlace && ( <div className="absolute top-[80px] bg-green-200 shadow-lg  p-2 rounded-2xl  right-[70px] max-w-[120px] text-sm text-black-600"> 👈選擇第一個景點，接著選擇第二個，會自動連線，以此類推</div>)} </div>
+        {activeTab === 'places' && (
+          <>
+           <div className="flex flex-wrap space-x-2 mb-5">
+          <div className="mt-3 lg:mt-0">
+            { hideUploadGeo ? (
+                <i className={`cursor-pointer hover:text-blue-500 absolute right-5 top-[80px] fas fa-file-import text-xl border-2 rounded-full px-2 py-1 shadow-md`}
+                    onClick={showUploadGeoAction}
+                ></i> 
+              ):(
+                <>
+                  <div className="border-2 w-60 rounded-3xl p-2 mt-5 md:mt-2 ml-2 shadow-lg flex-col items-center">
+                    <div className="relative">
+                      <button title="show Geo" 
+                              onClick={hideUploadGeoAction} className="absolute hide-upload flex border-2 p-2 rounded-full left-[-20px] top-[-26px] bg-white shadow-lg">
+                        <i className="fas fa-minus"></i>
+                      </button>
+                    </div>
+                    <KmzFileUploader onFileSelected={handleFileSelected}  onUploadClick={handleUploadClick}
+                                      isProcessing={isProcessing} />
+                  </div>
+                  <div>
+                  { kmzPlaces && (<>
+                  <div className="mt-2 text-center cursor-pointer bg-red-400 w-36 text-white p-2 rounded-full hover:bg-white hover:text-blue-500 border-2" 
+                        onClick={() => setKmzPlaces('')}>
+                          取消顯示匯入區塊
+                  </div>
+                    <KmzPlacesList places={kmzPlaces} />
+                    </>)}
+                  </div>
+                </>
+              )}
+          </div>
+        </div>
+        {!isEditing && (
+        <>
           { !newMarker && showPlacesList && (
             <div className="places-list mt-4">
-              <div className="search-and-filter">
-                <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-2 mb-4">
-                  <div className="flex-1">
+              <div className="search-and-filter border-2 shadow-lg rounded-2xl">
+                <div className="flex flex-col px-3 mt-5 md:flex-row items-center space-y-2 md:space-y-0 md:space-x-2 mb-4">
+                <div className="flex-1 relative">
+                  <div className="flex items-center justify-center">
+                    <div><i className="fas fa-search text-black mr-2"></i></div>
                     <input
                       type="text"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       placeholder="搜尋景點名稱或標籤"
-                      className="p-2 w-full border border-gray-300 rounded-md text-black focus:ring-blue-500 focus:border-blue-500"
-                    />
+                      className="p-2 w-full border border-gray-300 rounded-md text-black focus:ring-blue-500 focus:border-blue-500"/>
+                  </div>
+                  {searchTerm && (
+                      <button
+                        title="clear-search"
+                        onClick={() => { setSearchTerm(''); setSelectedCategory(''); }}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-black-400 hover:text-gray-600">
+                        <i className="fas fa-times"></i>
+                      </button>
+                    )}
                   </div>
                   <div>
                     <select
                       title="category-select"
                       value={selectedCategory}
                       onChange={(e) => setSelectedCategory(e.target.value)}
-                      className="p-2 w-full border border-gray-300 rounded-md text-black focus:ring-blue-500 focus:border-blue-500"
-                >
+                      className="p-2 w-full border border-gray-300 rounded-md text-black focus:ring-blue-500 focus:border-blue-500">
                   <option value="">搜尋類別</option>
                   {Object.entries(categoryMapping).map(([key, { text }]) => (
                     <option key={key} value={key}>{text}</option>
@@ -650,76 +717,69 @@ const MapDemoPage: React.FC = () => {
                 </select>
               </div>
             </div>
-              { searchTerm || selectedCategory ? (
+            { searchTerm || selectedCategory ? (
+            <div className="p-2 flex-column">
+              <h2 className="text-lg font-semibold mb-2 text-center">搜尋後景點列表</h2>
+              { filteredPlaces.length === 0 ? (
+              <p className="text-center">找不到符合條件的景點</p>
+              ) : (
               <>
-                <h2 className="text-lg font-semibold mb-2">搜尋後景點列表</h2>
-                { filteredPlaces.length === 0 ? (
-                <p className="text-center">找不到符合條件的景點</p>
-                ) : (
-                <>
-                {/* {filteredPlaces.map(place => (
-                    <div key={place.id} className="hover:bg-yellow-50 place-item flex justify-between items-center p-2 border border-gray-300 rounded m-2 cursor-pointer" 
-                        onClick={() => handlePlaceSelect(place)}>
-                        {place.name}
-                    </div>
-                  ))} */}
                 {currentPlaces.map((place) => (
-                  <div key={place.id} className="hover:bg-green-100 place-item flex justify-between items-center p-2 border border-gray-300 rounded m-2 cursor-pointer"
+                  <div key={place.id} className="hover:bg-green-100 place-item flex justify-between items-center
+                                      p-2 border border-gray-300 rounded m-2 cursor-pointer"
                       onClick={() => handlePlaceSelect(place)}>
                     {place.name}
                   </div>
                 ))}
-                <div className="pagination">
+                <div className="pagination text-center">
                   {Array.from({ length: totalPages }, (_, index) => (
                     <button
                       key={index}
                       onClick={() => paginate(index + 1)}
-                      className={`px-3 py-1 m-1 ${currentPage === index + 1 ? 'bg-blue-500 text-white' : 'bg-white text-black'}`}
-                    >
-                      {index + 1}
+                      className={`px-3 py-1 m-1 rounded-full 
+                      ${currentPage === index + 1 ? 'bg-blue-500 text-white' : 'bg-white text-black'}`}>
+                        {index + 1}
                     </button>
                   ))}
                 </div>
-                </>
-                )}
               </>
-              ) : (
-              <>
-                <h2 className="text-lg font-semibold mb-2">景點列表</h2>
-                {currentPlaces.map((place) => (
-                    <div key={place.id} className="hover:bg-green-100 place-item flex justify-between items-center p-2 border border-gray-300 rounded m-2 cursor-pointer"
-                        onClick={() => handlePlaceSelect(place)}>
-                      {place.name}
-                    </div>
-                ))}
-                  <div className="pagination">
-                    {Array.from({ length: totalPages }, (_, index) => (
-                      <button
-                        key={index}
-                        onClick={() => paginate(index + 1)}
-                        className={`px-3 py-1 m-1 ${currentPage === index + 1 ? 'bg-blue-500 text-white' : 'bg-white text-black'}`}
-                      >
-                        {index + 1}
-                      </button>
-                    ))}
+            )}
+            </div>
+            ) : (
+            <div className="p-2 flex-column">
+              <h2 className="text-lg font-semibold mb-2 text-center">景點列表</h2>
+              {currentPlaces.map((place) => (
+                  <div key={place.id} className="hover:bg-green-100 place-item flex justify-between items-center p-2 border border-gray-300 rounded m-2 cursor-pointer"
+                      onClick={() => handlePlaceSelect(place)}>
+                    {place.name}
                   </div>
-              </>
-              )
-            }
+              ))}
+                <div className="pagination text-center">
+                  {Array.from({ length: totalPages }, (_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => paginate(index + 1)}
+                      className={`rounded-full px-3 py-1 m-1 
+                      ${currentPage === index + 1 ? 'bg-blue-500 text-white' : 'bg-white text-black'}`}>
+                        {index + 1}
+                    </button>
+                  ))}
+                </div>
+            </div>
+            )}
           </div>
         </div>
           )}
         </>
       )}
-
-      {selectedPlace && !isEditing && (
+      {!selectedPlace  &&  (<span className="border-2 rounded-2xl shadow-lg px-3 py-2 text-sm bg-green-200"> 選中的景點會顯示在此處 </span>)}
+      {selectedPlace && (
         <>
-          <div className="relative p-4 bg-white rounded shadow-md">
-            <h2 className="text-2xl font-bold text-gray-800 border-b border-gray-300 pb-2 mb-4">{selectedPlace.name}</h2>
-            <p className="absolute right-0 top-0 text-black cursor-pointer p-5" onClick={handlePlaceClose} >
+          <div className="mt-5 mb-5 relative p-4 bg-white border-2 rounded-2xl shadow-lg pr-12"> 
+            <div className="absolute right-0 top-0 text-black cursor-pointer p-5" onClick={handlePlaceClose} >
               <i className="fas fa-times"></i>
-            </p>
-
+            </div>
+            <h2 className="text-2xl font-bold text-gray-800 border-b border-gray-300 pb-2 mb-4">{selectedPlace.name}</h2>
             <h3 className="text-lg text-gray-600 mb-4">{selectedPlace.description}</h3>
             {selectedPlace.tags && selectedPlace.tags.filter(tag => tag.trim().length > 0).length > 0 && (
             <div className="mb-4">
@@ -736,8 +796,7 @@ const MapDemoPage: React.FC = () => {
             
             <div className="mt-5">
               {selectedPlace.images?.map((url, index) => (
-                <div key={index} className="image-preview mb-2 relative" 
-                                 style={{ width: 300, height: 300 }}>
+                <div key={index} className="image-preview mb-2 relative w-[200px] h-[200px]"  >
                   <Image 
                     src={url}
                     alt={`${selectedPlace.name} image ${index}`}
@@ -746,6 +805,13 @@ const MapDemoPage: React.FC = () => {
                   />
                 </div>
               ))}
+              { selectedPlace.createdTime &&
+              <div className="text-sm"> 發佈時間：{new Date(selectedPlace?.createdTime ).toLocaleString("zh-TW", { hour12: true })}</div>
+              }
+
+              {selectedPlace?.updatedTime && selectedPlace?.updatedTime !="" &&
+                <div className="text-sm"> 更新時間：{new Date(selectedPlace?.updatedTime ).toLocaleString("zh-TW", { hour12: true })} </div>
+              }
               <div className="mb-3">{formatCoordinates(selectedPlace.coordinates.lat, selectedPlace.coordinates.lng)}</div>
             </div>
             <div className="flex">
@@ -765,41 +831,154 @@ const MapDemoPage: React.FC = () => {
                   <span className="hidden lg:flex"> 經緯</span>
                 </button>
               </Link>
-              <button className="flex items-center mr-3 bg-blue-100 text-black p-2 rounded hover:bg-blue-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-300"
-                      onClick={handleGooglePlaces}>
+              <button className="flex items-center mr-3 bg-blue-100 text-black p-2 rounded hover:bg-blue-400 hover:text-white
+                                  focus:outline-none focus:ring-2 focus:ring-blue-300" 
+                                onClick={handleGooglePlaces} >
                 <i className="fa-solid fa-directions mr-1.5"></i>
                 <span className="hidden lg:flex"> 附近景點</span>
               </button>
             </div>
             <button
               title="edit-place"
-              className=" h-12 w-12  absolute right-14 top-0 mb-5 mt-5 m-2 bg-blue-100 flex-column justify-center items-center border-2 border-dashed border-gray-300 rounded-full cursor-pointer
+              className=" h-12 w-12 absolute right-[-15px] top-10 mb-5 mt-5 m-2 bg-blue-100 flex-column justify-center items-center border-2 border-dashed border-gray-300 rounded-full cursor-pointer
                hover:border-gray-500 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              onClick={() => handleEditClick(selectedPlace)}
-            >
+              onClick={() => handleEditClick(selectedPlace)}>
               <i className="fas fa-edit"></i>
             </button>
             <button
               title="delete-place"
               // className="m-2 px-4 py-2 bg-red-100 text-black border border-black rounded hover:bg-red-400 hover:text-white hover:border-white focus:outline-none focus:ring-2 focus:ring-blue-300"
-              className=" h-12 w-12  absolute right-0 top-0 mb-5 mt-5 m-2 bg-red-100 flex-column justify-center items-center border-2 border-gray-300  rounded-full cursor-pointer hover:border-gray-500 hover:bg-red-300 focus:outline-none focus:ring-2 focus:ring-red-500"
-              onClick={handleDeletePlace}
-            >
+              className=" h-12 w-12  absolute right-[-15px] top-24 mb-5 mt-5 m-2 bg-red-100 flex-column justify-center items-center border-2 border-gray-300  rounded-full cursor-pointer hover:border-gray-500 hover:bg-red-300 focus:outline-none focus:ring-2 focus:ring-red-500"
+              onClick={handleDeletePlace}>
               <i className="fas fa-trash-alt"></i>
             </button> 
           </div>
+          {googlePlacesSearch && (<div className="flex-col items-center justify-center">
+                <button title="close-search" 
+                        // tailwind beautiful buttons
+                        className="w-full button px-4 py-3 bg-red-100 rounded-full mt-3 " 
+                        onClick={closeGooglePlacesSearch}> 
+                        關閉 Google Places        
+                </button>   
+            <GooglePlaces 
+              latitude={latitude} 
+              longitude={longitude}
+              isFetchingAPI={googlePlacesSearch} 
+              onSelectPlace={handleSelectPlace}
+              placeName={selectedPlace?.name}
+            />
+            </div>
+          )}
         </>
       )}
+      </>
+      )}
+      {activeTab === 'content' && (
+        <>
+      <button title="show-places" className="bg-blue-300 p-2 rounded-full border-2 px-3 py-2 text-sm bg-yellow-100 hover:bg-yellow-400" 
+              onClick={()=>setShowPlaceInArticle(!showPlaceInArticle)}> {showPlaceInArticle ? '不顯示選中景點' : '同時顯示選中景點'} </button>
+      <div className="mt-2">
+      {!selectedPlace  && showPlaceInArticle &&  (<span className="border-2 rounded-2xl shadow-lg px-3 py-2 text-sm bg-green-200"> 選中的景點會顯示在此處 </span>)}
+      {selectedPlace && showPlaceInArticle && (
+        <>
+           <div className="mt-5 mb-5 relative p-4 bg-white border-2 rounded-2xl shadow-lg pr-12"> 
+            <div className="absolute right-0 top-0 text-black cursor-pointer p-5" onClick={handlePlaceClose} >
+              <i className="fas fa-times"></i>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-800 border-b border-gray-300 pb-2 mb-4">{selectedPlace.name}</h2>
+            <h3 className="text-lg text-gray-600 mb-4">{selectedPlace.description}</h3>
+            {selectedPlace.tags && selectedPlace.tags.filter(tag => tag.trim().length > 0).length > 0 && (
+            <div className="mb-4">
+              <div className="flex flex-wrap gap-2">
+                {selectedPlace.tags.map(tag => (
+                  <span key={tag} className="text-xs bg-blue-200 px-2 py-1 rounded-full">{tag}</span>
+                ))}
+              </div>
+            </div>
+            )}
+            <div className={`${categoryMapping[selectedPlace.category]?.color || 'bg-gray-200'} p-2 rounded mb-4 w-24`}>
+              {categoryMapping[selectedPlace.category]?.text || '不明'}
+            </div>
+            
+            <div className="mt-5">
+              {selectedPlace.images?.map((url, index) => (
+                <div key={index} className="image-preview mb-2 relative w-[200px] h-[200px]"  >
+                  <Image 
+                    src={url}
+                    alt={`${selectedPlace.name} image ${index}`}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              ))}
+              { selectedPlace.createdTime &&
+              <div className="text-sm"> 發佈時間：{new Date(selectedPlace?.createdTime ).toLocaleString("zh-TW", { hour12: true })}</div>
+              }
+
+              {selectedPlace?.updatedTime && selectedPlace?.updatedTime !="" &&
+                <div className="text-sm"> 更新時間：{new Date(selectedPlace?.updatedTime ).toLocaleString("zh-TW", { hour12: true })} </div>
+              }
+              <div className="mb-3">{formatCoordinates(selectedPlace.coordinates.lat, selectedPlace.coordinates.lng)}</div>
+            </div>
+            <div className="flex">
+              <Link href={`https://www.google.com/maps/place/?q=place_name:${selectedPlace.name}`} target="_blank" passHref>
+                <button className="flex items-center mr-3 bg-blue-100 text-black px-3 py-2  rounded hover:bg-blue-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-300">
+                  <i className="fab fa-google mr-1"></i>
+                  <i className="fa-solid fa-magnifying-glass mr-1"></i>
+                  <i className="fas fa-external-link mr-1.5"></i>
+                  <div className="hidden lg:flex"> 名稱</div>
+                </button>
+              </Link>
+              <Link href={`https://www.google.com/maps/place/${decimalToDms(selectedPlace.coordinates.lat, selectedPlace.coordinates.lng)}`} target="_blank" passHref>
+                <button className="flex items-center mr-3 bg-blue-100 text-black p-2 rounded hover:bg-blue-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-300">
+                  <i className="fab fa-google mr-1"></i>
+                  <i className="fa-solid fa-globe mr-1.5"></i>
+                  <i className="fas fa-external-link mr-1.5"></i>
+                  <span className="hidden lg:flex"> 經緯</span>
+                </button>
+              </Link>
+              <button className="flex items-center mr-3 bg-blue-100 text-black p-2 rounded hover:bg-blue-400 hover:text-white
+                                  focus:outline-none focus:ring-2 focus:ring-blue-300" 
+                                onClick={handleGooglePlaces} >
+                <i className="fa-solid fa-directions mr-1.5"></i>
+                <span className="hidden lg:flex"> 附近景點</span>
+              </button>
+            </div>
+            <button
+              title="edit-place"
+              className=" h-12 w-12 absolute right-[-15px] top-10 mb-5 mt-5 m-2 bg-blue-100 flex-column justify-center items-center border-2 border-dashed border-gray-300 rounded-full cursor-pointer
+               hover:border-gray-500 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onClick={() => handleEditClick(selectedPlace)}>
+              <i className="fas fa-edit"></i>
+            </button>
+            <button
+              title="delete-place"
+              // className="m-2 px-4 py-2 bg-red-100 text-black border border-black rounded hover:bg-red-400 hover:text-white hover:border-white focus:outline-none focus:ring-2 focus:ring-blue-300"
+              className=" h-12 w-12  absolute right-[-15px] top-24 mb-5 mt-5 m-2 bg-red-100 flex-column justify-center items-center border-2 border-gray-300  rounded-full cursor-pointer hover:border-gray-500 hover:bg-red-300 focus:outline-none focus:ring-2 focus:ring-red-500"
+              onClick={handleDeletePlace}>
+              <i className="fas fa-trash-alt"></i>
+            </button> 
+          </div>
+          
+        </>
+      )}
+      </div>
+      <div className="mt-3 border-2 rounded-2xl shadow-lg px-3 py-2 text-sm bg-green-50"> 新增座標 <i className="fas fa-map-marker-alt"></i>  以新增景點，或點選景點後按 <i className="fas fa-edit"> 編輯景點</i></div>
       {newMarker && (
-        <div className="p-4 bg-white rounded shadow-md">
+        <div className="relative mb-5 p-4 bg-white border-2 shadow-lg rounded-2xl">
           <h3 className="text-lg font-semibold mb-2 text-black">{isEditing ? '編輯景點' : '新增景點'}</h3>
+          <div className="absolute top-3 right-5 cursor-pointer"> {isEditing ? (
+            <div onClick={handleCancelEdit}> <i className="fas fa-times"></i></div> 
+          ):( 
+            <div onClick={toggleAddingMarker}> <i className="fas fa-times"></i></div> 
+          )} 
+          </div>
           <input 
             type="text" 
             placeholder="名稱" 
             value={newMarker.name} 
             onChange={(e) => handleInputChange('name', e.target.value)} 
-            className="p-2 w-full mb-2 border rounded text-black"
-          />
+            className="p-2 w-full mb-2 border rounded text-black"/>
           <textarea 
             placeholder="描述" 
             value={newMarker.description} 
@@ -817,8 +996,7 @@ const MapDemoPage: React.FC = () => {
             title="choose-category" 
             value={newMarker.category} 
             onChange={(e) => handleInputChange('category', e.target.value)} 
-            className="p-2 w-full mb-2 border rounded text-black"
-          >
+            className="p-2 w-full mb-2 border rounded text-black">
             <option value="">選擇類別</option>
             {Object.entries(categoryMapping).map(([key, { text }]) => (
               <option key={key} value={key}>{text}</option>
@@ -826,21 +1004,17 @@ const MapDemoPage: React.FC = () => {
           </select>
           <div className="image-uploader p-2 w-full mb-2 border rounded">
           <DropzoneImage onFileUploaded={handleFileUpload} />
-
           {previewImages.map((src, index) => (
               src ? (
-                <div key={index} className="image-preview relative" 
-                                  style={{ width: 300, height: 300 }}  >
+                <div key={index} className="image-preview relative w-[200px] h-[200px]" >
                   <Image 
                     src={src}
                     alt={`Uploaded preview ${index}`} 
                     fill
-                    className="object-cover"
-                  />
+                    className="object-cover"/>
                   <button 
                     className="absolute top-0 right-0 bg-red-500 text-white p-1"
-                    onClick={() => handleRemoveImage(index, src)}
-                  >
+                    onClick={() => handleRemoveImage(index, src)}>
                     刪除
                   </button>
                 </div>
@@ -852,22 +1026,22 @@ const MapDemoPage: React.FC = () => {
             <div className="flex mt-2">
               <Link href={`https://www.google.com/maps/place/?q=place_name:${newMarker.name}`} target="_blank" passHref>
                 <button className="flex items-center bg-blue-100 mr-2 text-black p-2 rounded hover:bg-blue-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-300">
-                  <i className="fab fa-google mr-1"></i><i className="fa-solid fa-magnifying-glass mr-1.5"></i><span className="hidden lg:flex"> 名稱</span>
+                <i className="mr-1 fa-solid fa-arrow-up-right-from-square"></i><i className="fab fa-google mr-1"></i><i className="fa-solid fa-magnifying-glass mr-1.5"></i><span className="hidden lg:flex"> 名稱</span>
                 </button>
               </Link>
               <Link href={`https://www.google.com/maps/place/${decimalToDms(newMarker.coordinates.lat, newMarker.coordinates.lng)}`} target="_blank" passHref>
                 <button className="flex items-center bg-blue-100 mr-2 text-black p-2 rounded hover:bg-blue-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-300">
-                  <i className="fab fa-google mr-1"></i><i className="fa-solid fa-globe mr-1.5"></i><span className="hidden lg:flex"> 經緯</span>
+                <i className="mr-1fa-solid fa-arrow-up-right-from-square"></i><i className="fab fa-google mr-1"></i><i className="fa-solid fa-globe mr-1.5"></i><span className="hidden lg:flex"> 經緯</span>
                 </button>
               </Link>
               <button className={`${RainbowButtonModule.rainbowButton} flex items-center mr-3 bg-blue-100 text-black p-2 rounded hover:bg-blue-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-300`}
-                      onClick={handleGooglePlacesForNewMarker}
-                      // @ts-ignore
-                      alt={`附近景點`}
-                      >
-                {/* <i className="fab fa-google mr-1"></i> */}
-                {/* <i className="fa-solid fa-directions mr-1.5"></i> */}
-                {/* <span className="hidden lg:flex"> 附近景點</span> */}
+                      onClick={handleGooglePlacesForNewMarker}  
+              >
+                <button className="bg-white flex items-center px-3 py-1 rounded-md">
+                  <i className="fab fa-google mr-1"></i>
+                  <i className="fa-solid fa-directions mr-1.5"></i>
+                  <span className="hidden lg:flex text-sm"> 附近景點</span>
+                </button>
               </button>
             </div>
           </div>
@@ -885,7 +1059,6 @@ const MapDemoPage: React.FC = () => {
               </span>
             )}
           </button>
-
           {isEditing && (
             <button
               onClick={handleCancelEdit}
@@ -898,17 +1071,13 @@ const MapDemoPage: React.FC = () => {
           )}
         </div>
       )}
-      { (googlePlacesSearch || googlePlacesSearchForNewMarker) ? ( 
-        <div className="flex justify-center">
-          <button title="close-search" 
-                  // tailwind beautiful buttons
-                  className="button px-4 py-3 bg-slate-300 rounded-full mt-3 " 
-                  onClick={closeGooglePlacesSearch}> 
-                  關閉 Google Places        
-          </button>   
-        </div> ):''}
-        
-      {googlePlacesSearch && (
+      {googlePlacesSearch && (<div className="flex-col items-center justify-center">
+                <button title="close-search" 
+                        // tailwind beautiful buttons
+                        className="w-full button px-4 py-3 bg-red-100 rounded-full mt-3 " 
+                        onClick={closeGooglePlacesSearch}> 
+                        關閉 Google Places        
+                </button>   
         <GooglePlaces 
           latitude={latitude} 
           longitude={longitude}
@@ -916,17 +1085,27 @@ const MapDemoPage: React.FC = () => {
           onSelectPlace={handleSelectPlace}
           placeName={selectedPlace?.name}
         />
+        </div>
       )}
-      {googlePlacesSearchForNewMarker && (
+      {googlePlacesSearchForNewMarker && (<>
+                <button title="close-search" 
+                        // tailwind beautiful buttons
+                        className="w-full button px-4 py-3 bg-red-100 rounded-full mt-3 " 
+                        onClick={closeGooglePlacesSearch}> 
+                        關閉 Google Places        
+                </button>   
+      
         <GooglePlaces 
           latitude={latitude} 
           longitude={longitude}
           isFetchingAPI={googlePlacesSearchForNewMarker} 
           onSelectPlace={handleSelectPlaceForNewMarker}
         />
+        </>
       )}
+      </>
+    )}
     </div>
-    
     <AlertModal 
       isOpen={showDeleteConfirm}
       onClose={() => setShowDeleteConfirm(false)}
@@ -939,6 +1118,7 @@ const MapDemoPage: React.FC = () => {
       onClose={() => setIsAlertOpen(false)}
       message={alertMessage}
     />
+  </div>
   </div>
   );
 };
