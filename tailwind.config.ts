@@ -14,6 +14,7 @@ const config: Config = {
         'noto-sans': ['Noto Sans TC', 'sans-serif'],
       },
       backgroundImage: {
+        'night-image': "url('/images/night.jpg')",
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-conic':
           'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
@@ -24,7 +25,10 @@ const config: Config = {
         'normal': '400',
         'medium': '500',
         'bold': '700'
-      }
+      },
+      mixBlendMode: {
+        'color-burn': 'color-burn',
+      },
     },
   },
   plugins: [],

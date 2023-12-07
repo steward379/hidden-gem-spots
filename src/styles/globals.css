@@ -17,13 +17,23 @@
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
+  /* color: rgb(var(--foreground-rgb));
   background: linear-gradient(
       to bottom,
       transparent,
       rgb(var(--background-end-rgb))
     )
-    rgb(var(--background-start-rgb));
+    rgb(var(--background-start-rgb)); */
+    background-color: rgb(186, 245, 255);
+}
+button:disabled {
+  cursor: not-allowed;
+}
+button {
+  transition: ease-in-out 0.3s;
+}
+.transition-btn {
+  transition: ease-in-out 0.3s;
 }
 
 .modal {
@@ -39,4 +49,155 @@ body {
   justify-content: center;
   align-items: center;
   z-index: 999;
+}
+
+.h-screen-without-navbar {
+  height: calc(100vh - 64px); /* 視窗高度減去 Navbar 高度 */
+}
+
+/* progress-bar */
+.progress-bar {
+  overflow: hidden;
+}
+
+.progress {
+  animation: load 2s infinite ease-out;
+}
+
+@keyframes load {
+  0% {
+    width: 0;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+/* the globe */
+.globe-container {
+  width: 100%; 
+  /* overflow-x: hidden; */
+  max-width: 100vw;
+}
+.globe-wrapper {
+  max-width: 1000px; 
+  margin: auto; 
+}
+/* content adjustment */
+.content-section {
+  position: absolute; 
+  top: 50%; 
+  left: 50%;
+  transform: translate(-50%, -50%); 
+  z-index: 20; 
+  max-width: 100%; 
+}
+/* merely-hard-light */
+.hard-light-only{
+  transition: transform 0.3s ease-in-out, mix-blend-mode 1s ease-in-out;
+}
+.hard-light-only:hover {
+  mix-blend-mode: hard-light;
+  /* 放大 */
+  transform: scale(1.5);
+}
+
+/* flex-on-hover */
+.flex-on-hover {
+  transition: transform 0.7s ease-in-out;
+  transform: translateX(0); 
+}
+.flex-on-hover:hover {
+  /* display: block; */
+  transform: translateY(300px);
+}
+@media (max-width: 768px) {
+  .flex-on-hover:hover {
+    transform: translateY(150px);
+  }
+}
+
+
+/* hard-light-scale-up-lg */
+.hard-light {
+  transition: transform 0.3s ease-in-out, mix-blend-mode 1s ease-in-out;
+}
+.hard-light:hover {
+  mix-blend-mode: hard-light;
+  transform: scale(1.7);
+}
+@media (max-width: 768px) {
+  .hard-light:hover {
+    transform: scale(1.1);
+  }
+}
+/* color-burn */
+.color-burn {
+  transition: transform 0.2s ease-in-out, mix-blend-mode 0.2s ease-in-out;
+}
+.color-burn:hover {
+  mix-blend-mode: color-burn;
+}
+/* hard-light-scale-up-sm */
+.image-hover-effect {
+  transition: transform 0.2s ease-in-out, mix-blend-mode 0.2s ease-in-out;
+}
+.image-hover-effect:hover {
+  /* transform: matrix(0, 1, 1, 0, 1, 0); */
+  mix-blend-mode: hard-light;
+  transform: scale(1.195);
+}
+/* scale-up-md for delete */
+.scale-2{
+  transition: transform 0.1s ease-in-out, mix-blend-mode 0.1s ease-in-out;
+}
+.scale-2:hover {
+  transform: scale(1.35);
+}
+/* skew-card for cards components*/
+.skew-card {
+  transition: transform 0.2s ease-in-out, mix-blend-mode 0.2s ease-in-out;
+}
+.skew-card:hover {
+  transform: skew(1.5deg, 1.5deg);
+}
+
+/* invisible smooth */
+.custom-transition-container {
+  transition: opacity 0.5s ease, height 0.5s ease;
+  overflow: hidden;
+  opacity: 1; /* 初始透明度 */
+  height: auto; /* 初始高度 */
+}
+.custom-transition-container.custom-hidden {
+  opacity: 0; /* 完全透明 */
+  height: 0; /* 高度為0 */
+}
+/* matrix */
+.matrix-flip {
+  transition: transform 0.2s ease-in-out, mix-blend-mode 0.2s ease-in-out;
+}
+.matrix-flip:hover {
+  mix-blend-mode: hard-light;
+  transform: matrix(0, 1, 1, 0, 0, 0);
+}
+/* rotate */
+.rotate-flip {
+  transition: transform 0.2s ease-in-out, mix-blend-mode 0.2s ease-in-out;
+}
+.rotate-flip:hover {
+  mix-blend-mode: hard-light;
+  transform: rotate(90deg);
+}
+
+/* 調整 Routing Machine 介面位置 */
+@media screen and (max-width: 840px) {
+  .leaflet-routing-container {
+      top: 40px !important;
+      width: 93% !important;
+  }
+}
+/* quill 遮蓋問題 */
+.ql-tooltip {
+  left: 0px !important; 
 }
