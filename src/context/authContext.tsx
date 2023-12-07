@@ -1,13 +1,19 @@
 // pages/context/AuthContext.tsx
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, getAuth, createUserWithEmailAndPassword,  signInWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { signInWithCustomToken , onAuthStateChanged, getAuth, createUserWithEmailAndPassword,  signInWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { useRouter }  from 'next/router';
 import { getDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
 import { getStorage, ref, getDownloadURL } from 'firebase/storage';
 import firebaseServices from '../utils/firebase';
-const { db, auth, storage } = firebaseServices;
+const { db, auth } = firebaseServices;
 // import { IUser } from '../types/IUser';
 import { LoginMethod } from '../LoginMethod';
+// import { getToken } from '@clerk/clerk-sdk-node';
+import {  getRandomAvatarUrl } from '../utils/randomProfile';
+
+// clerk using signInWithCustomToken
+import { useAuth as useClerkAuth, useClerk } from "@clerk/nextjs";
+import { initializeApp } from "firebase/app";
 
 interface IUser {
   uid: string;
@@ -42,26 +48,37 @@ const AuthContext = createContext<{
   updateUserProfile: async () => {}
 });
 
-const getRandomAvatarUrl = async () => {
-  const randomNumber = Math.floor(Math.random() * 11) + 1; // 生成1到11之間的隨機數字
-  const storage = getStorage();
-  const avatarRef = ref(storage, `/avatar-default/a_${randomNumber}.png`);
-
-  try {
-    const url = await getDownloadURL(avatarRef);
-    return url;
-  } catch (error) {
-    console.error("無法獲取頭像 URL", error);
-    return null; 
-  }
-};
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children}) => {
   const [user, setUser] = useState<IUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [loginMethod, setLoginMethod] = useState<LoginMethod>(LoginMethod.None);
-
   const [loaded, setLoaded] = useState(false);
+  const router = useRouter();
+
+  // const auth = getAuth();
+
+  const { user: clerkUser } = useClerk();
+
+  const { signOut: clerkSignOut } = useClerk();
+
+  // // cleark
+  // const { isSignedIn, user: clerkUser } = useClerk();
+  // const firebaseAuth = getAuth();
+
+  const { getToken } = useClerkAuth();
+  // const firebaseAuth = getAuth(firebaseServices);
+
+  useEffect(() => {
+    const signInWithClerk = async () => {
+      const token = await getToken({ template: "integration_firebase" });
+      if (token) {
+        await signInWithCustomToken(auth, token);
+        setLoginMethod(LoginMethod.clerk);
+      }
+    };
+
+    signInWithClerk();
+  }, [getToken]);
 
   const updateUserProfile = async (updatedData) => {
     if (!user) return;
@@ -75,10 +92,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }));
   };
 
-  const router = useRouter();
-
-  // const auth = getAuth();
-
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
@@ -86,13 +99,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const docSnap = await getDoc(userRef);
 
         let userData: IUser;
+  
+        const randomAvatar = await getRandomAvatarUrl();     
+        
+        const email = clerkUser && clerkUser.emailAddresses && clerkUser.emailAddresses.length > 0 
+              ? clerkUser.emailAddresses[0].emailAddress 
+              : firebaseUser.email;
+        const name = clerkUser && clerkUser.firstName 
+             ? clerkUser.firstName 
+             : (firebaseUser.displayName || '第三方會員');
+
+        // if (!docSnap.exists()) {
+        // userData = {
+        //   uid: firebaseUser.uid,
+        //   email: firebaseUser.email,
+        //   name: firebaseUser.displayName,
+        //   avatar: firebaseUser.photoURL,
+        //   following: [],
+        //   followers: []
+        // };
 
         if (!docSnap.exists()) {
           userData = {
             uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            name: firebaseUser.displayName,
-            avatar: firebaseUser.photoURL,
+            email: email,
+            name: name,
+            avatar: firebaseUser.photoURL || randomAvatar,
             following: [],
             followers: []
           };
@@ -103,14 +135,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         setUser(userData);
+
       } else {
+        // const userRef = doc(db, 'users', firebaseUser.uid);
+        // const docSnap = await getDoc(userRef);
+
+        // const randomAvatar = await getRandomAvatarUrl();     
+
+        // const email = clerkUser.emailAddresses[0]?.emailAddress;
+        // const name = clerkUser.firstName || "Google 會員";
+        // const avatar = clerkUser.imageUrl
+
+        // let userData: IUser;
+  
+    
+        // if (!docSnap.exists()) {
+        //   userData = {
+        //     uid: firebaseUser.uid,
+        //     email: clerkUser.emailAddresses[0]?.emailAddress,
+        //     name: clerkUser.firstName  ||  clerkUser.emailAddresses[0]?.emailAddress.split('@')[0] ||'第三方會員',
+        //     avatar: clerkUser.imageUrl || randomAvatar,
+        //     following: [],
+        //     followers: []
+        // //   };
+        //   await setDoc(userRef, userData);
+
+        // } else {
+        //   userData = docSnap.data() as IUser;
+        // }
+
+        // setUser(userData);
+    
         setUser(null);
         setLoading(false);
         if (router.asPath.startsWith("/accounting") || router.asPath.startsWith("/map")) {
           router.push({ pathname: "/home", query: { message: "請先登入" } });
         }
-
+              
       }
+
       setLoading(false);
           // 網站通知
       setLoaded(true);
@@ -121,7 +184,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         unsubscribeAuth();
       };
 
-  }, [router]);
+  }, [router, clerkUser]);
 
   const loginWithEmail = async (email: string, password: string) => {
     try {
@@ -189,6 +252,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
+
+      if (clerkSignOut) {
+        await clerkSignOut();
+      }  
+
       await signOut(auth);
       setUser(null);
       setLoginMethod(LoginMethod.None);
@@ -205,6 +273,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     </AuthContext.Provider>
   );
 };
+
+
 
 // Hook 來使用 context
 export const useAuth = () => useContext(AuthContext);
