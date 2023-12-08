@@ -1,6 +1,9 @@
 // pages/components/MapComponent.tsx
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Image from 'next/image';
+import { LazyLoadImage } from 'react-lazy-load-image-component';
+import 'react-lazy-load-image-component/src/effects/blur.css';
+
 import L from 'leaflet';
 import 'leaflet-minimap';
 import 'leaflet-routing-machine';
@@ -536,9 +539,6 @@ const MapComponent = ({
       `;
 
   
-      // tempMarker.bindPopup(popupContent).openPopup();
-      tempMarker.bindPopup(popupContent).openPopup();
-      map.setView([lat, lng]);
 
       tempMarker.on('popupopen', () => {
         const deleteButton = document.getElementById('delete-temp-marker-btn');
@@ -550,17 +550,9 @@ const MapComponent = ({
         }
       });
 
-
-      // setTimeout(() => {
-      //   const deleteButton = document.getElementById('delete-marker-btn');
-      //   if (deleteButton) {
-      //     deleteButton.addEventListener('click', () => {
-      //       tempMarker.remove();
-      //     });
-      //   }
-      // }, 0);
-
-      // setGoogleMarkers(prevMarkers => [...prevMarkers, tempMarker]);
+      // tempMarker.bindPopup(popupContent).openPopup();
+      tempMarker.bindPopup(popupContent).openPopup();
+      map.setView([lat, lng]);
       
       return () => {
         tempMarker.remove();
@@ -596,10 +588,7 @@ const MapComponent = ({
           </div>
         </div>
       `;
-  
-      // tempMarker.bindPopup(popupContent).openPopup();
-      tempMarker.bindPopup(popupContent).openPopup();
-      map.setView([lat, lng]);
+
 
       tempMarker.on('popupopen', () => {
         const deleteButton = document.getElementById('delete-temp-marker-btn');
@@ -610,6 +599,10 @@ const MapComponent = ({
           };
         }
       });
+
+      // tempMarker.bindPopup(popupContent).openPopup();
+      tempMarker.bindPopup(popupContent).openPopup();
+      map.setView([lat, lng]);
 
 
       // setTimeout(() => {
@@ -1033,7 +1026,7 @@ const toggleMode = () => {
       }
       <div ref={mapRef} className="z-10 h-full w-full flex-1" />
         <div className="absolute top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2">
-          <Image src="/images/marker-star.png" alt="Marker" 
+        <LazyLoadImage effect="blur" src="/images/marker-star.png" alt="Marker" 
                   width="60" height="100" />
         </div>
         <button
@@ -1044,7 +1037,7 @@ const toggleMode = () => {
 
           <i className='fa fa-location'></i>
           <div className="text-sm hidden md:block"> 取得定位 </div>
-          {/* <Image src="/images/map-cursor.png" alt="Fetch-Location" className="h-7 w-7" width="30" height="30" /> */}
+          {/* <LazyLoadImage effect="blur" src="/images/map-cursor.png" alt="Fetch-Location" className="h-7 w-7" width="30" height="30" /> */}
         </button>
         { (isRoutingMode || isFreeMode) && (
           <div className="">
@@ -1073,7 +1066,7 @@ const toggleMode = () => {
           </div>
         )}
         { isDragModeEnabled && (
-          <Image src="/images/marker-bowl.png" alt="star-bowl" width={70} height={70}
+          <LazyLoadImage effect="blur" src="/images/marker-bowl.png" alt="star-bowl" width={70} height={70}
                 className="marker-bowl-image absolute bottom-1/3 right-0 z-10" />
         )}
         <AlertModal
