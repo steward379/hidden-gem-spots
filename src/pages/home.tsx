@@ -147,7 +147,7 @@ export default function Home() {
                 {/* Content Section */}
                 <div className="content-section max-w-xl mx-auto items-center justify-center">
                     <div className="flex flex-col items-center bg-gray-300 rounded-full p-10 backdrop-blur-sm bg-opacity-30 hover:bg-opacity-60">
-                        <LazyLoadImage src="/images/ballon.png" alt="Scene Image" width="300" height="300" style={{ objectFit: 'cover', mixBlendMode: 'color-burn' }} />
+                        <LazyLoadImage src="/images/ballon.png" alt="Scene Image" width="200" height="200" style={{ objectFit: 'cover', mixBlendMode: 'color-burn' }} />
                         <h1 className="text-4xl mb-4 text-gray-800">Hidden Gem Spots</h1>
                         <Image src="/images/hidden_gem.png" alt="logo Image" width="300" height="300" style={{ objectFit: 'cover', mixBlendMode: 'color-burn' }} />
                         <p className="text-xl mb-6 text-black">找尋你的秘密景點</p>
