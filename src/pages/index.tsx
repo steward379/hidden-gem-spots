@@ -32,10 +32,13 @@ const LandingPage = () => {
 
         <div className="absolute top-0 left-0 right-0 bottom-0 flex items-center justify-center z-3">
             <div className="text-center text-white z-10">
-                <LazyLoadImage src="/images/ballon.png" alt="Scene Image" width="500" height="300" 
+              <div className='flex-column items-center justify-center'>
+                <LazyLoadImage src="/images/ballon.png" alt="Scene Image" width="300" height="300" 
                     style={{ objectFit: 'cover' }} effect="blur" />
-                <h1 className="text-6xl mb-4 font-normal"><span className="font-medium">Hidden Gem Spot</span> 旅圓</h1>
-                <p className="text-3xl mb-8">紀錄自己的下一趟生活冒險。</p>
+                 <LazyLoadImage src="/images/logo.png" alt="Scene Image" width="500" height="300" 
+                    style={{ objectFit: 'cover' }} effect="blur" />
+              </div>
+                <p className="mt-4 text-2xl mb-8"> Hidden Gem 旅圓紀錄自己的下一趟生活冒險。</p>
                 {message && <p className="text-white-500 p-5">{message}</p>}
                 <Link href="/home">
                     <button className="bg-red-400 text-red text-xl font-semibold py-3
