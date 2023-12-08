@@ -9,7 +9,6 @@ const dynamicBackground = (imageUrl) => ({
 const MapCard = ({ map, userId }) => {
     return (
         <>
-            {/* eslint-disable-next-line react/style-prop-object */}
             <div className={`border bg-cover bg-center hover:bg-yellow-500 transition-btn rounded-3xl bg-purple-400 h-[300px]`} style={dynamicBackground(map.coverImage)}> 
                 <div className="relative p-4 w-full h-full bg-gradient-to-t from-transparent to-blue-600 opacity-100 rounded-3xl 
                             hover:bg-yellow-400 hover:bg-opacity-50">

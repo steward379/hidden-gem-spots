@@ -5,8 +5,8 @@
     // "editor.formatOnSave": true,
     // Runs Prettier, then ESLint. Auto-fix eslint errors on save
     "editor.codeActionsOnSave": {
-        "source.formatDocument": true,
-        "source.fixAll.eslint": true
+        "source.formatDocument": "explicit",
+        "source.fixAll.eslint": "explicit"
     },
     "[typescriptreact]": {
         "editor.defaultFormatter": "vscode.typescript-language-features"

@@ -197,7 +197,23 @@ button {
       width: 93% !important;
   }
 }
-/* quill 遮蓋問題 */
+/* quill cover issue 遮蓋問題 */
 .ql-tooltip {
   left: 0px !important; 
+}
+/* 網點 */
+.overlay-dot-pattern {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.2); /* 黑色半透明背景 */
+    background-image: radial-gradient(circle, #000 1px, transparent 1px); /* 創造網點效果 */
+    background-size: 5px 5px; /* 調整網點大小 */
+    z-index: -1;
+}
+
+.h-screen-without-navbar-half {
+  height: calc(100vh - 200px); /* 視窗高度減去 Navbar 高度 */
 }

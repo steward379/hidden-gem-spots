@@ -19,20 +19,32 @@ const LandingPage = () => {
 
   return (
     <div className="flex flex-col font-sans">
-      <div className="bg-cover bg-no-repeat bg-center h-screen flex items-center justify-center" 
-           style={{ backgroundImage: "url('/images/pexels-tyler-lastovic.jpg')" }}>
-        <div className="bg-black opacity-20 rounded mt-20"></div>
-        <div className="text-center text-white">
-            <LazyLoadImage src="/images/ballon.png" alt="Scene Image" width="500" height="300" 
-                   style={{ objectFit: 'cover' }} effect="blur" />
-            <h1 className="text-6xl mb-4 font-normal"><span className="font-medium">Hidden Gem Spot</span> 旅圓</h1>
-            <p className="text-3xl mb-8">紀錄自己的下一趟生活冒險。</p>
-            <Link href="/home">
-            {message && <p className="text-white-500 p-5">{message}</p>}
-              <button className="bg-red-400 text-red text-xl font-semibold py-3 px-5 rounded hover:bg-red-500 transition duration-300">開始探索</button>
-            </Link>
+          
+    <div className="relative font-sans mt-[-65px] h-screen-without-navbar-half">
+        <div className="bg-cover bg-no-repeat bg-center absolute top-0 left-0 right-0 bottom-0 z-[-1]" 
+            style={{ backgroundImage: "url('/images/pexels-tyler-lastovic.jpg')" }}>
         </div>
-      </div>
+
+        <div className="overlay-dot-pattern absolute mt-[64px] top-0 left-0 right-0 bottom-0 z-2"></div>
+
+        <div className="absolute top-0 left-0 right-0 bottom-0 flex items-center justify-center z-3">
+            <div className="text-center text-white z-10">
+                <LazyLoadImage src="/images/ballon.png" alt="Scene Image" width="500" height="300" 
+                    style={{ objectFit: 'cover' }} effect="blur" />
+                <h1 className="text-6xl mb-4 font-normal"><span className="font-medium">Hidden Gem Spot</span> 旅圓</h1>
+                <p className="text-3xl mb-8">紀錄自己的下一趟生活冒險。</p>
+                {message && <p className="text-white-500 p-5">{message}</p>}
+                <Link href="/home">
+                    <button className="bg-red-400 text-red text-xl font-semibold py-3
+                    px-5 rounded hover:bg-red-500 transition duration-300
+                    cursor-pointer z-10" >
+                        開始探索
+                    </button>
+                </Link>
+            </div>
+        </div>
+    </div>
+
 
       {/* Block 1 */}
       <div className="md:flex gap-10 items-center justify-end bg-gray-100 p-16">
