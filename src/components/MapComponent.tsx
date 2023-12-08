@@ -1066,9 +1066,10 @@ const toggleMode = () => {
           </div>
         )}
         { isDragModeEnabled && (
-          <LazyLoadImage effect="blur" src="/images/marker-bowl.png" alt="star-bowl" width={70} height={70}
+          <Image src="/images/marker-bowl.png" alt="star-bowl" width={70} height={70}
                 className="marker-bowl-image absolute bottom-1/3 right-0 z-10" />
         )}
+
         <AlertModal
           isOpen={isAlertOpen}
           onClose={() => setIsAlertOpen(false)}
