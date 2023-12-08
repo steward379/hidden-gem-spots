@@ -3,12 +3,15 @@ import React, { useState, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import Router from 'next/router';
 import Image from 'next/image';
+import { LazyLoadImage } from 'react-lazy-load-image-component';
+import 'react-lazy-load-image-component/src/effects/blur.css';
 import Link from 'next/link';
 import { collection, query, onSnapshot, getDocs, updateDoc, getDoc, 
   addDoc, where, doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
 import firebaseServices from '../../utils/firebase'; 
 const { db, storage } = firebaseServices; 
+
 import { useAuth } from '../../context/AuthContext';
 import AlertModal from '../../components/AlertModal'
 import DropzoneImage from '../../components/DropzoneImage';
@@ -796,11 +799,12 @@ const MapDemoPage: React.FC = () => {
             
             <div className="mt-5">
               {selectedPlace.images?.map((url, index) => (
-                <div key={index} className="image-preview mb-2 relative w-[200px] h-[200px]"  >
-                  <Image 
+                <div key={index} className="image-preview mb-2 relative w-[200px] h-[200px] overflow-hidden"  >
+                  <LazyLoadImage effect="blur"
                     src={url}
                     alt={`${selectedPlace.name} image ${index}`}
-                    fill
+                    width="200px"
+                    height="200px"
                     className="object-cover"
                   />
                 </div>
@@ -902,11 +906,12 @@ const MapDemoPage: React.FC = () => {
             
             <div className="mt-5">
               {selectedPlace.images?.map((url, index) => (
-                <div key={index} className="image-preview mb-2 relative w-[200px] h-[200px]"  >
-                  <Image 
+                <div key={index} className="image-preview mb-2 relative w-200 h-200 overflow-hidden"  >
+                  <LazyLoadImage effect="blur"
                     src={url}
                     alt={`${selectedPlace.name} image ${index}`}
-                    fill
+                    width="200" // 设定宽度
+                    height="200" // 设定高度
                     className="object-cover"
                   />
                 </div>
@@ -1006,11 +1011,12 @@ const MapDemoPage: React.FC = () => {
           <DropzoneImage onFileUploaded={handleFileUpload} />
           {previewImages.map((src, index) => (
               src ? (
-                <div key={index} className="image-preview relative w-[200px] h-[200px]" >
-                  <Image 
+                <div key={index} className="image-preview relative w-[200px] h-[200px] overflow-hidden" >
+                  <LazyLoadImage effect="blur"
                     src={src}
                     alt={`Uploaded preview ${index}`} 
-                    fill
+                    width="200px"
+                    height="200px"
                     className="object-cover"/>
                   <button 
                     className="absolute top-0 right-0 bg-red-500 text-white p-1"

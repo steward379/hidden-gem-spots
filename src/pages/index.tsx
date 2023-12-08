@@ -2,6 +2,9 @@
 import Link from 'next/link';
 import React from 'react';
 import Image from 'next/image';
+import { LazyLoadImage } from 'react-lazy-load-image-component';
+import 'react-lazy-load-image-component/src/effects/blur.css';
+
 import { useRouter } from 'next/router';
 // import { Inter } from "next/font/google";
 // const inter = Inter({ subsets: ["latin"] });
@@ -20,8 +23,8 @@ const LandingPage = () => {
            style={{ backgroundImage: "url('/images/pexels-tyler-lastovic.jpg')" }}>
         <div className="bg-black opacity-20 rounded mt-20"></div>
         <div className="text-center text-white">
-            <Image src="/images/ballon.png" alt="Scene Image" width="500" height="300" 
-                   style={{ objectFit: 'cover' }} />
+            <LazyLoadImage src="/images/ballon.png" alt="Scene Image" width="500" height="300" 
+                   style={{ objectFit: 'cover' }} effect="blur" />
             <h1 className="text-6xl mb-4 font-normal"><span className="font-medium">Hidden Gem Spot</span> 旅圓</h1>
             <p className="text-3xl mb-8">紀錄自己的下一趟生活冒險。</p>
             <Link href="/home">
@@ -35,8 +38,8 @@ const LandingPage = () => {
       <div className="md:flex gap-10 items-center justify-end bg-gray-100 p-16">
         <div className="md:flex-1 md:w-1/2">
           <div className="md:flex items-center justify-end">
-            <Image src="/images/pexels-marina-leonova.jpg" alt="Scene Image" width="500" height="500"
-                    className= "rounded-full" />
+            <LazyLoadImage src="/images/pexels-marina-leonova.jpg" alt="Scene Image" width="500" height="500"
+                    className= "rounded-full" effect="blur" />
           </div>
         </div>
         <div className=" w-full md:w-1/2 text-center md:text-left p-4 text-black">
@@ -59,9 +62,10 @@ const LandingPage = () => {
         </div>
         <div className="flex-1 md:w-1/2" 
               style={{ maxHeight: "600px"}}>
-          <Image src="/images/pexels-bhupendra-singh.jpg" alt="Scene Image" width="500" height="500" 
+          <LazyLoadImage src="/images/pexels-bhupendra-singh.jpg" alt="Scene Image" width="500" height="500" 
+                 effect="blur"
                  className= "rounded-full"
-                 style={{ objectFit: 'cover' }}
+                 style={{ objectFit: 'cover' } }
           />
         </div>
       </div>
@@ -70,7 +74,8 @@ const LandingPage = () => {
       <div className="md:flex gap-10 items-center justify-end bg-gray-100 p-16">
         <div className="flex-1 md:w-1/2"
              style={{ maxHeight: "600px", overflow: 'hidden' }}>
-          <Image src="/images/pexels-photo-friends.jpeg" alt="Scene Image" width="500" height="500" 
+          <LazyLoadImage src="/images/pexels-photo-friends.jpeg" alt="Scene Image" width="500" height="500" 
+                  effect="blur"
                  className= "rounded-full"
                  style={{ objectFit: 'cover' }} />
         </div>

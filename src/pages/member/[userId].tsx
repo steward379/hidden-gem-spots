@@ -3,6 +3,8 @@ import { useEffect, useState, useRef  } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Image from 'next/image';
+import { LazyLoadImage } from 'react-lazy-load-image-component';
+import 'react-lazy-load-image-component/src/effects/blur.css';
 // auth
 import { useAuth } from '@/src/context/AuthContext';
 // firebase
@@ -267,7 +269,7 @@ const MemberPage = () => {
           {list.map((userId) => (
             userDetails[userId] && (
               <Link href={`/member/${userId}`} key={userId} className="flex items-center m-2">
-                <Image 
+                <LazyLoadImage effect="blur"
                   src={userDetails[userId].avatar} 
                   alt={userDetails[userId].name} 
                   width="50" 
@@ -291,7 +293,7 @@ const MemberPage = () => {
           <div className="flex flex-col justify-between space-y-3">
             <div className="flex-col items-center justify-center space-y-3">
               <div className="rotate-flip w-24 h-24 bg-yellow-500 rounded-full">
-                <Image className="w-24 h-24 mb-5 rounded-full matrix-flip" 
+                <LazyLoadImage effect="blur"className="w-24 h-24 mb-5 rounded-full matrix-flip" 
                     alt="profile-image" 
                     src={memberData.avatar ? memberData.avatar : '/images/marker-icon.png' } width="100" height="100" />
               </div>

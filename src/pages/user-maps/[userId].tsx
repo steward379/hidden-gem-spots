@@ -6,6 +6,8 @@ import firebaseServices from '../../utils/firebase';
 const { db } = firebaseServices;
 import { useAuth } from '../../context/AuthContext';
 import Image from 'next/image';
+import { LazyLoadImage } from 'react-lazy-load-image-component';
+import 'react-lazy-load-image-component/src/effects/blur.css';
 import Link from 'next/link';
 import AlertModal from '@/src/components/AlertModal';
 
@@ -180,7 +182,7 @@ const UserMapsPage = () => {
                   <h2 className="text-2xl font-normal lg:mb-0 text-stone-200 pt-3">{isCurrentUser ? '你的地圖' : `${mapMaker?.name}的地圖`}</h2>
                 </div>
             { mapMaker?.avatar &&
-              <Image 
+              <LazyLoadImage effect="blur"
                 src={mapMaker?.avatar} 
                 alt={mapMaker?.name} 
                 className="w-24 h-24 rounded-full cursor-pointer image-hover-effect" 

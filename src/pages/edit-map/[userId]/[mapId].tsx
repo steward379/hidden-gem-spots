@@ -1,6 +1,8 @@
 // pages/edit-map/[userId]/[mapId].tsx
 import { useRouter } from 'next/router';
 import Image from 'next/image';
+import { LazyLoadImage } from 'react-lazy-load-image-component';
+import 'react-lazy-load-image-component/src/effects/blur.css';
 import dynamic from 'next/dynamic';
 import React, { useState, useEffect } from 'react';
 // redux
@@ -221,9 +223,13 @@ const EditMap = () => {
                     <span className="ml-4 text-gray-500">沒有選擇檔案</span>
                   )}
                  {coverImagePreview && (
-                    <div className="relative mt-2 mb-10 w-full h-60">
-                      <Image src={coverImagePreview} alt="Cover Preview" 
-                            fill className="object-cover" />
+                    <div className="relative mt-2 mb-10 w-full h-300 w-100 overflow-hidden">
+                      <LazyLoadImage effect="blur"src={coverImagePreview} alt="Cover Preview" 
+                                  width={400}
+                                  height={250} // 设置图片显示的宽度
+                                  objectFit="cover" // 确保图片按比例填充容器
+                                  layout="responsive" // 设置布局方式为响应式
+                                    />
                       <button onClick={handleRemoveImage} className="absolute top-0 right-0 bg-red-500 text-white p-2 rounded-full hover:bg-red-700">
                         移除圖片
                       </button>

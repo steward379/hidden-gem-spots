@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Image from 'next/image';
+import { LazyLoadImage } from 'react-lazy-load-image-component';
+import 'react-lazy-load-image-component/src/effects/blur.css';
 
 import { useMapNotification } from '../context/MapNotificationContext';
 import { collectionGroup, query, onSnapshot, getDocs, orderBy } from "firebase/firestore";
@@ -145,7 +147,7 @@ export default function Home() {
                 {/* Content Section */}
                 <div className="content-section max-w-xl mx-auto items-center justify-center">
                     <div className="flex flex-col items-center bg-gray-300 rounded-full p-10 backdrop-blur-sm bg-opacity-30 hover:bg-opacity-60">
-                        <Image src="/images/ballon.png" alt="Scene Image" width="300" height="300" style={{ objectFit: 'cover', mixBlendMode: 'color-burn' }} />
+                        <LazyLoadImage src="/images/ballon.png" alt="Scene Image" width="300" height="300" style={{ objectFit: 'cover', mixBlendMode: 'color-burn' }} />
                         <h1 className="text-4xl mb-4 text-gray-800">Hidden Gem Spots</h1>
                         <p className="text-xl mb-6 text-black">找尋你的秘密景點</p>
                         <Link href="/map">
@@ -219,12 +221,11 @@ export default function Home() {
                 </div>
             </div>
             <div className='w-full text-center flex-1 md:w-1/2 mx-auto mt-16'>
-          
-                <Image src="/images/future-02.png" alt="Scene Image" width="1000" height="1000" 
+                <LazyLoadImage effect="blur" src="/images/future-02.png" alt="Scene Image" width="1000" height="1000" 
                     style={{ objectFit: 'cover' }} />
-                <Image src="/images/future-03.png" alt="Scene Image" width="1000" height="1000" 
+                <LazyLoadImage effect="blur" src="/images/future-03.png" alt="Scene Image" width="1000" height="1000" 
                     style={{ objectFit: 'cover' }} />
-                <Image src="/images/future-01.png" alt="Scene Image" width="1000" height="1000" 
+                <LazyLoadImage effect="blur" src="/images/future-01.png" alt="Scene Image" width="1000" height="1000" 
                     style={{ objectFit: 'cover' }} />
                 <AlertModal isOpen={isAlertOpen} onClose={() => setIsAlertOpen(false)} message={alertMessage} />
             </div>

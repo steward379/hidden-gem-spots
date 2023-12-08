@@ -3,6 +3,9 @@ import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import Router from 'next/router';
 import Image from 'next/image';
+import { LazyLoadImage } from 'react-lazy-load-image-component';
+import 'react-lazy-load-image-component/src/effects/blur.css';
+
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 // react modules
@@ -536,11 +539,14 @@ const PublishMapPage = () => {
 
                   <div className="mt-5">
                     {selectedPlace.images?.map((url, index) => (
-                      <div key={index} className="image-preview mb-2 relative w-[200px] h-[200px]"  >
-                        <Image
+                      <div key={index} className="image-preview mb-2 relative w-[200px] h-[200px] overflow-hidden"  >
+                        <LazyLoadImage effect="blur"
                           src={url}
                           alt={`${selectedPlace.name} image ${index}`}
-                          fill
+                          objectFit="cover" 
+                          layout="responsive"
+                          width={200}
+                          height={200} 
                           className="object-cover"
                         />
                       </div>
@@ -610,22 +616,32 @@ const PublishMapPage = () => {
                 <div> 代表圖片 </div>
                 {/* {coverImagePreview && (
                 <div>
-                  <Image src={coverImagePreview} alt="Cover Preview" width="300" height="300" />
+                 <LazyLoadImage effect="blur"  src={coverImagePreview} alt="Cover Preview" width="300" height="300" />
                   <button onClick={() => setCoverImagePreview('')}>移除圖片</button>
                 </div>
               )} */}
 
                 <DropzoneImage onFileUploaded={handleFileUpload} />
                 {coverImagePreview && (
-                  <div className="relative mt-2 mb-10 w-full h-60">
-                    <Image src={coverImagePreview} alt="Cover Preview"
-                      fill className="object-cover" />
-                    <button className="absolute top-0 right-0 bg-red-500 text-white p-2 rounded-full hover:bg-red-700"
-                      onClick={() => setCoverImagePreview('')}>
-                      移除圖片
-                    </button>
-                  </div>
-                )}
+  <div className="relative mt-2 mb-10 w-200 h-100 overflow-hidden"> {/* 设置容器宽度为200px，高度为100px */}
+    <LazyLoadImage
+      effect="blur"
+      src={coverImagePreview}
+      alt="Cover Preview"
+      width="200"  // 设置图片宽度为200px
+      height="100" // 设置图片高度为100px
+      objectFit="cover" // 确保图片按比例填充容器
+      layout="responsive" // 设置布局方式为响应式
+    />
+    <button
+      className="absolute top-0 right-0 bg-red-500 text-white p-2 rounded-full hover:bg-red-700"
+      onClick={() => setCoverImagePreview('')}
+    >
+      移除圖片
+    </button>
+  </div>
+)}
+
                 <div className=''>
 
                 </div>

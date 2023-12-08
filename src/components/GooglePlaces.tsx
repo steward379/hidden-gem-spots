@@ -1,6 +1,8 @@
 // components/GooglePlaces.tsx
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { LazyLoadImage } from 'react-lazy-load-image-component';
+import 'react-lazy-load-image-component/src/effects/blur.css';
 import Link from 'next/link';
 import { categoryMapping } from '@/src/constants';
 
@@ -128,7 +130,7 @@ const GooglePlaces = ({ latitude, longitude, isFetchingAPI = false,
             <p className="text-sm">緯度 {place.geometry.location.lat}, 經度 {place.geometry.location.lng}</p>
             <h4 className="font-bold text-lg">{place.name}</h4>
             <div className="flex space-x-3">            
-              <Image className="w-5 h-5" src={place.icon} alt={place.name} width="100" height="100" />
+            <LazyLoadImage effect="blur" className="w-5 h-5" src={place.icon} alt={place.name} width="100" height="100" effect="blur" />
               <p  className="text-sm">{place.vicinity}</p>
             </div>
             <div className="flex items-center space-x-2">

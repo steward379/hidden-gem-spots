@@ -2,6 +2,9 @@ import { SignIn, SignOutButton, UserButton, useUser } from "@clerk/nextjs";
 import React, { useState } from 'react';
 import Web3 from 'web3';
 import Image from 'next/image';
+import { LazyLoadImage } from 'react-lazy-load-image-component';
+import 'react-lazy-load-image-component/src/effects/blur.css';
+
 import Link from 'next/link';
 import GlobeComponent from "../components/animation/GlobeComponent";
 import RainbowButtonModule from '@/src/styles/RainbowButton.module.css';
@@ -90,7 +93,8 @@ export default function MintPage() {
       <h3 className="mb-2 text-center">圖標們的聚會 </h3>
       <a title="series" className="hover:black" href="https://www.okx.com/hk/web3/marketplace/nft/collection/polygon/hiddengemnft" target="_blank" rel="noopener noreferrer">
         <div>
-          <Image className="mb-10 rounded-3xl" src="/images/marker-nft.png" alt="nft-photo" width={200} height={200} />
+          <LazyLoadImage effect="blur"className="mb-10 rounded-3xl" 
+          src="/images/marker-nft.png" alt="nft-photo" width={200} height={200} />
         </div>
       </a>
     </div>
