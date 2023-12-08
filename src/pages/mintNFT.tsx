@@ -25,6 +25,28 @@ export default function MintPage() {
     if ((window as any).ethereum) {
       const web3 = new Web3((window as any).ethereum);
       try {
+
+        const networkId = await web3.eth.net.getId();
+
+        // Polygon 主網的 ID 是 137
+        const polygonNetworkId = 137;
+  
+        if (networkId !== polygonNetworkId) {
+          try {
+            // 請求切換到 Polygon 網路
+            await (window as any).ethereum.request({
+              method: 'wallet_switchEthereumChain',
+              params: [{ chainId: web3.utils.toHex(polygonNetworkId) }],
+            });
+          } catch (switchError) {
+            // 用戶拒絕切換網路
+            if (switchError.code === 4001) {
+              console.log('用戶拒絕切換到 Polygon 鏈');
+            }
+            // 未知錯誤
+            console.error(switchError);
+          }
+        }
         // await window.ethereum.enable();
         // const accounts = await web3.eth.getAccounts();
         const accounts = await (window as any).ethereum.request({ method: 'eth_requestAccounts' });
