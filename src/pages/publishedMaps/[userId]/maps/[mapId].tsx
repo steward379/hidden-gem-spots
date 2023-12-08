@@ -4,6 +4,9 @@ import { useRouter } from "next/router";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import Image from "next/image";
+import { LazyLoadImage } from 'react-lazy-load-image-component';
+import 'react-lazy-load-image-component/src/effects/blur.css';
+import GooglePlaces from "@/src/components/GooglePlaces";
 // firebase
 import {
     doc,
@@ -45,6 +48,15 @@ const ReactQuill = dynamic(() => import("react-quill"), {
     loading: () => <p>Loading...</p>,
 });
 const PublishedMapDetail = () => {
+
+    const [showGooglePlaces, setShowGooglePlaces] = useState(false);
+    const [googlePlacesCoords, setGooglePlacesCoords] = useState({ lat: 0, lng: 0 });
+
+    const handleGooglePlacesToggle = (place) => {
+        setShowGooglePlaces(!showGooglePlaces);
+        setGooglePlacesCoords({ lat: place.coordinates.lat, lng: place.coordinates.lng });
+      };
+    
     // redux
     const dispatch = useDispatch();
     const mapDataRedux = useSelector(
@@ -820,12 +832,12 @@ const PublishedMapDetail = () => {
                                 <div className="mr-2 flex">
                                     {mapData.authorAvatar && (
                                         <Link href={`/member/${mapData.userId}/`}>
-                                            <Image
+                                            <LazyLoadImage effect="blur"
                                                 src={mapData.authorAvatar}
                                                 alt="Author Avatar"
                                                 className="rounded-full w-12 h-12 mr-3"
-                                                width="50"
-                                                height="50"
+                                                width={50}
+                                                height={50}
                                             />
                                         </Link>
                                     )}
@@ -841,11 +853,14 @@ const PublishedMapDetail = () => {
                                 )}
                             </p>
                             {mapData.coverImage && (
-                                <div className="w-full h-60 relative">
-                                    <Image
+                                <div className="w-full relative h-[300px] w-[200px] overflow-hidden">
+                                <LazyLoadImage effect="blur"
                                         src={mapData.coverImage}
                                         alt="Cover Image"
-                                        fill
+                                        width={400}
+                                        height={250}
+                                        objectFit="cover" // 确保图片按比例填充容器
+                                        layout="responsive" // 设置布局方式为响应式
                                         className="object-cover"
                                     />
                                 </div>
@@ -934,12 +949,15 @@ const PublishedMapDetail = () => {
                                         {selectedPlace.images.map((url, index) => (
                                             <div
                                                 key={index}
-                                                className="image-preview mb-2 relative w-[300px] h-[300px]"
+                                                className="image-preview mb-2 relative w-[200px] h-[200px] overflow-hidden"
                                             >
-                                                <Image
+                                                <LazyLoadImage effect="blur"
                                                     src={url}
                                                     alt={`${selectedPlace.name} image ${index}`}
-                                                    fill
+                                                    width={200}
+                                                    height={200}
+                                                    objectFit="cover" // 确保图片按比例填充容器
+                                                    layout="responsive" // 设置布局方式为响应式
                                                     className="object-cover"
                                                 />
                                             </div>
@@ -997,10 +1015,25 @@ const PublishedMapDetail = () => {
                                                 </span>
                                             </button>
                                         </Link>
+
+                                        <button onClick={() => handleGooglePlacesToggle(selectedPlace)}>
+                                            查看附近景点
+                                        </button>
                                     </div>
                                 </>
                             )}
                         </div>
+                    )}
+                    
+                    {showGooglePlaces && (
+                        <GooglePlaces
+                            latitude={googlePlacesCoords.lat}
+                            longitude={googlePlacesCoords.lng}
+                            isFetchingAPI={showGooglePlaces}
+                            onSelectPlace={()=>{}}
+                            placeName={selectedPlace?.name}
+                        // 其他需要的props
+                        />
                     )}
                     {(showPlacesList || showLikedPlacesList) && (
                         <div className="places-list mt-4">
