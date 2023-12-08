@@ -4,6 +4,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/blur.css';
+import { LazyLoadImage } from 'react-lazy-load-image-component';
+import 'react-lazy-load-image-component/src/effects/blur.css';
 
 import { useMapNotification } from '../context/MapNotificationContext';
 import { collectionGroup, query, onSnapshot, getDocs, orderBy } from "firebase/firestore";
@@ -223,9 +225,12 @@ export default function Home() {
             </div>
             <div className='w-full text-center flex-1 md:w-1/2 mx-auto mt-16'>
                 <LazyLoadImage effect="blur" src="/images/future-02.png" alt="Scene Image" width="1000" height="1000" 
+                <LazyLoadImage effect="blur" src="/images/future-02.png" alt="Scene Image" width="1000" height="1000" 
                     style={{ objectFit: 'cover' }} />
                 <LazyLoadImage effect="blur" src="/images/future-03.png" alt="Scene Image" width="1000" height="1000" 
+                <LazyLoadImage effect="blur" src="/images/future-03.png" alt="Scene Image" width="1000" height="1000" 
                     style={{ objectFit: 'cover' }} />
+                <LazyLoadImage effect="blur" src="/images/future-01.png" alt="Scene Image" width="1000" height="1000" 
                 <LazyLoadImage effect="blur" src="/images/future-01.png" alt="Scene Image" width="1000" height="1000" 
                     style={{ objectFit: 'cover' }} />
                 <AlertModal isOpen={isAlertOpen} onClose={() => setIsAlertOpen(false)} message={alertMessage} />
