@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import LazyLoadImage from 'react-lazy-load-image-component';
 
 const TestAPI = () => {
   const [latitude, setLatitude] = useState('');
@@ -90,7 +91,7 @@ const TestAPI = () => {
             <p><strong>Latitude:</strong> {place.geometry.location.lat}</p>
             <p><strong>Longitude:</strong> {place.geometry.location.lng}</p>
             <p><strong>Distance:</strong> {Math.round(place.distance)} m</p>
-            <img className="w-10 h-10" src={place.icon} alt={place.name} />
+            <LazyLoadImage effect="blur" className="w-10 h-10" src={place.icon} alt={place.name} />
             <p><strong>Name:</strong> {place.name}</p>
             <p><strong>Vicinity:</strong> {place.vicinity}</p>
             <a 
