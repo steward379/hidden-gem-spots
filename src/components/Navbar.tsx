@@ -4,6 +4,8 @@ import EmailLogComponent from './EmailLogComponent';
 import GoogleLogComponent from './GoogleLogComponent';  
 import { useAuth } from '../context/AuthContext';
 import Image from 'next/image';
+import { LazyLoadImage } from 'react-lazy-load-image-component';
+import 'react-lazy-load-image-component/src/effects/blur.css';
 
 // clerk
 import { SignInButton } from "@clerk/nextjs";
@@ -33,7 +35,7 @@ const Navbar: React.FC = () => {
         <div className="flex items-center justify-between">
           <Link href="/">
             <div className="flex items-center cursor-pointer">
-              <Image src="/images/ballon.png" alt="logo" width="50" height="50" />
+            <LazyLoadImage effect="blur" src="/images/ballon.png" alt="logo" width="50" height="50" />
               <span className="lg:text-2xl font-bold ml-2 text-md sm:block">Hidden Gem</span>
             </div>
           </Link>
@@ -51,10 +53,11 @@ const Navbar: React.FC = () => {
                   <Link href={`/member/${user.uid}`}>
                     <div className="flex items-center cursor-pointer">
                         <div className="image-hover-effect bg-yellow-500 relative w-12 h-12 rounded-full overflow-hidden">
-                          <Image 
+                        <LazyLoadImage effect="blur"  
                             src={user.avatar || '/images/marker-icon.png'} 
                             alt="User avatar" 
-                            fill
+                            width="50"
+                            height="50"
                             style={{ objectFit: 'cover' }}
                           />
                         </div>
