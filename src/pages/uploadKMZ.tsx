@@ -66,7 +66,7 @@ const UploadKMZ = () => {
       const extractedPlacemarks = placemarks.map(placemark => {
         // 切割坐標字串
         const coordinatesStr = placemark.Point && placemark.Point[0].coordinates[0].trim();
-        console.log('coordinatesStr', coordinatesStr);
+        // console.log('coordinatesStr', coordinatesStr);
         const coordinates = coordinatesStr ? coordinatesStr.split(',') : [25.03, 121.56];
         if (coordinates.length < 2) {
           return null; // 或者設置一個預設值
