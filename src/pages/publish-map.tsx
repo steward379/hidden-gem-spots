@@ -244,7 +244,7 @@ const PublishMapPage = () => {
           duplicates: 0,
           duplicatedBy: []
         };
-        console.log(placeData);
+        // console.log(placeData);
         await setDoc(placeRef, placeData);
         newPublishedPlaces.push({ ...place, id: placeRef.id });
       }
