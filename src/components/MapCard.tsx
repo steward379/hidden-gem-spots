@@ -22,7 +22,7 @@ const MapCard = ({ map, userId, isCurrentUser = false }) => {
                 <Link href={`/publishedMaps/${userId}/maps/${map.id}`}>
                     <h2 className="text-2xl font-semibold text-amber-400 cursor-pointer">{map.title}</h2>
                     <p className="text-gray-600 text-sm">by {map.authorName}</p>
-                        <div className="flex flex-wrap gap-2 mt-2">
+                        <div className="flex flex-wrap gap-2 mt-2 mb-2">
                             {(map.tags || []).map((tag, index) => (
                                 <span key={index} className="bg-blue-100 text-blue-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">
                                     {tag}
