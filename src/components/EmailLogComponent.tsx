@@ -28,7 +28,7 @@ const EmailLogComponent  = () => {
       await signUpWithEmail(email, password);
       setLoginMethod(LoginMethod.Email);
       setErrorMsg('');
-      console.log("註冊成功，使用者 ID 是：",user.uid);
+      // console.log("註冊成功，使用者 ID 是：",user.uid);
     } catch (error) {
       console.log("註冊失敗", error);
       setErrorMsg("帳號已被使用或信箱有錯、密碼不滿 6 個字");
@@ -40,7 +40,7 @@ const EmailLogComponent  = () => {
       await loginWithEmail(email, password);
       setLoginMethod(LoginMethod.Email);
       setErrorMsg("");
-      console.log("登入成功，使用者 ID 是：", user.uid);
+      // console.log("登入成功，使用者 ID 是：", user.uid);
     } catch (error) {
 
       setErrorMsg("帳號或密碼錯誤，或帳號存在其他登入方式");
@@ -53,7 +53,7 @@ const EmailLogComponent  = () => {
     try {
 
       await logout();
-      console.log("登出成功", user.uid);
+      // console.log("登出成功", user.uid);
     } catch (error) {
       console.log("登出失敗", error);
     }
