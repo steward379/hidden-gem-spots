@@ -5,6 +5,7 @@ import Router from 'next/router';
 import Image from 'next/image';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/blur.css';
+import RainbowButtonModule from '@/src/styles/RainbowButton.module.css';
 
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -18,6 +19,7 @@ import PublishArea from '../components/PublishArea';
 import DropzoneImage from '../components/DropzoneImage';
 import AlertModal from '../components/AlertModal';
 // auth
+// @ts-ignore
 import { useAuth } from '../context/AuthContext';
 // css
 import 'react-quill/dist/quill.snow.css'; 
@@ -68,6 +70,7 @@ const PublishMapPage = () => {
   const [content, setContent] = useState('');
   const [coverImage, setCoverImage] = useState('');
   const [publishDate, setPublishDate] = useState('');
+  const [articleTags, setArticleTags] = useState('');
   //show source code
   const [showSourceCode, setShowSourceCode] = useState(false);
   // images 
@@ -204,13 +207,15 @@ const PublishMapPage = () => {
       if (coverImageFile) {
         uploadedImageUrl = await handleUploadCoverImage();
         setCoverImage(uploadedImageUrl);
+        
       }
       const mapRef = doc(collection(db, 'publishedMaps', user.uid, 'maps'));
       
+      const tagsArray = articleTags.split(',').map(tag => tag.trim());
       await setDoc(mapRef, {
         title: title.trim(),
         content: content.trim(),
-        tags: [],
+        tags: tagsArray,
         coverImage: uploadedImageUrl,
         publishDate: new Date().toISOString(),
         updatedDate:'',
@@ -221,7 +226,7 @@ const PublishMapPage = () => {
         duplicatedBy: [],
         placesLikes: 0,
         placesLikedBy: [],
-        popularity: 0
+        popularity: 0,
       });
 
       const newPublishedPlaces = [];
@@ -311,7 +316,7 @@ const PublishMapPage = () => {
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="flex flex-col h-screen-without-navbar md:flex-row text-black bg-gray-200">
-        <div className="lg:w-2/3 md:w-1/2 w-full lg:m-10 md:m-5 m-0 border">
+        <div className="lg:w-3/7 md:w-1/2 w-full lg:m-10 md:m-5 m-0 border">
           <MapComponentWithNoSSR
             places={places}
             isPublishing={isPublishing}
@@ -326,54 +331,69 @@ const PublishMapPage = () => {
         </div>
 
         <div className="relative md:overflow-x-visible lg:overflow-x-visible md:overflow-y-auto
-          lg:w-1/3 md:w-1/2 w-full lg:mb-10 lg:mt-10 md:mt-5 mt-7 lg:mr-10 md:mr-5 
+          lg:w-4/7 md:w-1/2 w-full lg:mb-10 lg:mt-10 md:mt-5 mt-7 lg:mr-10 md:mr-5 
          bg-white shadow rounded ">
-          <div className="sticky top-0 bg-white shadow-lg z-50 flex items-center">
+          <div className="sticky top-0 bg-white shadow-lg z-50 flex items-center space-x-3 px-3 py-2">
+
             <button
-              className="p-2 rounded-3xl mb-5 mt-5 m-2 flex-column justify-center items-center border-2 border-dashed border-gray-300 cursor-pointer hover:border-gray-500 hover:bg-gray-200"
+              className="p-2 rounded-3xl  flex-column justify-center items-center border-2 border-dashed border-gray-300 cursor-pointer hover:border-gray-500 hover:bg-gray-200"
               onClick={handleCancelPublish}>
-              <i className="fas fa-circle-arrow-left mr-2"></i>
-              <span className="hidden md:inline-block text-sm">取消發布</span>
+              <i className="fas fa-circle-arrow-left"></i>
+              <span className="ml-2 hidden lg:inline-block text-sm">取消發佈</span>
             </button>
-            <div className="tab-buttons flex">
-              <button className="border p-1 rounded-full mr-1" onClick={() => setActiveTab('places')}>景點</button>
-              <button className="border-2 p-1 rounded-full mr-1" onClick={() => setActiveTab('content')}>文章</button>
-            </div>
-            <div className="inline-block">
-              <button title="route-mode"
-                className={`justify-center items-center relative`}>
-                <button
-                  className={`p-3 text-sm
-                            font-medium hover:bg-black  hover:text-green-500 ${isDragModeEnabled ? 'bg-gray-200' : 'bg-yellow-200'}  
-                            rounded-full mr-2`}
-                  onClick={() => setIsDragModeEnabled(!isDragModeEnabled)}>
-                  <div>
-                    {isDragModeEnabled ? <i className="fa-regular fa-star"></i> : <i className="fa-solid fa-star"></i>}
-                  </div>
-                  <div className="hidden lg:inline">
-                    {isDragModeEnabled ? "停用拖曳" : "啟用拖曳"}
-                  </div>
+
+            <div className="flex">
+             <button title="rainbow-route-btn" className="flex items-center space-x-1">
+                <button title="route-mode"
+                        className={`${RainbowButtonModule.rainbowButton} justify-center items-center relative`}
+                        style={{
+                          // @ts-ignore
+                          '--button-width': '45px',
+                          '--button-height': '50px',
+                          '--button-border-radius': '100px',
+                        }}> 
+                  <button
+                      className=" bg-white p-3 text-sm
+                            font-medium hover:bg-black hover:text-green-500 rounded-full"
+                      onClick={() => setIsRoutingMode(!isRoutingMode)}>
+                    <div>
+                    {isRoutingMode ?  <i className="fas fa-door-open"></i> :  <i className="fas fa-route"></i>}   
+                    </div>
+                  </button>
                 </button>
+                <div className="hidden lg:inline text-sm font-medium">
+                        {isRoutingMode ? "停止路徑" : "規劃路徑"}
+                </div>
               </button>
-            </div>
-            <div className="inline-block">
-              <button title="route-mode"
-                className={`justify-center items-center relative`}>
-                <button
-                  className=" p-3 text-sm
-                            font-medium hover:bg-black bg-green-200 hover:text-green-500 rounded-full"
-                  onClick={() => setIsRoutingMode(!isRoutingMode)}>
-                  <div>
-                    {isRoutingMode ? <i className="fas fa-door-open"></i> : <i className="fas fa-route"></i>}
+          </div>
+
+      
+            
+            {/* <div className="tab-buttons flex">
+              <button className={`border ml-2 p-1 px-1.5 py-2 mr-2 rounded-full text-sm ${activeTab=='places' && 'bg-yellow-200 text-base' }`} onClick={() => setActiveTab('places')}> <span className="hidden lg:block">景點</span> <i className="fa-solid lg:hidden fa-mountain-sun"></i></button>
+              <button className={`border p-1  px-2 py-2 mr-2 rounded-full text-sm ${activeTab=='content' && 'bg-green-300 text-base' }`} onClick={() => setActiveTab('content')}><span className="hidden lg:block">文章</span> <i className="fa-solid fa-pencil lg:hidden "></i></button>
+            </div> */}
+
+            <div className="flex items-center justify-center">
+              <label htmlFor="toggle-tab" className="flex items-center cursor-pointer">
+                <div className="relative">
+                  <input type="checkbox" id="toggle-tab" className="sr-only"
+                        onChange={() => setActiveTab(activeTab === 'places' ? 'content' : 'places')}
+                        checked={activeTab === 'content'} />
+                  <div className={`flex items-center justify-${activeTab === 'content' ? 'start' : 'end'} w-16 h-9 rounded-full transition-colors ${activeTab === 'content' ? 'bg-yellow-500' : 'bg-blue-300'}`}>
+                    <i className={`fas ${activeTab === 'content' ? 'fa-mountain-sun text-stone-500 pl-2' : 'fa-pencil text-gray-900 pr-2.5'} `} ></i>
                   </div>
-                  <div className="hidden lg:inline">
-                    {isRoutingMode ? "停止路徑" : "規劃路徑"}
+                  <div className={`dot absolute left-1 top-1 bg-white h-7 w-7 rounded-full transition transform ${activeTab === 'content' ? 'translate-x-full' : ''}`}>
                   </div>
-                </button>
-              </button>
+                </div>
+                <div className="ml-2 text-gray-700 font-medium text-sm hidden lg:flex">
+                  {activeTab === 'places' ? '文章' : '景點'}
+                </div>
+              </label>
             </div>
-            <div className="show-hide-list flex flex-col w-full lg:w-auto lg:flex-row md:flex-col mb-4 controls">
-              <div className=" flex items-center justify-center mb-5 mt-5">
+
+            {/* <div className="show-hide-list flex w-full lg:w-auto lg:flex-row md:flex-col mb-4 controls"> */}
+              <div className=" flex items-center justify-start">
                 <label htmlFor="toggle" className="flex items-center cursor-pointer">
                   <div className="relative">
                     <input type="checkbox" id="toggle" className="sr-only"
@@ -391,7 +411,7 @@ const PublishMapPage = () => {
                 </label>
               </div>
             </div>
-          </div>
+          {/* </div> */}
 
           <div className="container lg:px-6 md:px-4 px-3 py-3">
           {activeTab === 'places' && (
@@ -414,6 +434,23 @@ const PublishMapPage = () => {
                   並輸入本地圖的標題、內容、上傳封面照片(可選)。
                 </div>
               </div>
+            </div>
+            <div className="inline-block ml-4 mb-4">
+              <button title="route-mode"
+                className={`justify-center items-center relative`}>
+                <button
+                  className={`px-4 py-2 text-sm
+                            font-medium hover:bg-black  hover:text-green-500 ${isDragModeEnabled ? 'bg-gray-200' : 'bg-yellow-200'}  
+                            rounded-full mr-2`}
+                  onClick={() => setIsDragModeEnabled(!isDragModeEnabled)}>
+                  <div>
+                    {isDragModeEnabled ? <i className="fa-regular fa-star"></i> : <i className="fa-solid fa-star"></i>}
+                  </div>
+                  <div className="hidden lg:inline">
+                    {isDragModeEnabled ? "停用拖曳" : "啟用拖曳"}
+                  </div>
+                </button>
+              </button>
             </div>
 
             <div className="flex">
@@ -439,6 +476,7 @@ const PublishMapPage = () => {
                 onSelectPlace={setSelectedPlace}
               />
             </div>
+
             {showPlacesList && (
               <div className="places-list mt-4">
                 <div className="search-and-filter border-2 shadow-lg rounded-2xl p-3">
@@ -543,7 +581,6 @@ const PublishMapPage = () => {
                         <LazyLoadImage effect="blur"
                           src={url}
                           alt={`${selectedPlace.name} image ${index}`}
-                          objectFit="cover" 
                           layout="responsive"
                           width={200}
                           height={200} 
@@ -584,7 +621,9 @@ const PublishMapPage = () => {
           )}
             {activeTab === 'content' && (
               <div className="mt-10 border-2 shadow-lg rounded-2xl p-3 " >
-                <h2 className="text-xl font-bold mb-6"> 文章編輯區 </h2>
+                <h2 className="text-xl font-bold mb-6"> 地圖附文發佈 </h2>
+
+                <div className="font-medium text-lg mb-3"> 標題 </div>
                 <input
                   type="text"
                   value={title}
@@ -592,6 +631,7 @@ const PublishMapPage = () => {
                   placeholder="地圖標題"
                   className="rounded-xl mb-5 p-2 w-full border rounded text-black focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                 />
+                <div className="font-medium text-lg mb-3"> 內容 </div>
                 <div className="bg-white text-black z-100 overflow-visible rounded-3xl">
                   <ReactQuill theme="snow" value={content} onChange={handleContentChange} />
                 </div>
@@ -613,7 +653,17 @@ const PublishMapPage = () => {
                     className="mb-2 p-2 w-full border rounded text-gray-500 rounded-3xl"
                   />
                 )}
-                <div> 代表圖片 </div>
+                <div className="font-medium text-lg mb-3"> 文章標籤 </div>
+                
+                <input 
+                  type="text" 
+                  placeholder="標籤 (用逗號分隔)" 
+                  value={articleTags} 
+                  onChange={(e) => setArticleTags(e.target.value)} 
+                  className="p-2 w-full mb-2 border  text-black rounded-xl"
+                />
+
+                <div className="font-medium text-lg mb-3"> 代表圖片 </div>
                 {/* {coverImagePreview && (
                 <div>
                  <LazyLoadImage effect="blur"  src={coverImagePreview} alt="Cover Preview" width="300" height="300" />
@@ -623,33 +673,29 @@ const PublishMapPage = () => {
 
                 <DropzoneImage onFileUploaded={handleFileUpload} />
                 {coverImagePreview && (
-  <div className="relative mt-2 mb-10 w-200 h-100 overflow-hidden"> {/* 设置容器宽度为200px，高度为100px */}
-    <LazyLoadImage
-      effect="blur"
-      src={coverImagePreview}
-      alt="Cover Preview"
-      width="200"  // 设置图片宽度为200px
-      height="100" // 设置图片高度为100px
-      objectFit="cover" // 确保图片按比例填充容器
-      layout="responsive" // 设置布局方式为响应式
-    />
-    <button
-      className="absolute top-0 right-0 bg-red-500 text-white p-2 rounded-full hover:bg-red-700"
-      onClick={() => setCoverImagePreview('')}
-    >
-      移除圖片
-    </button>
-  </div>
-)}
-
-                <div className=''>
-
-                </div>
+                  <div className="relative mt-2 mb-10 w-200 h-100 overflow-hidden"> 
+                    <LazyLoadImage
+                      effect="blur"
+                      src={coverImagePreview}
+                      alt="Cover Preview"
+                      width="200"  
+                      height="100" 
+                      className="object-cover"
+                      layout="responsive" 
+                    />
+                    <button
+                      className="absolute top-0 right-0 bg-red-500 text-white p-2 rounded-full hover:bg-red-700"
+                      onClick={() => setCoverImagePreview('')}
+                    >
+                      移除圖片
+                    </button>
+                  </div>
+                )}
                 <button
-                  className="bg-green-300 mb-5 mt-5 m-2 flex-column justify-center items-center border-2 border-dashed border-gray-300 rounded-lg h-20 w-32 cursor-pointer hover:border-gray-500 hover:bg-green-300"
+                  className="mb-3 mt-5 m-2 bg-green-100 flex justify-center items-center border-2 border-dashed border-gray-300 rounded-lg h-12 w-40 cursor-pointer hover:border-green-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   onClick={handleConfirmPublish}>
-                  <i className="fas fa-check mr-2"></i>
-                  <div>確定發布</div>
+                    <i className="fas fa-check mr-2"></i>
+                    <div>確定發布</div>
                 </button>
               </div>
             )}
