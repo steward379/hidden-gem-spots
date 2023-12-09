@@ -59,6 +59,12 @@ const EmailLogComponent  = () => {
     }
   };
 
+  // demo 帳密
+  const fillDemoCredentials = () => {
+    setEmail("demo@example.com"); // 將這些值替換為您的示範帳號和密碼
+    setPassword("demoPassword");
+  };
+
   return (
     <div className="mb-3 lg:mb-0">
     {user ? (
@@ -91,8 +97,11 @@ const EmailLogComponent  = () => {
             )}
 
             <div className="mt-4 flex gap-2">
-              <button className="bg-green-500 text-white p-2 rounded" onClick={handleSignUp}>註冊</button>
-              <button className="bg-blue-500 text-white p-2 rounded" onClick={handleSignIn}>登入</button>
+              <button className="bg-green-400 text-blue-500 p-2 px-3 rounded" onClick={handleSignUp}>註冊</button>
+              <button className="bg-blue-400 text-white p-2 px-3 rounded" onClick={handleSignIn}>登入</button>
+              <button className="bg-gray-300 text-black p-2 rounded " onClick={fillDemoCredentials}>
+                Demo Account
+              </button>
             </div>
           </div>
         </div>
