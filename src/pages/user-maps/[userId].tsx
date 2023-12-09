@@ -218,9 +218,9 @@ const UserMapsPage = () => {
   };  
 
   return (
-    <div className=" container mx-auto rounded-3xl p-20  h-screen-without-navbar">
+    <div className=" container mx-auto rounded-3xl p-5 lg:p-20">
        {renderUserInfo()}
-       <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10  ">
+       <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-4 mt-14 ">
         {maps.map(map => (
           <div 
               key={map.id} 
@@ -250,7 +250,7 @@ const UserMapsPage = () => {
       <div className="mt-6">
             {/* 喜愛的地圖 */}
         <div className="mt-6">
-          <h3 className="text-2xl font-bold mb-5">喜愛的地圖</h3>
+          <h3 className="text-2xl font-bold mb-5 text-rose-500"> 🔥 喜愛的地圖</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 ">
             {likedMaps.map(map => (
               <div key={map.id}
@@ -269,6 +269,7 @@ const UserMapsPage = () => {
           </div>
         </div>
       </div>
+      
       <AlertModal 
         isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
