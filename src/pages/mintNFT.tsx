@@ -104,45 +104,52 @@ export default function MintPage() {
 
   return (
 
-  <div className="relative flex items-center justify-center min-h-screen bg-gray-100 p-4">
+  <div className="relative flex items-center justify-center min-h-screen bg-gray-800 p-4">
    <GlobeComponent disableHover={true} />
 
 
     
     <div className="absolute top-60 left-51% flex-col justify-center items-center z-10">
-    <h1 className="text-2xl font-bold mb-4">NFT Mint 頁面 on Polygon</h1>
-    <div className="flex-col justify-center align-center">
-      <h3 className="mb-2 text-center">圖標們的聚會 </h3>
+    <h1 className="text-3xl font-bold mb-4 text-center shadow-xl p-5 bg-gray-800 text-orange-500 opacity-95 rounded-full px-10">NFT Mint 頁面 on Polygon</h1>
+    <div className="flex-col flex justify-center items-center">
+      <h3 className="mb-4 text-black bg-orange-400 py-2 px-3 rounded-3xl opacity-90 ">圖釘們的聚會</h3>
       <a title="series" className="hover:black" href="https://www.okx.com/hk/web3/marketplace/nft/collection/polygon/hiddengemnft" target="_blank" rel="noopener noreferrer">
-        <div>
+        <div className="text-center opacity-90">
           <LazyLoadImage effect="blur"className="mb-10 rounded-3xl" 
           src="/images/marker-nft.png" alt="nft-photo" width={200} height={200} />
         </div>
       </a>
     </div>
+    <div className="text-center mb-2 mt-2">
     <UserButton />
+    </div>
+    <div className="flex flex-col">
     {account ? (
-      <>
-        <p className="text-gray-700 mb-4">已連接帳號: <span className="font-semibold">{account}</span></p>
+      <div className="flex-col">
+          <p className="mb-4 text-white">已連接帳號 🦊 <span className="text-baseline font-semibold">{account}</span></p>
+          <button 
+            onClick={handleMint} 
+            className="bg-blue-500 text-white font-bold py-2 px-4 mt-2 rounded hover:bg-blue-600"
+          >
+            Mint NFT
+            Address:{" "}
+            {primaryWeb3Wallet ? primaryWeb3Wallet.web3Wallet : ""}
+          </button>
+        </div>
+      ) : (
+        <div className="flex-col flex justify-center align-middle items-center">
         <button 
-          onClick={handleMint} 
-          className="bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-600"
-        >
-          Mint NFT
-
-          Address:{" "}
-          {primaryWeb3Wallet ? primaryWeb3Wallet.web3Wallet : ""}
-        </button>
-      </>
-    ) : (
-      <button 
-        onClick={connectWallet} 
-        className="bg-green-500 text-white font-bold py-2 px-4 rounded hover:bg-green-600"
-      >
-        連接 MetaMask 錢包
-      </button>
-    )}
-          <span>{message}</span>
+            onClick={connectWallet} 
+            className="bg-orange-500  text-white font-bold py-2 px-4 rounded hover:bg-green-600"
+          >
+            連接 MetaMask 錢包
+          </button>
+        </div>
+      )}
+      <div className="">
+        <span className="mt-3 text-white">{message}</span>
+      </div>
+      </div>
       {txHash && (
         <>
           <div className="bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-600 my-2">
