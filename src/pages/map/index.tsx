@@ -47,6 +47,7 @@ export interface Place {
   duplicates?: number;
   duplicatedBy?: string[];
 }
+
 const MapComponentWithNoSSR = dynamic(
   () => import('../../components/MapComponent'),
   { ssr: false }
@@ -534,7 +535,7 @@ const MapDemoPage: React.FC = () => {
 
   return (
     <div className="flex flex-col md:flex-row h-screen-without-navbar text-black bg-gray-200">
-      <div className="lg:w-2/3 md:w-1/2 w-full lg:m-10 md:m-5 m-0 border">
+      <div className="lg:w-3/7 md:w-1/2 w-full lg:m-10 md:m-5 m-0 border">
         <MapComponentWithNoSSR 
           onMarkerPlaced={handleMarkerPlaced}
           isAddingMarker={isAddingMarker} 
@@ -550,26 +551,11 @@ const MapDemoPage: React.FC = () => {
         />
       </div>
       <div className="relative md:overflow-x-visible lg:overflow-x-visible md:overflow-y-auto
-        lg:w-1/3 md:w-1/2 w-full lg:mb-10 lg:mt-10 md:mt-5 mt-7 lg:mr-10 md:mr-5 
+        lg:w-4/7 md:w-1/2 w-full lg:mb-10 lg:mt-10 md:mt-5 mt-7 lg:mr-10 md:mr-5 
          bg-white shadow rounded pb-5">
-       <div className="sticky top-0 bg-white shadow-lg z-50 flex items-center py-2 pl-3">
-          <div className="flex items-center space-x-1 mr-2">
-            <button
-                  title="add-marker"
-                  className="relative h-12 w-12 rounded-full flex justify-center items-center border-2 
-                              border-dashed border-gray-300 cursor-pointer hover:border-gray-500 hover:bg-green-300
-                            "
-              >
-              
-                <div className=" w-full h-full flex justify-center items-center rounded-full"
-                      onClick={toggleAddingMarker}>
-                      <i className={`fas ${isAddingMarker ? 'fa-times' : 'fa-location-dot'}`}></i>
-                </div>
-            </button>
-            <div className="text-sm hidden lg:block font-medium">{isAddingMarker ? '取消新增' : '新增座標'}</div>
-          </div>
+       <div className="sticky top-0 bg-white shadow-lg z-50 flex items-center py-2 pl-3 space-x-3">
 
-          <div className="flex pr-3">
+          <div className="flex">
              <button title="rainbow-route-btn" className="flex items-center space-x-1">
                 <button title="route-mode"
                         className={`${RainbowButtonModule.rainbowButton} justify-center items-center relative`}
@@ -592,20 +578,52 @@ const MapDemoPage: React.FC = () => {
                         {isRoutingMode ? "停止路徑" : "規劃路徑"}
                 </div>
               </button>
-            </div>
+          </div>
+            
+          <div className="flex items-center space-x-1">
+            <button
+                  title="add-marker"
+                  className="relative py-1 px-3 rounded-full flex justify-center items-center border-2 
+                              border-dashed border-gray-300 cursor-pointer hover:border-gray-500 hover:bg-green-300
+                            "
+              >
+              
+                <div className=" w-full h-full flex-column justify-center items-center rounded-full ml-1 mr-1"
+                      onClick={toggleAddingMarker}>
+                      <i className={`fas ${isAddingMarker ? 'fa-times' : 'fa-location-dot'}`}></i>
+                      <div className="text-sm hidden lg:block font-medium">{isAddingMarker ? '取消新增' : '新增座標'}</div>
+                </div>
+            </button>
+          </div>
 
+          <div className="flex items-center justify-center">
+              <label htmlFor="toggle-tab" className="flex items-center cursor-pointer">
+                <div className="relative">
+                  <input type="checkbox" id="toggle-tab" className="sr-only"
+                        onChange={() => setActiveTab(activeTab === 'places' ? 'content' : 'places')}
+                        checked={activeTab === 'content'} />
+                  <div className={`flex items-center justify-${activeTab === 'content' ? 'start' : 'end'} w-16 h-9 rounded-full transition-colors 
+                                    ${activeTab === 'content' ? 'bg-yellow-500' : 'bg-blue-300'}`}>
+                    <i className={`fas ${activeTab === 'content' ? 'fa-mountain-sun text-gray-700 pl-2' : 'fa-pencil text-gray-900 pr-2.5'} `} ></i>
+                  </div>
+                  <div className={`dot absolute left-1 top-1 bg-white h-7 w-7 rounded-full transition transform ${activeTab === 'content' ? 'translate-x-full' : ''}`}>
+                  </div>
+                </div>
+                <div className="ml-2 text-gray-700 font-medium text-sm hidden lg:flex">
+                  {activeTab === 'places' ? '文章' : '景點'}
+                </div>
+              </label>
+          </div>
+          
           <button 
-            className="flex items-center justify-center bg-teal-50 shadow-md hover:bg-teal-600  py-2 px-4 rounded-xl hover:text-white"
+            className="flex items-center justify-center bg-amber-700 text-white shadow-md hover:bg-gray-700 py-1.5 px-4 rounded-xl hover:text-orange-500"
             onClick={handlePublishClick}
           >
-            <i className={`fas fa-map p-1`}></i>
+            <i className={`fas fa-map px-2 py-2`}></i>
             <div className="hidden lg:flex text-sm font-medium">發佈</div>
           </button>
-          <div className="tab-buttons flex">
-              <button className={`border ml-2 p-1 rounded-full mr-1 text-sm ${activeTab=='places' && 'bg-blue-300 text-base' }`} onClick={() => setActiveTab('places')}>景點</button>
-              <button className={`border p-1 rounded-full mr-1 text-sm ${activeTab=='content' && 'bg-green-300 text-base' }`} onClick={() => setActiveTab('content')}>文章</button>
-            </div>
-          <div className="place-list absolute right-5 flex items-center justify-center mb-5 mt-5">
+
+          <div className="place-list flex items-center justify-center mb-5 mt-5">
             <label htmlFor="toggle" className="flex items-center cursor-pointer">
               <div className="relative">
                 {/*  */}
@@ -621,7 +639,9 @@ const MapDemoPage: React.FC = () => {
               </div>
             </label>
           </div>
+          
       </div>
+
       <div className="container lg:px-6 md:px-4 px-3 py-3">
         <button
           className=""
@@ -654,7 +674,7 @@ const MapDemoPage: React.FC = () => {
            <div className="flex flex-wrap space-x-2 mb-5">
           <div className="mt-3 lg:mt-0">
             { hideUploadGeo ? (
-                <i className={`cursor-pointer hover:text-blue-500 absolute right-5 top-[80px] fas fa-file-import text-xl border-2 rounded-full px-2 py-1 shadow-md`}
+                <i className={`cursor-pointer hover:text-blue-500 absolute right-5 top-[150px] fas fa-file-import text-xl border-2 rounded-full px-2 py-1 shadow-md`}
                     onClick={showUploadGeoAction}
                 ></i> 
               ):(
@@ -671,9 +691,9 @@ const MapDemoPage: React.FC = () => {
                   </div>
                   <div>
                   { kmzPlaces && (<>
-                  <div className="mt-2 text-center cursor-pointer bg-red-400 w-36 text-white p-2 rounded-full hover:bg-white hover:text-blue-500 border-2" 
+                  <div className="mt-6 mb-4 text-center cursor-pointer bg-red-200 w-36 text-red-700 p-2 rounded-full hover:bg-black hover:text-blue-500 " 
                         onClick={() => setKmzPlaces('')}>
-                          取消顯示匯入區塊
+                          關閉列表
                   </div>
                     <KmzPlacesList places={kmzPlaces} />
                     </>)}
@@ -864,6 +884,7 @@ const MapDemoPage: React.FC = () => {
                         onClick={closeGooglePlacesSearch}> 
                         關閉 Google Places        
                 </button>   
+
             <GooglePlaces 
               latitude={latitude} 
               longitude={longitude}
@@ -910,8 +931,8 @@ const MapDemoPage: React.FC = () => {
                   <LazyLoadImage effect="blur"
                     src={url}
                     alt={`${selectedPlace.name} image ${index}`}
-                    width="200" // 设定宽度
-                    height="200" // 设定高度
+                    width="200" 
+                    height="200" 
                     className="object-cover"
                   />
                 </div>
@@ -968,7 +989,7 @@ const MapDemoPage: React.FC = () => {
         </>
       )}
       </div>
-      <div className="mt-3 border-2 rounded-2xl shadow-lg px-3 py-2 text-sm bg-green-50"> 新增座標 <i className="fas fa-map-marker-alt"></i>  以新增景點，或點選景點後按 <i className="fas fa-edit"> 編輯景點</i></div>
+      <div className="mt-3 border-2 rounded-2xl shadow-lg px-4 py-2 text-sm bg-green-50"> 新增座標 <i className="fas fa-map-marker-alt"></i>  以新增景點，或點選景點後按 <i className="fas fa-edit"> 編輯景點</i></div>
       {newMarker && (
         <div className="relative mb-5 p-4 bg-white border-2 shadow-lg rounded-2xl">
           <h3 className="text-lg font-semibold mb-2 text-black">{isEditing ? '編輯景點' : '新增景點'}</h3>
