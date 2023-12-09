@@ -52,7 +52,7 @@ const UserMapsPage = () => {
           id: likedMapsIds[index].id, 
           ...mapSnap.data(), 
           authorId: likedMapsIds[index].authorId, 
-          authorName: authorSnap.data().name // 或其他你需要的作者信息
+          authorName: authorSnap.data().name
         };
       }
       return null;
@@ -237,6 +237,13 @@ const UserMapsPage = () => {
               )}
               <Link href={`/publishedMaps/${userId}/maps/${map.id}`}>
                 <h2 className="text-2xl font-semibold text-amber-400">{map.title}</h2>
+                <div className="flex flex-wrap gap-2 mt-2 mb-2">
+                        {(map.tags || []).map((tag, index) => (
+                            <span key={index} className="bg-blue-100 text-blue-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">
+                                {tag}
+                            </span>
+                        ))}
+                </div>
                 <p className=" text-amber-200 font-bold">{formatDate(map.publishDate)}</p>
                 <div className="h-full w-full"></div>
               </Link>
@@ -261,6 +268,13 @@ const UserMapsPage = () => {
                   <div className="p-4 w-full h-full bg-gradient-to-t from-transparent to-red-500 opacity-100 rounded-3xl  hover:bg-yellow-300 hover:bg-opacity-50">
                     <h2 className="text-2xl font-semibold text-sky-100">{`${map.title}`}</h2>
                     <h4 className="text-lg text-sky-100">{`${map.authorName}`}</h4>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                        {(map.tags || []).map((tag, index) => (
+                            <span key={index} className="bg-blue-100 text-blue-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">
+                                {tag}
+                            </span>
+                        ))}
+                    </div>
                     <p className="text-sky-200 font-bold">{formatDate(map.publishDate)}</p>
                   </div>
                 </Link>
