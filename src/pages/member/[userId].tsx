@@ -286,7 +286,7 @@ const MemberPage = () => {
   };
 
   return (
-    <div className="container mx-auto p-4 flex-column">
+    <div className="container mx-auto p-4 flex-column h-screen-without-navbar">
       <h1 className="w-full text-2xl font-bold mb-5 ">會員中心</h1>
       <div className="lg:flex flex-col md:flex-row space-y-6 md:space-y-0">
         <div className="flex-2 md:mb-6 lg:mb-0 w-full bg-white border-lg rounded-3xl p-7">
