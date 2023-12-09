@@ -18,6 +18,7 @@ import { useAuth } from '../../../context/AuthContext';
 // component, dnd
 import DropzoneImage from '../../../components/DropzoneImage';
 import LoadingIndicator from '@/src/components/LoadingIndicator';
+import AlertModal from '@/src/components/AlertModal';
 // static
 import 'react-quill/dist/quill.snow.css'; 
 
@@ -41,17 +42,22 @@ const EditMap = () => {
   
   const [mapData, setMapData] = useState(null);
 
+  const [tags, setTags] = useState('');
+
   const [coverImageFile, setCoverImageFile] = useState(null);
   const [coverImagePreview, setCoverImagePreview] = useState('');
   const [showSourceCode, setShowSourceCode] = useState(false);
 
   const [selectedPlace, setSelectedPlace] = useState(null);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [confirmMessage, setConfirmMessage] = useState('');
+  const [confirmFunction, setConfirmFunction] = useState(null);
 
   useEffect(() => {
     const fetchMapData = async () => {
       if (reduxMapData) {
-
         setMapData(reduxMapData);
+        setTags(reduxMapData.tags.join(', ')); 
         setCoverImagePreview(reduxMapData.coverImage || '');
 
       } else if (typeof mapId === "string" && typeof user.uid === "string") {
@@ -91,23 +97,19 @@ const EditMap = () => {
 
   }, [mapId, user.uid, reduxMapData]);
 
-  const toggleSourceCode = () => {
-    setShowSourceCode(!showSourceCode);
-  };
-
   const handleFileUpload = (file) => {
     setCoverImageFile(file);
     setCoverImagePreview(URL.createObjectURL(file));
   };
 
-  const handleCoverImageChange = (event) => {
-      const file = event.target.files[0];
+  // const handleCoverImageChange = (event) => {
+  //     const file = event.target.files[0];
 
-      if (file) {
-          setCoverImageFile(file);
-          setCoverImagePreview(URL.createObjectURL(file));
-      }
-  };
+  //     if (file) {
+  //         setCoverImageFile(file);
+  //         setCoverImagePreview(URL.createObjectURL(file));
+  //     }
+  // };
 
   const handleRemoveImage = () => {
       setCoverImageFile(null);
@@ -147,11 +149,14 @@ const EditMap = () => {
       coverImageURL = await uploadImageToStorage(coverImageFile);
     }
 
+    const tagsArray = tags.split(',').map(tag => tag.trim());
+
     if (typeof mapId === 'string') {
       const mapRef = doc(db, `publishedMaps/${user.uid}/maps`, mapId);
       await updateDoc(mapRef, {
         title: mapData.title,
         content: mapData.content,
+        tags: tagsArray, 
         coverImage: coverImageURL,
         publishDate: mapData.publishDate,
         updatedDate : new Date().toISOString()
@@ -162,11 +167,16 @@ const EditMap = () => {
   };
 
   const resetChanges = () => {
+    setConfirmMessage('您確定要取消發佈嗎？文章將清空');
+    setConfirmFunction(()=>confirmResetChanges);
+    setShowResetConfirm(true);
+  };
+
+  const confirmResetChanges  = () => {
     setMapData({ title: '', content: '', coverImage: '',authorName: '', publishedPlaces: [] });
     setCoverImageFile(null);
     setCoverImagePreview('');
     setShowSourceCode(false);
-
     router.back();
   };
 
@@ -180,19 +190,37 @@ const EditMap = () => {
         </div>
         
         <div className="lg:overflow-auto md:overflow-auto lg:w-1/3 md:w-1/2 w-full lg:mb-10 lg:mt-10 md:mt-5 mt-7 lg:mr-10 md:mr-5 lg:p-8 md:p-4 p-10 bg-white shadow rounded">
-            <form onSubmit={handleSubmit}>
-                    <div> 標題更改 </div>
+
+            <button
+              className="p-2 mb-5 rounded-3xl flex-column justify-center items-center border-2 border-dashed border-gray-300 cursor-pointer hover:border-gray-500 hover:bg-gray-200"
+              onClick={resetChanges}>
+              <i className="fas fa-circle-arrow-left"></i>
+              <span className="ml-1.5 hidden lg:inline-block text-sm">取消變更</span>
+            </button>
+            <form className="space-y-4" onSubmit={handleSubmit}>
+                    <div className="font-medium text-lg"> 標題更改 </div>
                     <input
-                        className="text-black border rounded mb-2 w-full"
+                        className="text-black border rounded mb-2 w-full p-2"
                         title="map-title"
                         type="text"
                         value={mapData.title}
                         onChange={(e) => setMapData({ ...mapData, title: e.target.value })}
                     />
-                    <div><label> 內容更改 </label></div>
-                    <button type="button" onClick={toggleSourceCode} className="mt-2 mb-5 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-700">
-                      {showSourceCode ? "隱藏原始碼" : "顯示原始碼"}
+                    <div className="font-medium text-lg mb-3"><label> 內容更改 </label></div>
+
+                    <ReactQuill theme="snow" value={mapData.content} onChange={(e) => setMapData({ ...mapData, content: e })} />
+
+                    <button
+                      type="button"
+                      className={`mb-5  p-3 flex justify-center items-center rounded-lg 
+                  cursor-pointer ${showSourceCode ? 'hover:bg-red-100 bg-gray-200' : 'hover:bg-green-200 bg-green-100'}
+                  focus:outline-none focus:ring-2 focus:ring-blue-300`}
+                      onClick={() => setShowSourceCode(!showSourceCode)}
+                    >
+                      <i className={`fas ${showSourceCode ? 'fa-eye-slash' : 'fa-eye'} mr-2`}></i>
+                      <div>{showSourceCode ? "隱藏原始碼" : "顯示原始碼"}</div>
                     </button>
+                    
                     {showSourceCode && (
                     <textarea
                         title="map-source-content"
@@ -201,15 +229,24 @@ const EditMap = () => {
                         onChange={(e) => setMapData({ ...mapData, content: e.target.value })}
                     />
                     )}
-                    <ReactQuill theme="snow" value={mapData.content} onChange={(e) => setMapData({ ...mapData, content: e })} />
+
+                    <label className="font-medium text-lg mb-3"> Tags 更改 </label>
+                    <input 
+                      className="text-black border rounded mb-2 w-full p-2"
+                      title="map-tags"
+                      type="text"
+                      value={tags}
+                      onChange={(e) => setTags(e.target.value)}
+                      placeholder="Tag1, Tag2, Tag3"
+                    />
                 {/* <textarea
                     className="text-black"
                     title="map-content"
                     value={mapData.content}
                     onChange={(e) => setMapData({ ...mapData, content: e.target.value })}
                 /> */}
-                <div className="mb-4">
-                  <label> 變更封面圖片 </label>
+                <div className="mb-4 text-lg font-medium">
+                  <label className="font-medium text-lg mb-3"> 變更封面圖片 </label>
                   {/* <input 
                       title="cover-photo"
                       type="file" 
@@ -218,32 +255,39 @@ const EditMap = () => {
                   /> */}
                   <DropzoneImage onFileUploaded={handleFileUpload} />
                   {coverImageFile ? (
-                    <span className="ml-4">{coverImageFile.name}</span>
+                    <div className="mb-5">{coverImageFile.name}</div>
                   ) : (
-                    <span className="ml-4 text-gray-500">沒有選擇檔案</span>
+                    <div className="text-gray-500 mb-5 text-sm">沒有選擇檔案</div>
                   )}
                  {coverImagePreview && (
                     <div className="relative mt-2 mb-10 w-full h-300 w-100 overflow-hidden">
                       <LazyLoadImage effect="blur"src={coverImagePreview} alt="Cover Preview" 
                                   width={400}
-                                  height={250} // 设置图片显示的宽度
-                                  objectFit="cover" // 确保图片按比例填充容器
-                                  layout="responsive" // 设置布局方式为响应式
+                                  height={250} 
+                                  className="object-cover"
+                                  layout="responsive"
                                     />
                       <button onClick={handleRemoveImage} className="absolute top-0 right-0 bg-red-500 text-white p-2 rounded-full hover:bg-red-700">
                         移除圖片
                       </button>
                     </div>
                   )}
-                  <button type="submit" className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-700">
-                    保存變更
+                  <button type="submit" className="mb-3 m-2 bg-green-100 flex-column justify-center items-center border-2 border-dashed border-gray-300 rounded-lg h-12 w-40 cursor-pointer hover:border-green-500 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium">
+                    <i className="fas fa-check-circle mr-1"></i> 保存變更
                   </button>
-                  <button type="button" onClick={resetChanges} className="ml-4 bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-700">
-                    取消變更
+                  <button type="button" onClick={resetChanges} className="mb-5 m-2 bg-red-100 flex-column justify-center items-center border-2 border-dashed border-gray-300 rounded-lg h-12 w-40 cursor-pointer hover:border--500 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium">
+                    <i className="fas fa-times-circle mr-1"></i>取消變更
                   </button>
                 </div>
             </form>
         </div>
+        <AlertModal
+          isOpen={showResetConfirm}
+          onClose={() => setShowResetConfirm(false)}
+          onConfirm={confirmFunction}
+          message={confirmMessage}
+          showConfirmButton={true}
+        />
     </div>
   );
 };
