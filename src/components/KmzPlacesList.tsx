@@ -26,13 +26,18 @@ const KmzPlacesList = ({ places = '',  onPlaceClick = (e)=>{} }) => {
               <p className="text-gray-600">{place.description}</p>
               <p className="text-sm text-gray-500">標籤：{place.tags.join(', ')}</p>
               <p className="text-sm text-gray-500">坐標：{place.coordinates.lat}, {place.coordinates.lng}</p>
-              <div key={index} className="mt-2 text-center cursor-pointer bg-blue-500 w-36 text-white p-2 rounded-full hover:bg-white hover:text-blue-500 border-blue-500 border-2" onClick={() => handlePlaceClick(place)}>
-                在地圖上顯示
-              </div>
-              <div className="mt-2 text-center cursor-pointer bg-red-400 w-36 text-white p-2 rounded-full hover:bg-white hover:text-blue-500 border-2" 
-                  onClick={() => handlePlaceCancelClick()}>
-                        取消地圖彈出
+              <div className="flex justify-start space-x-3">
+                <div key={index} className="mt-2 text-center cursor-pointer bg-green-400 w-36 text-amber-900 transition-all p-2 rounded-full 
+                                      hover:bg-white hover:text-green-500 border-2 border:green-500" 
+                     onClick={() => handlePlaceClick(place)}>
+                  在地圖上顯示
                 </div>
+                <div key={index} className="mt-2 text-center cursor-pointer bg-red-400 w-36 text-white p-2 rounded-full transition-all hover:bg-white 
+                              hover:text-red-500 border-2 border:red-500" 
+                    onClick={() => handlePlaceCancelClick()}>
+                  取消地圖彈出
+                </div>
+              </div>
             </li>
           ))}
       </ul>
