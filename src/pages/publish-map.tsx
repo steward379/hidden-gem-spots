@@ -420,7 +420,7 @@ const PublishMapPage = () => {
               <button
                 className=""
                 onClick={() => setIsCollapsed(!isCollapsed)}>
-                <div className="ursor-pointer">
+                <div className="cursor-pointer">
                   <i className="fas fa-chevron-down"></i>
                   <i className="fas fa-question-circle ml-1"></i>
                   <span className="text-sm hidden lg:inline lg:ml-2 font-medium">提示</span>
@@ -629,7 +629,7 @@ const PublishMapPage = () => {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="地圖標題"
-                  className="rounded-xl mb-5 p-2 w-full border rounded text-black focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                  className=" mb-5 p-2 w-full border rounded-xl text-black focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                 />
                 <div className="font-medium text-lg mb-3"> 內容 </div>
                 <div className="bg-white text-black z-100 overflow-visible rounded-3xl">
@@ -650,7 +650,7 @@ const PublishMapPage = () => {
                     title="地圖內容原始碼"
                     value={content}
                     // readOnly // 如果不希望用戶在這裡編輯，可以設為只讀
-                    className="mb-2 p-2 w-full border rounded text-gray-500 rounded-3xl"
+                    className="mb-2 p-2 w-full border text-gray-500 rounded-xl"
                   />
                 )}
                 <div className="font-medium text-lg mb-3"> 文章標籤 </div>

@@ -11,8 +11,8 @@ import { collection, query, onSnapshot, getDocs, updateDoc, getDoc,
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
 import firebaseServices from '../../utils/firebase'; 
 const { db, storage } = firebaseServices; 
-
 import { useAuth } from '../../context/AuthContext';
+
 import AlertModal from '../../components/AlertModal'
 import DropzoneImage from '../../components/DropzoneImage';
 import GooglePlaces from '../../components/GooglePlaces';
@@ -568,7 +568,7 @@ const MapDemoPage: React.FC = () => {
                   <button
                       className=" bg-white p-3 text-sm
                             font-medium hover:bg-black hover:text-green-500 rounded-full"
-                      onClick={() => setIsRoutingMode(!isRoutingMode)}>
+                      onClick={() => setIsRoutingMode(!isRoutingMode)} aria-label="路徑模式">
                     <div>
                     {isRoutingMode ?  <i className="fas fa-door-open"></i> :  <i className="fas fa-route"></i>}   
                     </div>
@@ -617,7 +617,7 @@ const MapDemoPage: React.FC = () => {
           
           <button 
             className="flex items-center justify-center bg-amber-700 text-white shadow-md hover:bg-gray-700 py-1.5 px-4 rounded-xl hover:text-orange-500"
-            onClick={handlePublishClick}
+            onClick={handlePublishClick} aria-label="發佈地圖文章"
           >
             <i className={`fas fa-map px-2 py-2`}></i>
             <div className="hidden lg:flex text-sm font-medium">發佈</div>
@@ -866,14 +866,14 @@ const MapDemoPage: React.FC = () => {
               title="edit-place"
               className=" h-12 w-12 absolute right-[-15px] top-10 mb-5 mt-5 m-2 bg-blue-100 flex-column justify-center items-center border-2 border-dashed border-gray-300 rounded-full cursor-pointer
                hover:border-gray-500 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              onClick={() => handleEditClick(selectedPlace)}>
+              onClick={() => handleEditClick(selectedPlace)} aria-label="編輯景點">
               <i className="fas fa-edit"></i>
             </button>
             <button
               title="delete-place"
               // className="m-2 px-4 py-2 bg-red-100 text-black border border-black rounded hover:bg-red-400 hover:text-white hover:border-white focus:outline-none focus:ring-2 focus:ring-blue-300"
               className=" h-12 w-12  absolute right-[-15px] top-24 mb-5 mt-5 m-2 bg-red-100 flex-column justify-center items-center border-2 border-gray-300  rounded-full cursor-pointer hover:border-gray-500 hover:bg-red-300 focus:outline-none focus:ring-2 focus:ring-red-500"
-              onClick={handleDeletePlace}>
+              onClick={handleDeletePlace} aria-label="刪除景點">
               <i className="fas fa-trash-alt"></i>
             </button> 
           </div>
@@ -900,14 +900,14 @@ const MapDemoPage: React.FC = () => {
       )}
       {activeTab === 'content' && (
         <>
-      <button title="show-places" className="bg-blue-300 p-2 rounded-full border-2 px-3 py-2 text-sm bg-yellow-100 hover:bg-yellow-400" 
+      <button title="show-places" className="bg-blue-300 p-2 rounded-full border-2 px-3 py-2 text-sm  hover:bg-yellow-400" 
               onClick={()=>setShowPlaceInArticle(!showPlaceInArticle)}> {showPlaceInArticle ? '不顯示選中景點' : '同時顯示選中景點'} </button>
       <div className="mt-2">
       {!selectedPlace  && showPlaceInArticle &&  (<span className="border-2 rounded-2xl shadow-lg px-3 py-2 text-sm bg-green-200"> 選中的景點會顯示在此處 </span>)}
       {selectedPlace && showPlaceInArticle && (
         <>
            <div className="mt-5 mb-5 relative p-4 bg-white border-2 rounded-2xl shadow-lg pr-12"> 
-            <div className="absolute right-0 top-0 text-black cursor-pointer p-5" onClick={handlePlaceClose} >
+            <div className="absolute right-0 top-0 text-black cursor-pointer p-5" onClick={handlePlaceClose} aria-label="關閉本景點顯示">
               <i className="fas fa-times"></i>
             </div>
             <h2 className="text-2xl font-bold text-gray-800 border-b border-gray-300 pb-2 mb-4">{selectedPlace.name}</h2>
@@ -974,14 +974,14 @@ const MapDemoPage: React.FC = () => {
               title="edit-place"
               className=" h-12 w-12 absolute right-[-15px] top-10 mb-5 mt-5 m-2 bg-blue-100 flex-column justify-center items-center border-2 border-dashed border-gray-300 rounded-full cursor-pointer
                hover:border-gray-500 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              onClick={() => handleEditClick(selectedPlace)}>
+              onClick={() => handleEditClick(selectedPlace)} aria-label="編輯景點">
               <i className="fas fa-edit"></i>
             </button>
             <button
               title="delete-place"
               // className="m-2 px-4 py-2 bg-red-100 text-black border border-black rounded hover:bg-red-400 hover:text-white hover:border-white focus:outline-none focus:ring-2 focus:ring-blue-300"
               className=" h-12 w-12  absolute right-[-15px] top-24 mb-5 mt-5 m-2 bg-red-100 flex-column justify-center items-center border-2 border-gray-300  rounded-full cursor-pointer hover:border-gray-500 hover:bg-red-300 focus:outline-none focus:ring-2 focus:ring-red-500"
-              onClick={handleDeletePlace}>
+              onClick={handleDeletePlace} aria-label="刪除景點">
               <i className="fas fa-trash-alt"></i>
             </button> 
           </div>

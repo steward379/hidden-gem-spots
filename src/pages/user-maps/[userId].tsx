@@ -222,9 +222,11 @@ const UserMapsPage = () => {
        {renderUserInfo()}
        <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10  ">
         {maps.map(map => (
-        <div key={map.id} className="skew-card border bg-cover bg-center hover:bg-yellow-500 transition-btn rounded-3xl bg-purple-400" 
-               style={{ backgroundImage: `url('${map.coverImage}')`, height: '300px', backgroundSize: 'cover', backgroundPosition: 'center', }} 
-        >
+          <div 
+              key={map.id} 
+              className="skew-card border bg-cover bg-center hover:bg-yellow-500 transition duration-300 ease-in-out rounded-3xl bg-purple-400 h-72" 
+              style={{ backgroundImage: `url('${map.coverImage}')` }} 
+          >
 
             <div className="relative p-4 w-full h-full bg-gradient-to-t from-transparent to-blue-600 opacity-100 rounded-3xl  hover:bg-yellow-400 hover:bg-opacity-50">
               {isCurrentUser && (
@@ -251,9 +253,10 @@ const UserMapsPage = () => {
           <h3 className="text-2xl font-bold mb-5">喜愛的地圖</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 ">
             {likedMaps.map(map => (
-              <div key={map.id} 
-                   className="skew-card border bg-cover bg-center hover:bg-red-400 transition-btn rounded-3xl bg-orange-800" 
-                    style={{ backgroundImage: `url('${map.coverImage}')`, height: '300px', backgroundSize: 'cover', backgroundPosition: 'center' }} >
+              <div key={map.id}
+                  className="skew-card border bg-cover bg-center hover:bg-red-400 transition-btn rounded-3xl bg-orange-800 h-72" 
+                  style={{ backgroundImage: `url('${map.coverImage}')` }}
+              >
                 <Link href={`/publishedMaps/${map.authorId}/maps/${map.id}`}>
                   <div className="p-4 w-full h-full bg-gradient-to-t from-transparent to-red-500 opacity-100 rounded-3xl  hover:bg-yellow-300 hover:bg-opacity-50">
                     <h2 className="text-2xl font-semibold text-sky-100">{`${map.title}`}</h2>
