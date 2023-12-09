@@ -10,7 +10,7 @@ import { useAuth } from '@/src/context/AuthContext';
 // firebase
 import { getAuth, updateProfile } from 'firebase/auth';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { doc,  getDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { doc,  getDoc, updateDoc, arrayUnion, arrayRemove, collection, query, where, getDocs   } from 'firebase/firestore';
 import firebaseServices from '@/src/utils/firebase'; 
 // notifications hook
 import useAuthListeners  from '@/src/hooks/useAuthListeners';
@@ -25,6 +25,48 @@ const { db, storage } = firebaseServices;
 type AuthListener = (message: string) => void | {};
 
 const MemberPage = () => {
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+
+  // Algolia 搜索
+
+  const handleSearch = async () => {
+    try {
+      const usersRef = collection(db, "users");
+      const q = query(usersRef, where("name", "==", searchQuery));
+      const querySnapshot = await getDocs(q);
+  
+      const results = [];
+      querySnapshot.forEach((doc) => {
+        results.push({ id: doc.id, ...doc.data() });
+      });
+  
+      setSearchResults(results);
+    } catch (error) {
+      console.error("搜索錯誤:", error);
+    }
+  };
+
+   const renderSearchResults = () => {
+    return searchResults.map((user) => (
+      <Link href={`/member/${user.id}`} key={user.id}>
+        <div key={user.id} className="flex items-center space-x-4 mb-4">
+          <LazyLoadImage
+            effect="blur"
+            src={user.avatar}
+            alt={user.name}
+            width="50"
+            height="50"
+            className="rounded-full"
+          />
+          <span>{user.name}</span>
+        </div>
+      </Link>
+    ));
+  };
+
+  
   const router = useRouter();
   const { userId } = router.query;
 
@@ -253,9 +295,10 @@ const MemberPage = () => {
     setTempAvatar(null);
   }
 
+  
+
   const isCurrentlyFollowing = memberData.followers.includes(user?.uid);
 
-  // 渲染追蹤和被追蹤列表
   const renderFollowList = (list, title) => {
 
     if (!Array.isArray(list)) {
@@ -286,7 +329,7 @@ const MemberPage = () => {
   };
 
   return (
-    <div className="container mx-auto p-4 flex-column h-screen-without-navbar">
+    <div className="container mx-auto p-4 flex-column min-h-screen"> 
       <h1 className="w-full text-2xl font-bold mb-5 ">會員中心</h1>
       <div className="lg:flex flex-col md:flex-row space-y-6 md:space-y-0">
         <div className="flex-2 md:mb-6 lg:mb-0 w-full bg-white border-lg rounded-3xl p-7">
@@ -377,8 +420,29 @@ const MemberPage = () => {
             {renderFollowList(memberData.followers, '追蹤')}
           </div>
         </div>
+
       </div>
       <div>
+      <div className="mt-4">
+        <input
+          type="text"
+          placeholder="搜尋使用者"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="border border-gray-300 p-2 rounded"
+        />
+        <button
+          onClick={handleSearch}
+          className="bg-blue-500 text-white px-4 py-2 ml-2 rounded"
+        >
+          搜尋
+        </button>
+      </div>
+
+      {/* 搜索結果 */}
+      <div className="mt-4">
+        {renderSearchResults()}
+      </div>
 
     {isCurrentUser && (
     <div>
@@ -395,6 +459,7 @@ const MemberPage = () => {
           ))}
         </div>
     </div>
+    
     )}
       </div>
     </div>
