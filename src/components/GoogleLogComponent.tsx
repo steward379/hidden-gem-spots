@@ -14,7 +14,7 @@ const GoogleLogComponent = () => {
       await loginWithGoogle();
       setLoginMethod(LoginMethod.Google);
 
-      console.log('Google 登入成功，使用者 ID 是：', user.uid);
+      // console.log('Google 登入成功，使用者 ID 是：', user.uid);
     } catch (error) {
       console.log('Google 登入失敗', error);
     }
