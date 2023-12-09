@@ -23,6 +23,7 @@ interface MapState {
     mapDataRedux: {
         title: string;
         content: string;
+        tags: string[];
         coverImage: string;
         authorName: string;
         publishedPlaces: Place[];
