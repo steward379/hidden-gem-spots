@@ -218,7 +218,7 @@ const UserMapsPage = () => {
   };  
 
   return (
-    <div className=" container mx-auto rounded-3xl p-20 ">
+    <div className=" container mx-auto rounded-3xl p-20  h-screen-without-navbar">
        {renderUserInfo()}
        <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10  ">
         {maps.map(map => (
