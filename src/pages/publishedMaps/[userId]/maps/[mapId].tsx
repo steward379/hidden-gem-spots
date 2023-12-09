@@ -8,18 +8,8 @@ import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/blur.css';
 import GooglePlaces from "@/src/components/GooglePlaces";
 // firebase
-import {
-    doc,
-    getDoc,
-    updateDoc,
-    setDoc,
-    deleteDoc,
-    arrayUnion,
-    arrayRemove,
-    runTransaction,
-    collection,
-    addDoc,
-    getDocs,
+import { doc, getDoc, getDocs,
+    collection, arrayUnion,arrayRemove, runTransaction
 } from "firebase/firestore";
 import firebaseServices from "../../../../utils/firebase";
 const { db } = firebaseServices;
@@ -134,7 +124,6 @@ const PublishedMapDetail = () => {
                         mapDetails.authorAvatar = authorSnap.data().avatar;
                     }
 
-                    // 取得地圖中的景點
                     const placesRef = collection(
                         db,
                         `publishedMaps/${userId}/maps/${mapId}/places`
@@ -150,7 +139,6 @@ const PublishedMapDetail = () => {
                             user && place.likedBy.includes(user.uid);
                     });
 
-                    // 使用包含作者名字的數據
                     setMapData(mapDetails);
 
                     const totalDups = placesSnap.docs.reduce(
@@ -171,6 +159,7 @@ const PublishedMapDetail = () => {
                         content: mapDetails.content,
                         coverImage: mapDetails.coverImage,
                         authorName: authorSnap.data().name,
+                        tags: mapDetails.tags || [], 
                         publishedPlaces: placesSnap.docs.map((doc) => {
                             const placeData = doc.data();
                             return {
@@ -213,14 +202,10 @@ const PublishedMapDetail = () => {
 
         if (user && typeof user.uid === "string") {
             const mapRef = doc(
-                db,
-                `publishedMaps/${mapData.userId}/maps`,
-                mapId
+                db, `publishedMaps/${mapData.userId}/maps`, mapId
             );
             const userLikedMapsRef = doc(
-                db,
-                `users/${user.uid}/likedMaps`,
-                mapId
+                db, `users/${user.uid}/likedMaps`, mapId
             );
             const alreadyLiked = mapData.likedBy.includes(user.uid);
 
@@ -247,19 +232,16 @@ const PublishedMapDetail = () => {
                 });
 
                 if (!alreadyLiked) {
-                    // 增加喜愛次數
                     transaction.set(userLikedMapsRef, {
                         mapId: mapId,
                         title: mapData.title,
                         authorId: mapData.userId,
                     });
                 } else {
-                    // 減少喜愛次數
                     transaction.delete(userLikedMapsRef);
                 }
             });
 
-            // 更新本地狀態
             setMapData((prevData) => ({
                 ...prevData,
                 likes: alreadyLiked ? prevData.likes - 1 : prevData.likes + 1,
@@ -270,7 +252,6 @@ const PublishedMapDetail = () => {
 
             setIsMapLiked(!isMapLiked);
         } else {
-            // 未登入用戶的處理
             const likedMaps = JSON.parse(
                 localStorage.getItem("likedMaps") || "[]"
             );
@@ -400,7 +381,6 @@ const PublishedMapDetail = () => {
                 });
             });
         } else {
-            // 未登入用戶的處理
             const likedPlaces = JSON.parse(
                 localStorage.getItem("likedPlaces") || "[]"
             );
@@ -422,7 +402,6 @@ const PublishedMapDetail = () => {
 
     const handlePlaceDuplicate = async (placeId) => {
         if (!user) {
-            // 如果使用者未登入，無法使用複製功能
             showAlert("請先登入才能複製景點");
             return;
         }
@@ -431,12 +410,10 @@ const PublishedMapDetail = () => {
 
         if (user && typeof user.uid === "string") {
             const mapRef = doc(
-                db,
-                `publishedMaps/${mapData.userId}/maps/${mapId}`
+                db, `publishedMaps/${mapData.userId}/maps/${mapId}`
             );
             const placeRef = doc(
-                db,
-                `publishedMaps/${mapData.userId}/maps/${mapId}/places/${placeId}`
+                db,`publishedMaps/${mapData.userId}/maps/${mapId}/places/${placeId}`
             );
             const userPlacesRef = collection(db, `users/${user.uid}/places`);
 
@@ -449,7 +426,6 @@ const PublishedMapDetail = () => {
 
                 const placeData = placeDoc.data();
 
-                // 檢查用戶的私人地圖中是否已經有相同的景點
                 const userPlacesSnapshot = await getDocs(userPlacesRef);
                 const existingPlace = userPlacesSnapshot.docs.find((doc) => {
                     const data = doc.data();
@@ -633,10 +609,10 @@ const PublishedMapDetail = () => {
                 className="relative lg:overflow-auto md:overflow-auto lg:w-1/3 md:w-1/2 w-full lg:mb-10
       lg:mt-10 md:mt-5 mt-7 lg:mr-10 md:mr-5  bg-white shadow rounded"
             >
-                <div className="sticky top-0 bg-white shadow-lg z-50 flex items-center p-2">
-                    <div className="flex items-center justify-center">
+                <div className="sticky top-0 bg-white shadow-lg z-50 flex items-center py-2 pl-3 space-x-3">
+                    <div className="flex items-center justify-center space-x-3 py-2">
                         <button
-                            className="rounded-full bg-sky-100 p-3 mr-2 "
+                            className={`rounded-full  ${showMapContent ? 'bg-gray-200' : 'bg-red-100'} p-3 `}
                             onClick={() => {
                                 setShowMapContent(!showMapContent);
                             }}
@@ -644,7 +620,7 @@ const PublishedMapDetail = () => {
                             {showMapContent ? (
                                 <>
                                     <div>
-                                        <i className="fas fa-eye-slash mr-2"></i>
+                                        <i className="fas fa-eye-slash"></i>
                                     </div>
                                     <div className="hidden lg:inline text-sm">
                                         地圖文
@@ -653,7 +629,7 @@ const PublishedMapDetail = () => {
                             ) : (
                                 <>
                                     <div>
-                                        <i className="fas fa-map-location mr-2"></i>
+                                        <i className="fas fa-map-location"></i>
                                     </div>
                                     <div className="hidden lg:inline text-sm">
                                         {" "}
@@ -662,113 +638,66 @@ const PublishedMapDetail = () => {
                                 </>
                             )}
                         </button>
-                        <div className="inline-block">
-                            <button title="route-mode"
-                                className={`justify-center items-center relative`}>
+
+                        <div className="flex">
+                            <button title="rainbow-route-btn" className="flex items-center space-x-1">
+                                <button title="route-mode"
+                                        className={`${RainbowButtonModule.rainbowButton} justify-center items-center relative`}
+                                        style={{
+                                        // @ts-ignore
+                                        '--button-width': '45px',
+                                        '--button-height': '50px',
+                                        '--button-border-radius': '100px',
+                                        }}> 
                                 <button
-                                    className=" p-3 text-sm
-                            font-medium hover:bg-black bg-green-200 hover:text-green-500 rounded-full"
+                                    className=" bg-white p-3 text-sm
+                                            font-medium hover:bg-black hover:text-green-500 rounded-full"
                                     onClick={() => setIsRoutingMode(!isRoutingMode)}>
                                     <div>
-                                        {isRoutingMode ? <i className="fas fa-door-open"></i> : <i className="fas fa-route"></i>}
-                                    </div>
-                                    <div className="hidden lg:inline">
-                                        {isRoutingMode ? "停止路徑" : "規劃路徑"}
+                                    {isRoutingMode ?  <i className="fas fa-door-open"></i> :  <i className="fas fa-route"></i>}   
                                     </div>
                                 </button>
-                            </button>
-                            <div className="">
-                                <div className="absolute top-0 right-2 flex items-center justify-center mb-5 mt-5">
-                                    <label
-                                        htmlFor="toggle-like"
-                                        className="flex items-center cursor-pointer"
-                                    >
-                                        <div className="relative">
-                                            <input
-                                                title="all"
-                                                type="checkbox"
-                                                id="toggle-like"
-                                                className="sr-only"
-                                                onChange={() => {
-                                                    setShowPlacesList(!showPlacesList);
-                                                    setShowLikedPlacesList(false);
-                                                }}
-                                                checked={showPlacesList}
-                                            />
-                                            <div
-                                                className={`flex items-center w-16 h-9 rounded-full transition-colors ${showPlacesList
-                                                    ? "bg-sky-500"
-                                                    : "bg-gray-400"
-                                                    }`}
-                                            >
-                                                <i
-                                                    className={`fas ${showPlacesList
-                                                        ? "fa-eye-slash ml-2 text-white "
-                                                        : "fa-eye ml-9 text-gray-900"
-                                                        } text-center`}
-                                                ></i>
-                                            </div>
-                                            <div
-                                                className={`dot absolute left-1 top-1 bg-white h-7 w-7 rounded-full transition transform ${showPlacesList ? "translate-x-full" : ""
-                                                    }`}
-                                            ></div>
-                                        </div>
-                                        <div className="ml-1.5 text-gray-700 font-medium  hidden lg:inline">
-                                            <i className="fas fa-list ml-1 mr-1"></i>
-                                            {showPlacesList ? "" : ""}
-                                        </div>
-                                    </label>
+                                </button>
+                                <div className="hidden lg:inline text-sm font-medium">
+                                        {isRoutingMode ? "停止路徑" : "規劃路徑"}
                                 </div>
-                                <div className="absolute top-0 right-[100px] flex items-center justify-center mb-5 mt-5">
-                                    <label
-                                        htmlFor="toggle"
-                                        className="flex items-center cursor-pointer"
-                                    >
-                                        <div className="relative">
-                                            <input
-                                                title="show-like"
-                                                type="checkbox"
-                                                id="toggle"
-                                                className="sr-only"
-                                                onChange={() => {
-                                                    setShowLikedPlacesList(
-                                                        !showLikedPlacesList
-                                                    );
-                                                    setShowPlacesList(false);
-                                                }}
-                                                checked={showLikedPlacesList}
-                                            />
-                                            <div
-                                                className={`flex items-center w-16 h-9 rounded-full transition-colors 
-                                            ${showLikedPlacesList
-                                                        ? "bg-red-400"
-                                                        : "bg-gray-400"
-                                                    }`}
-                                            >
-                                                <i
-                                                    className={`fas ${showLikedPlacesList
-                                                        ? "fa-heart-broken ml-2.5 text-white "
-                                                        : "fa-heart ml-9 text-white"
-                                                        } 
-                                                text-center`}
-                                                ></i>
-                                            </div>
-                                            <div
-                                                className={`dot absolute left-1 top-1 bg-white h-7 w-7 rounded-full transition transform
-                                    ${showLikedPlacesList
-                                                        ? "translate-x-full"
-                                                        : ""
-                                                    }`}
-                                            ></div>
-                                        </div>
-                                        <div className="ml-1.5 text-gray-700 font-medium hidden lg:inline">
+                            </button>
+                        </div>
 
-                                            {showLikedPlacesList ? "" : ""}
-                                        </div>
-                                    </label>
+                        <div className="place-list flex items-center justify-center mb-5 mt-5">
+                            <label htmlFor="toggle-place" className="flex items-center cursor-pointer">
+                            <div className="relative">
+                                {/*  */}
+                                <input type="checkbox" id="toggle-place" className="sr-only" onChange={() => {setShowPlacesList(!showPlacesList);setShowLikedPlacesList(false);}} checked={showPlacesList} />
+                                <div className={`flex items-center w-16 h-9 rounded-full transition-colors ${showPlacesList ? 'bg-green-500' : 'bg-gray-400'}`}>
+                                <i className={`fas ${showPlacesList ? 'fa-eye-slash ml-2 text-stone-500 ' : 'fa-eye ml-9 text-gray-900'} text-center`} ></i>
+                                </div>
+                                <div className={`dot absolute left-1 top-1 bg-white h-7 w-7 rounded-full transition transform ${showPlacesList ? 'translate-x-full' : ''}`}>
                                 </div>
                             </div>
+                            <div className="ml-2 text-gray-700 font-medium text-sm hidden lg:flex">
+                                <i className="fas fa-list-ul"></i>
+                            </div>
+                            </label>
                         </div>
+                            
+                        <div className="place-list flex items-center justify-center mb-5 mt-5">
+                            <label htmlFor="toggle-like-place" className="flex items-center cursor-pointer">
+                            <div className="relative">
+                                {/*  */}
+                                <input type="checkbox" id="toggle-like-place" className="sr-only" onChange={() => {setShowLikedPlacesList(!showLikedPlacesList);setShowPlacesList(false);}} checked={showPlacesList} />
+                                <div className={`flex items-center w-16 h-9 rounded-full transition-colors ${showLikedPlacesList ? 'bg-green-500' : 'bg-gray-400'}`}>
+                                <i className={`${showLikedPlacesList ? 'fa-regular fa-heart ml-2 text-gray-700' : 'fa-solid fa-heart ml-9 text-gray-900'} text-center`} ></i>
+                                </div>
+                                <div className={`dot absolute left-1 top-1 bg-white h-7 w-7 rounded-full transition transform ${showLikedPlacesList ? 'translate-x-full' : ''}`}>
+                                </div>
+                            </div>
+                            <div className="ml-2 text-gray-700 font-medium text-sm hidden lg:flex">
+                                <i className="fas fa-list-ul"></i>
+                            </div>
+                            </label>
+                        </div>
+
                     </div>
                 </div>
                 <div className="container lg:px-6 md:px-4 px-3 py-3">
@@ -853,15 +782,14 @@ const PublishedMapDetail = () => {
                                 )}
                             </p>
                             {mapData.coverImage && (
-                                <div className="w-full relative h-[300px] w-[200px] overflow-hidden">
+                                <div className="w-full relative h-[300px] overflow-hidden">
                                 <LazyLoadImage effect="blur"
                                         src={mapData.coverImage}
                                         alt="Cover Image"
                                         width={400}
                                         height={250}
-                                        objectFit="cover" // 确保图片按比例填充容器
-                                        layout="responsive" // 设置布局方式为响应式
                                         className="object-cover"
+                                        layout="responsive" // 设置布局方式为响应式
                                     />
                                 </div>
                             )}
@@ -873,6 +801,15 @@ const PublishedMapDetail = () => {
                                     modules={quillModules}
                                 />
                             </div>
+                            {mapData.tags && mapData.tags.length > 0 && (
+                                <div className="tags flex flex-wrap gap-2 mt-4">
+                                    {mapData.tags.map((tag, index) => (
+                                    <span key={index} className="text-xs bg-blue-200 px-2 py-1 rounded-full">
+                                        {tag}
+                                    </span>
+                                    ))}
+                                </div>
+                            )}
                             {mapData.updatedDate && (
                                 <p className="text-sm mb-4">
                                     最後更新時間: {new Date(mapData.updatedDate).toLocaleString("zh-TW", { hour12: true })}
@@ -956,9 +893,8 @@ const PublishedMapDetail = () => {
                                                     alt={`${selectedPlace.name} image ${index}`}
                                                     width={200}
                                                     height={200}
-                                                    objectFit="cover" // 确保图片按比例填充容器
-                                                    layout="responsive" // 设置布局方式为响应式
                                                     className="object-cover"
+                                                    layout="responsive" // 设置布局方式为响应式
                                                 />
                                             </div>
                                         ))}
