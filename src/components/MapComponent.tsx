@@ -65,8 +65,6 @@ const MapComponent = ({
   onRouteCalculated = undefined,
   onModeChange = undefined
 }) => {
-  console.log('isRoutingMode?', isRoutingMode);
-  console.log('isDragModeEnabled?', isDragModeEnabled);
 
   // zustand
   const { googlePlace, clearGooglePlace } = useGooglePlacesStore();
@@ -278,10 +276,10 @@ const MapComponent = ({
   const isMarkerInImageArea = useCallback((marker) => {
     const imageElem = document.querySelector('.marker-bowl-image');
     const imageRect = imageElem.getBoundingClientRect();
-    console.log(imageRect);
+    // console.log(imageRect);
   
     const markerPos = map.latLngToContainerPoint(marker.getLatLng());
-    console.log(markerPos);
+    // console.log(markerPos);
   
     return (
       markerPos.x >= imageRect.left -200 &&
