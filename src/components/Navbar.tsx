@@ -58,7 +58,7 @@ const Navbar: React.FC = () => {
                             alt="User avatar" 
                             width="50"
                             height="50"
-                            style={{ objectFit: 'cover' }}
+                            className="object-cover"
                           />
                         </div>
                         <div className="ml-3 ext-sm sm:block">你好，{user.name || '會員'}</div>
@@ -88,12 +88,16 @@ const Navbar: React.FC = () => {
                   </div>
                 </>
               ) : (
-                <div className={`mt-4 sm:mt-0 ${isMenuOpen ? 'flex' : 'hidden'} sm:flex flex-col sm:flex-row`}>
+                <div className={`mt-4 sm:mt-0 ${isMenuOpen ? 'flex' : 'hidden'} sm:flex flex flex-col justify-center items-center  sm:flex-row`}>
                   <EmailLogComponent />
                   <GoogleLogComponent />
                   {/* <SignInWithMetamaskButton /> */}
+                  <div className="flex items-center mt-3 lg:mt-0 lg:ml-3">
                   <SignInButton />
+                  </div>
+                  <div className="flex items-center mt-3 lg:mt-0 lg:ml-3">
                   <SignOutButton />
+                  </div>
                 </div>
               )}
             </div>
