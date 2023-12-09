@@ -349,7 +349,9 @@ const MemberPage = () => {
               <Link href={`/user-maps/${userId}`} className="flex items-center">
                 {/* @ts-ignore */}
                 <button title="rainbow-map" className={`${RainbowButtonModule.rainbowButton} mt-2 mb-3`} >
-                  <span>查看地圖</span>
+                     <button className="bg-red-500 rounded-full text-white font-bold py-2 px-10 text-sm hover:bg-blue-600 my-2">
+                                查看地圖
+                    </button>
                 </button>
               </Link>
               {/* lemmin codepen */}
