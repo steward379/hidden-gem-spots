@@ -62,8 +62,8 @@ const LandingPage = () => {
           <h2 className="text-xl md:text-2xl font-medium mb-3">  <i className="fas fa-location-dot"></i> 創造、查看你的景點</h2>
           <p className="mb-5 text-baseline md:text-lg">專屬於你的景點地圖，無論是戶外首選、約會聖地，還是神之餐廳，清楚呈現。</p>
           <Link href="/home">
-            <button className="md:text-xl max-w-xs py-2 md:py-3 px-4 md:px-5 bg-red-500
-             text-white font-medium  hover:bg-red-700 transition duration-300 rounded-full text-baseline">馬上新增</button>
+            <button className="md:text-xl max-w-xs py-2 md:py-3 px-4 md:px-5 bg-amber-400 text-amber-700
+              font-medium  hover:bg-red-400 transition duration-300 rounded-full text-baseline"> 🔥 立刻新增</button>
           </Link>
         </div>
       </div>
@@ -74,7 +74,8 @@ const LandingPage = () => {
           <h2 className="text-xl md:text-2xl font-medium mb-3"><i className="fas fa-route"></i> 簡單規劃路徑 </h2>
           <p className="mb-5 text-baseline md:text-lg">規劃 500 公尺內的路徑，查看景點之間的行進方式</p>
           <Link href="/home">
-            <button className="md:text-xl max-w-xs py-2 md:py-3 px-4 md:px-5 bg-blue-500 text-white font-medium rounded-full hover:bg-blue-700 transition duration-300 text-baseline">瀏覽地圖</button>
+            <button className="md:text-xl max-w-xs py-2 md:py-3 px-4 md:px-5 bg-green-400 text-white font-medium 
+            rounded-full hover:bg-blue-700 transition duration-300 text-baseline"> 🗺️ 瀏覽地圖</button>
           </Link>
         </div>
         <div className="flex justify-center md:justify-end items-center" >
@@ -99,8 +100,8 @@ const LandingPage = () => {
           <h2 className="text-xl md:text-2xl font-medium mb-3">查看附近的 <i className="fab fa-google"></i> 景點</h2>
           <p className="mb-5 text-baseline md:text-lg">點選附近景點，附近景點可點選呈現在地圖中心</p>
           <Link href="/home">
-            <button className="md:text-xl max-w-xs py-2 md:py-3 px-4 md:px-5 bg-red-500
-             text-white font-medium  hover:bg-red-700 transition duration-300 rounded-full text-baseline">馬上新增</button>
+            <button className="md:text-xl max-w-xs py-2 md:py-3 px-4 md:px-5 bg-red-500 text-teal-100
+              font-medium  hover:bg-white hover:text-red-600 transition duration-300 rounded-full text-baseline">📌 快來試試</button>
           </Link>
         </div>
       </div>
@@ -111,7 +112,8 @@ const LandingPage = () => {
           <h2 className="text-xl md:text-2xl font-medium mb-3"><i className="fas fa-route"></i> 使用 KML 上傳檔案 </h2>
           <p className="mb-5 text-baseline md:text-lg">規劃 500 公尺內的路徑，查看景點之間的行進方式</p>
           <Link href="/home">
-            <button className="md:text-xl max-w-xs py-2 md:py-3 px-4 md:px-5 bg-blue-500 text-white font-medium rounded-full hover:bg-blue-700 transition duration-300 text-baseline">瀏覽地圖</button>
+            <button className="md:text-xl max-w-xs py-2 md:py-3 px-4 md:px-5 bg-teal-700 text-white font-medium rounded-full hover:bg-blue-700 
+            transition duration-300 text-baseline">📃 即刻匯入</button>
           </Link>
         </div>
         <div className="flex justify-center md:justify-end items-center" >
