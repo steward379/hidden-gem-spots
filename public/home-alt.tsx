@@ -167,9 +167,10 @@ export default function Home() {
                                         '--button-height': '50px',
                                         '--button-border-radius': '100px'
                                         }}> 
-                            <Link href="/mintNFT"
-                                className="bg-red-500 rounded-full text-white font-bold py-2 px-10 text-sm hover:bg-blue-600 my-2">
-                                首發紀念 NFT
+                            <Link href="/mintNFT">
+                                <button className="bg-red-500 rounded-full text-white font-bold py-2 px-10 text-sm hover:bg-blue-600 my-2">
+                                    首發紀念 NFT
+                                </button>
                             </Link>
                         </button>
                     </div>
