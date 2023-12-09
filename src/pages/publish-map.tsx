@@ -5,7 +5,7 @@ import Router from 'next/router';
 import Image from 'next/image';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/blur.css';
-import RainbowButtonModule from '@/src/styles/RainbowButton.module.css';
+import RainbowButtonModule from '@/src/styles/rainbowButton.module.css';
 
 import Link from 'next/link';
 import { useRouter } from 'next/router';

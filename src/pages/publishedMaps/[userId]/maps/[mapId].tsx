@@ -25,7 +25,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../../../../store/store";
 import { setMapDataRedux } from "../../../../store/slices/mapSlice";
 // css&json
-import RainbowButtonModule from "@/src/styles/RainbowButton.module.css";
+import RainbowButtonModule from "@/src/styles/rainbowButton.module.css";
 import "react-quill/dist/quill.snow.css";
 import { categoryMapping } from "@/src/constants";
 
