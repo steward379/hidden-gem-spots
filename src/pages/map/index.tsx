@@ -273,7 +273,7 @@ const MapDemoPage: React.FC = () => {
     setActiveTab('places');
   };
   async function removeImageFromFirestore(placeId, imageUrl, userId) {
-    console.log(`Removing image URL from Firestore: ${imageUrl}`);
+    // console.log(`Removing image URL from Firestore: ${imageUrl}`);
   
     const placeRef = doc(db, `users/${userId}/places`, placeId);
   
@@ -294,7 +294,7 @@ const MapDemoPage: React.FC = () => {
       const updatedPlaceSnap = await getDoc(placeRef);
       if (updatedPlaceSnap.exists()) {
         const updatedPlaceData = updatedPlaceSnap.data();
-        console.log(`Updated document data: `, updatedPlaceData);
+        // console.log(`Updated document data: `, updatedPlaceData);
       }
     }
   }
@@ -362,7 +362,7 @@ const MapDemoPage: React.FC = () => {
 
       try {
         await deleteObject(imageRef);
-        console.log(`Deleted image: ${storagePath}`);
+        // console.log(`Deleted image: ${storagePath}`);
         // 刪除成功後，移除Firestore中的URL
         await removeImageFromFirestore(placeId, url, userId);
       } catch (error) {
