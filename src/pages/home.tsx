@@ -146,16 +146,32 @@ export default function Home() {
                 </div>
                 {/* Content Section */}
                 <div className="content-section max-w-xl mx-auto items-center justify-center">
-                    <div className="flex flex-col items-center bg-gray-300 rounded-full p-10 backdrop-blur-sm bg-opacity-30 hover:bg-opacity-60">
-                        <LazyLoadImage src="/images/ballon.png" alt="Scene Image" width="200" height="200" style={{ objectFit: 'cover', mixBlendMode: 'color-burn' }} />
-                        <h1 className="text-4xl mb-4 text-gray-800">Hidden Gem Spots</h1>
-                        <Image src="/images/hidden_gem.png" alt="logo Image" width="300" height="300" style={{ objectFit: 'cover', mixBlendMode: 'color-burn' }} />
-                        <p className="text-xl mb-6 text-black">找尋你的秘密景點</p>
+                    <div className="flex flex-col justify-center items-center bg-gray-300 rounded-full p-10 backdrop-blur-sm bg-opacity-30 hover:bg-opacity-60">
+                        <LazyLoadImage effects="blur" src="/images/ballon.png" alt="Scene Image" width="200" height="200" 
+                             className="object-cover mix-blend-color-burn" 
+                        />
+                        {/* <h1 className="text-4xl mb-4 text-gray-800">Hidden Gem Spots</h1> */}
+                        <LazyLoadImage effects="blur" src="/images/hidden_gem.png" alt="logo Image" width="300" height="300" 
+                            className="object-cover mix-blend-color-burn"
+                            />
+                        <p className="mt-5 px-10 py-3 rounded-3xl text-sm lg:text-lg mb-6 text-teal-300 bg-gray-600 opacity-90">定義你的私房景點<br></br>分享你的探險故事</p>
                         <Link href="/map">
-                            <div className="cursor-pointer text-lg  px-8 py-2 bg-blue-400 hover:bg-sky-700 rounded-3xl shadow transition-btn text-white">
+                            <div className="cursor-pointer lg:text-sm text-xs px-8 py-2 bg-teal-100 hover:bg-rose-700 hover:text-white rounded-3xl shadow transition-btn text-blue-700">
                                 前往你的景點地圖
                             </div>
                         </Link>
+                        <button className={`${RainbowButtonModule.rainbowButton} bg-red-500  text-white font-bold py-2 px-4 rounded hover:bg-blue-600 my-2`}
+                                    style={{
+                                        // @ts-ignore
+                                        '--button-width': '200px',
+                                        '--button-height': '50px',
+                                        '--button-border-radius': '100px'
+                                        }}> 
+                            <Link href="/mintNFT"
+                                className="bg-red-500 rounded-full text-white font-bold py-2 px-10 text-sm hover:bg-blue-600 my-2">
+                                首發紀念 NFT
+                            </Link>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -165,18 +181,6 @@ export default function Home() {
                         onClick={handleClick}> {isVisible? '隱藏地球' : '顯示地球' } 
                     </div>
                         <div className="mb-10 flex justify-center ">
-                    <button className={`${RainbowButtonModule.rainbowButton} bg-red-500  text-white font-bold py-2 px-4 rounded hover:bg-blue-600 my-2`}
-                                    style={{
-                                        // @ts-ignore
-                                        '--button-width': '200px',
-                                        '--button-height': '50px',
-                                        '--button-border-radius': '100px'
-                                        }}> 
-                        <Link href="/mintNFT"
-                            className="bg-red-500 rounded-full text-white font-bold py-2 px-10 rounded hover:bg-blue-600 my-2">
-                            首發紀念 NFT
-                        </Link>
-                    </button>
                 </div>
                 </div>
                 <div className="flex mb-4">
@@ -223,11 +227,11 @@ export default function Home() {
             </div>
             <div className='w-full text-center flex-1 md:w-1/2 mx-auto mt-16'>
                 <LazyLoadImage effect="blur" src="/images/future-02.png" alt="Scene Image" width="1000" height="1000" 
-                    style={{ objectFit: 'cover' }} />
+                                            className="object-cover"/>
                 <LazyLoadImage effect="blur" src="/images/future-03.png" alt="Scene Image" width="1000" height="1000" 
-                    style={{ objectFit: 'cover' }} />
+                                            className="object-cover" />
                 <LazyLoadImage effect="blur" src="/images/future-01.png" alt="Scene Image" width="1000" height="1000" 
-                    style={{ objectFit: 'cover' }} />
+                                            className="object-cover" />
                 <AlertModal isOpen={isAlertOpen} onClose={() => setIsAlertOpen(false)} message={alertMessage} />
             </div>
         </div>
