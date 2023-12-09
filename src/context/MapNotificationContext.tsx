@@ -15,7 +15,7 @@ export const MapNotificationProvider = ({ children }) => {
         setNotifications([...notifications, notification]);
     };
 
-    console.log("共享 notifications", notifications)
+    // console.log("共享 notifications", notifications)
 
     return (
         <MapNotificationContext.Provider value={{ notifications, addNotification }}>
