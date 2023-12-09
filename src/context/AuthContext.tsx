@@ -10,6 +10,7 @@ const { db, auth } = firebaseServices;
 import { LoginMethod } from '../LoginMethod';
 // import { getToken } from '@clerk/clerk-sdk-node';
 import {  getRandomAvatarUrl } from '../utils/randomProfile';
+import LoadingIndicator from '@/src/components/LoadingIndicator'; 
 
 // clerk using signInWithCustomToken
 import { useAuth as useClerkAuth, useClerk } from "@clerk/nextjs";
@@ -50,7 +51,9 @@ const AuthContext = createContext<{
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children}) => {
   const [user, setUser] = useState<IUser | null>(null);
+
   const [loading, setLoading] = useState(true);
+  
   const [loginMethod, setLoginMethod] = useState<LoginMethod>(LoginMethod.None);
   const [loaded, setLoaded] = useState(false);
   const router = useRouter();
@@ -66,20 +69,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // const { isSignedIn, user: clerkUser } = useClerk();
   // const firebaseAuth = getAuth();
 
+    // const firebaseAuth = getAuth(firebaseServices);
   const { getToken } = useClerkAuth();
-  // const firebaseAuth = getAuth(firebaseServices);
 
-  useEffect(() => {
-    const signInWithClerk = async () => {
-      const token = await getToken({ template: "integration_firebase" });
-      if (token) {
-        await signInWithCustomToken(auth, token);
-        setLoginMethod(LoginMethod.clerk);
-      }
-    };
 
-    signInWithClerk();
-  }, [getToken]);
+  // useEffect(() => {
+
+  //   const signInWithClerk = async () => {
+  //     const token = await getToken({ template: "integration_firebase" });
+  //     if (token) {
+  //       await signInWithCustomToken(auth, token);
+  //       setLoginMethod(LoginMethod.clerk);
+  //     }
+  //   };
+
+  //   signInWithClerk();
+  // }, [getToken]);
 
   const updateUserProfile = async (updatedData) => {
     if (!user) return;
@@ -93,22 +98,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }));
   };
 
-  useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        const userRef = doc(db, 'users', firebaseUser.uid);
-        const docSnap = await getDoc(userRef);
+  // useEffect(() => {
+  //   const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
+  //     if (firebaseUser) {
+  //       const userRef = doc(db, 'users', firebaseUser.uid);
+  //       const docSnap = await getDoc(userRef);
 
-        let userData: IUser;
+  //       let userData: IUser;
   
-        const randomAvatar = await getRandomAvatarUrl();     
+  //       const randomAvatar = await getRandomAvatarUrl();     
         
-        const email = clerkUser && clerkUser.emailAddresses && clerkUser.emailAddresses.length > 0 
-              ? clerkUser.emailAddresses[0].emailAddress 
-              : firebaseUser.email;
-        const name = clerkUser && clerkUser.firstName 
-             ? clerkUser.firstName 
-             : (firebaseUser.displayName || '第三方會員');
+  //       const email = clerkUser && clerkUser.emailAddresses && clerkUser.emailAddresses.length > 0 
+  //             ? clerkUser.emailAddresses[0].emailAddress 
+  //             : firebaseUser.email;
+  //       const name = clerkUser && clerkUser.firstName 
+  //            ? clerkUser.firstName 
+  //            : (firebaseUser.displayName || '第三方會員');
 
         // if (!docSnap.exists()) {
         // userData = {
@@ -120,24 +125,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         //   followers: []
         // };
 
-        if (!docSnap.exists()) {
-          userData = {
-            uid: firebaseUser.uid,
-            email: email,
-            name: name,
-            avatar: firebaseUser.photoURL || randomAvatar,
-            following: [],
-            followers: []
-          };
-          await setDoc(userRef, userData);
+      //   if (!docSnap.exists()) {
+      //     userData = {
+      //       uid: firebaseUser.uid,
+      //       email: email,
+      //       name: name,
+      //       avatar: firebaseUser.photoURL || randomAvatar,
+      //       following: [],
+      //       followers: []
+      //     };
+      //     await setDoc(userRef, userData);
 
-        } else {
-          userData = docSnap.data() as IUser;
-        }
+      //   } else {
+      //     userData = docSnap.data() as IUser;
+      //   }
 
-        setUser(userData);
+      //   setUser(userData);
 
-      } else {
+      // } else {
         // const userRef = doc(db, 'users', firebaseUser.uid);
         // const docSnap = await getDoc(userRef);
 
@@ -167,24 +172,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         // setUser(userData);
     
-        setUser(null);
-        setLoading(false);
-        if (router.asPath.startsWith("/accounting") || router.asPath.startsWith("/map")) {
-          router.push({ pathname: "/home", query: { message: "請先登入" } });
-        }
+  //       setUser(null);
+  //       setLoading(false);
+  //       if (router.asPath.startsWith("/accounting") || router.asPath.startsWith("/map")) {
+  //         router.push({ pathname: "/home", query: { message: "請先登入" } });
+  //       }
               
-      }
+  //     }
 
-      setLoading(false);
-          // 網站通知
-      setLoaded(true);
-    });
+  //     setLoading(false);
+  //         // 網站通知
+  //     setLoaded(true);
+  //   });
     
-      return () => {
-        unsubscribeAuth();
-      };
+  //     return () => {
+  //       unsubscribeAuth();
+  //     };
 
-  }, [router, clerkUser]);
+  // }, [router, clerkUser]);
 
   const loginWithEmail = async (email: string, password: string) => {
     try {
@@ -260,16 +265,86 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await signOut(auth);
       setUser(null);
       setLoginMethod(LoginMethod.None);
+      router.push('/home'); 
     } catch (error) {
       console.error("登出失敗", error);
     }
   };
 
+  useEffect(() => {
+    setLoading(true); // 開始進行登入流程時設置為 true
+
+    const signInWithClerk = async () => {
+      const token = await getToken({ template: "integration_firebase" });
+      if (token) {
+        await signInWithCustomToken(auth, token);
+      }
+    };
+
+    if (clerkUser) {
+      signInWithClerk();
+    }
+
+    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        const userRef = doc(db, 'users', firebaseUser.uid);
+        const docSnap = await getDoc(userRef);
+
+        let userData: IUser;
+  
+        const randomAvatar = await getRandomAvatarUrl();     
+        
+        const email = clerkUser && clerkUser.emailAddresses && clerkUser.emailAddresses.length > 0 
+              ? clerkUser.emailAddresses[0].emailAddress 
+              : firebaseUser.email;
+        const name = clerkUser && clerkUser.firstName 
+            ? clerkUser.firstName 
+            : (firebaseUser.displayName || '第三方會員');
+            
+        if (!docSnap.exists()) {
+          userData = {
+            uid: firebaseUser.uid,
+            email: email,
+            name: name,
+            avatar: firebaseUser.photoURL || randomAvatar,
+            following: [],
+            followers: []
+          };
+          
+          await setDoc(userRef, userData);
+
+        } else {
+          userData = docSnap.data() as IUser;
+        }
+
+        setUser(userData);
+
+      } else {
+        setUser(null);
+        if (router.asPath.startsWith("/accounting") || router.asPath.startsWith("/map")) {
+          router.push({ pathname: "/home", query: { message: "請先登入" } });
+        }
+      }
+
+      setLoading(false); 
+
+      setLoaded(true);
+    });
+
+    return () => {
+      unsubscribeAuth();
+    };
+  }, [router, clerkUser, getToken]);
+
+  if (loading) {
+    return <LoadingIndicator />;
+  }
+
   return (
     <AuthContext.Provider value={{ user, loading, loaded, loginMethod, 
     setLoginMethod, loginWithEmail, signUpWithEmail, loginWithGoogle, logout,
     updateUserProfile}}>
-      {!loading && loaded && children}
+      {loaded && children}
     </AuthContext.Provider>
   );
 };
