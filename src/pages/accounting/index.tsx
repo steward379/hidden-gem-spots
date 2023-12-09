@@ -10,7 +10,7 @@ import Link from 'next/link';
 import firebaseServices from '../../utils/firebase';
 const { db, auth } = firebaseServices;
 
-import { collection, getDocs, addDoc, deleteDoc, doc, query, where, onSnapshot } from 'firebase/firestore';
+import { collection, getDocs, addDoc, deleteDoc, doc, query, onSnapshot } from 'firebase/firestore';
 import { onAuthStateChanged } from "firebase/auth";
 
 export default function Accounting() {

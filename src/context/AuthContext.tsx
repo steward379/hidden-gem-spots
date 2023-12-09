@@ -61,7 +61,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const { signOut: clerkSignOut } = useClerk();
 
-  // // cleark
+  // // clerk
+
   // const { isSignedIn, user: clerkUser } = useClerk();
   // const firebaseAuth = getAuth();
 
@@ -179,7 +180,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoaded(true);
     });
     
-      // 清理監聽器
       return () => {
         unsubscribeAuth();
       };
@@ -273,8 +273,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     </AuthContext.Provider>
   );
 };
-
-
 
 // Hook 來使用 context
 export const useAuth = () => useContext(AuthContext);
