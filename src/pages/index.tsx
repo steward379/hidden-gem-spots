@@ -21,7 +21,7 @@ const LandingPage = () => {
     <div className="flex flex-col font-sans">
           
     <div className="relative font-sans mt-[-65px] h-screen-without-navbar-half">
-        <div className="bg-cover bg-no-repeat bg-center absolute top-0 left-0 right-0 bottom-0 z-[-1]" 
+        <div className="bg-fixed bg-cover bg-no-repeat bg-center absolute top-0 left-0 right-0 bottom-0 z-[-1]" 
             style={{ backgroundImage: "url('/images/pexels-tyler-lastovic.jpg')" }}>
         </div>
 
@@ -31,11 +31,11 @@ const LandingPage = () => {
             <div className="text-center text-white z-10">
               <div className='flex-column items-center justify-center'>
                 <LazyLoadImage src="/images/ballon.png" alt="Scene Image" width="300" height="300" 
-                    style={{ objectFit: 'cover' }} effect="blur" />
+                    className="object-cover mix-blend-color-burn" effect="blur" />
                  <LazyLoadImage src="/images/logo.png" alt="Scene Image" width="500" height="300" 
-                    style={{ objectFit: 'cover' }} effect="blur" />
+                    className="object-cover mix-blend-color-burn"  effect="blur" />
               </div>
-                <p className="mt-4 text-2xl mb-8"> Hidden Gem 旅圓紀錄自己的下一趟生活冒險。</p>
+                <p className="mt-4 text-2xl mb-8"> Hidden Gem 旅圓，讓你記錄每一趟生活冒險。</p>
                 {message && <p className="text-white-500 p-5">{message}</p>}
                 <Link href="/home">
                     <button className="bg-red-400 text-red text-xl font-semibold py-3
@@ -47,61 +47,82 @@ const LandingPage = () => {
             </div>
         </div>
     </div>
-
-
+    <div>
       {/* Block 1 */}
-      <div className="md:flex gap-10 items-center justify-end bg-gray-100 p-16">
-        <div className="md:flex-1 md:w-1/2">
-          <div className="md:flex items-center justify-end">
-            <LazyLoadImage src="/images/pexels-marina-leonova.jpg" alt="Scene Image" width="500" height="500"
-                    className= "rounded-full" effect="blur" />
+      <div className="md:flex gap-10 items-center justify-end bg-teal-50 p-4 md:p-16">
+        <div className="flex md:flex-1 md:w-1/2 justify-center md:justify-end">
+          <div className="flex justify-center md:justify-end w-80 h-80">
+            <LazyLoadImage src="/images/new_show.gif" alt="Scene Image" 
+                          className="rounded-2xl  shadow-2xl" 
+                          effect="blur" />
           </div>
         </div>
-        <div className=" w-full md:w-1/2 text-center md:text-left p-4 text-black">
-          <h2 className="text-4xl font-bold mb-3">1️⃣ 創造你的私人景點</h2>
-          <p className="mb-5 text-2xl"> 專屬於你的故事藏寶圖，無論是約會聖地、有故事的地方，全都一目瞭然。</p>
+        {/* 景點圖釘 fontawesome */}   
+        <div className="w-full md:w-1/2 text-center md:text-left p-4">
+          <h2 className="text-xl md:text-2xl font-medium mb-3">  <i className="fas fa-location-dot"></i> 創造、查看你的景點</h2>
+          <p className="mb-5 text-baseline md:text-lg">專屬於你的景點地圖，無論是戶外首選、約會聖地，還是神之餐廳，清楚呈現。</p>
           <Link href="/home">
-            <button className="text-xl max-w-xs py-3 px-5 bg-red-500 text-white font-semibold rounded hover:bg-red-700 transition duration-300">馬上新增</button>
+            <button className="md:text-xl max-w-xs py-2 md:py-3 px-4 md:px-5 bg-red-500
+             text-white font-medium  hover:bg-red-700 transition duration-300 rounded-full text-baseline">馬上新增</button>
           </Link>
         </div>
       </div>
 
       {/* Block 2 */}
-      <div className="md:flex gap-4 flex-wrap-reverse items-center justify-center bg-white p-10">
-        <div className="flex-1 md:w-1/2 text-center md:text-right p-8 text-black" >
-          <h2 className="text-4xl font-bold mb-3">2️⃣ 收藏更多景點</h2>
-          <p className="mb-5 text-2xl"> 追蹤、收藏分享他人的景點，收納到自己的地圖中。</p>
+      <div className="flex flex-col-reverse md:flex-row gap-4 items-center justify-center bg-white p-4 md:p-10">
+        <div className="w-full md:w-1/3 text-center md:text-end p-4  sm:mr-0 lg:mr-6">
+          <h2 className="text-xl md:text-2xl font-medium mb-3"><i className="fas fa-route"></i> 簡單規劃路徑 </h2>
+          <p className="mb-5 text-baseline md:text-lg">規劃 500 公尺內的路徑，查看景點之間的行進方式</p>
           <Link href="/home">
-            <button className="text-xl max-w-xs py-3 px-5 bg-blue-500 text-white font-semibold rounded hover:bg-blue-700 transition duration-300">瀏覽地圖</button>
+            <button className="md:text-xl max-w-xs py-2 md:py-3 px-4 md:px-5 bg-blue-500 text-white font-medium rounded-full hover:bg-blue-700 transition duration-300 text-baseline">瀏覽地圖</button>
           </Link>
         </div>
-        <div className="flex-1 md:w-1/2" 
-              style={{ maxHeight: "600px"}}>
-          <LazyLoadImage src="/images/pexels-bhupendra-singh.jpg" alt="Scene Image" width="500" height="500" 
-                 effect="blur"
-                 className= "rounded-full"
-                 style={{ objectFit: 'cover' } }
-          />
+        <div className="flex justify-center md:justify-end items-center" >
+                <div className="flex justify-center md:justify-end w-80 h-80">
+          <LazyLoadImage src="/images/route_show.gif" alt="Scene Image" 
+                        className="rounded-2xl shadow-2xl"
+                        effect="blur" />
+              </div>
         </div>
       </div>
 
       {/* Block 3 */}
-      <div className="md:flex gap-10 items-center justify-end bg-gray-100 p-16">
-        <div className="flex-1 md:w-1/2"
-             style={{ maxHeight: "600px", overflow: 'hidden' }}>
-          <LazyLoadImage src="/images/pexels-photo-friends.jpeg" alt="Scene Image" width="500" height="500" 
-                  effect="blur"
-                 className= "rounded-full"
-                 style={{ objectFit: 'cover' }} />
+      <div className="md:flex gap-10 items-center justify-end bg-red-50 p-4 md:p-16">
+        <div className="flex md:flex-1 md:w-1/2 justify-center md:justify-end">
+          <div className="flex justify-center md:justify-end w-80 h-80">
+            <LazyLoadImage src="/images/google_show.gif" alt="Scene Image" 
+                          className="rounded-2xl shadow-2xl" 
+                          effect="blur" />
+          </div>
         </div>
-        <div className=" w-full md:w-1/2 text-center md:text-left p-4 text-black">
-          <h2 className="text-4xl font-bold mb-3">1️⃣ 原來你也在！景點交友</h2>
-          <p className="mb-5 text-2xl"> 抓取附近景點，一起去有興趣或去過的景點溜達。</p>
+        <div className="w-full md:w-1/2 text-center md:text-left p-4">
+          <h2 className="text-xl md:text-2xl font-medium mb-3">查看附近的 <i className="fab fa-google"></i> 景點</h2>
+          <p className="mb-5 text-baseline md:text-lg">點選附近景點，附近景點可點選呈現在地圖中心</p>
           <Link href="/home">
-            <button className="text-xl max-w-xs py-3 px-5 bg-red-500 text-white font-semibold rounded hover:bg-red-700 transition duration-300">看看別人都去哪</button>
+            <button className="md:text-xl max-w-xs py-2 md:py-3 px-4 md:px-5 bg-red-500
+             text-white font-medium  hover:bg-red-700 transition duration-300 rounded-full text-baseline">馬上新增</button>
           </Link>
         </div>
       </div>
+      
+        {/* Block 4 */}
+      <div className="flex flex-col-reverse md:flex-row gap-4 items-center justify-center bg-white p-4 md:p-10">
+        <div className="w-full md:w-1/3 text-center md:text-end p-4  sm:mr-0 lg:mr-6">
+          <h2 className="text-xl md:text-2xl font-medium mb-3"><i className="fas fa-route"></i> 使用 KML 上傳檔案 </h2>
+          <p className="mb-5 text-baseline md:text-lg">規劃 500 公尺內的路徑，查看景點之間的行進方式</p>
+          <Link href="/home">
+            <button className="md:text-xl max-w-xs py-2 md:py-3 px-4 md:px-5 bg-blue-500 text-white font-medium rounded-full hover:bg-blue-700 transition duration-300 text-baseline">瀏覽地圖</button>
+          </Link>
+        </div>
+        <div className="flex justify-center md:justify-end items-center" >
+                <div className="flex justify-center md:justify-end w-80 h-90">
+          <LazyLoadImage src="/images/kml_show.gif" alt="Scene Image" 
+                        className="rounded-2xl shadow-2xl"
+                        effect="blur" />
+              </div>
+        </div>
+      </div>
+  </div>
     </div>
   );
 };
