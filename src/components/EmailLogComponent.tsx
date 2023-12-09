@@ -5,6 +5,8 @@ import { Auth, User, createUserWithEmailAndPassword, signInWithEmailAndPassword,
 import firebase from '../utils/firebase'; 
 import { LoginMethod } from '../LoginMethod';
 import { useAuth } from '../context/AuthContext';
+import { SignInButton, SignUpButton } from "@clerk/nextjs";
+import { SignOutButton } from "@clerk/nextjs";
 
 import Modal from './Modal';
 // import { useDispatch } from 'react-redux';
@@ -28,6 +30,7 @@ const EmailLogComponent  = () => {
       await signUpWithEmail(email, password);
       setLoginMethod(LoginMethod.Email);
       setErrorMsg('');
+      // console.log("註冊成功，使用者 ID 是：",user.uid);
       // console.log("註冊成功，使用者 ID 是：",user.uid);
     } catch (error) {
       console.log("註冊失敗", error);
@@ -66,7 +69,7 @@ const EmailLogComponent  = () => {
   };
 
   return (
-    <div className="mb-3 lg:mb-0">
+    <div className="mb-3 md:mb-0 lg:mb-0">
     {user ? (
         <button className= "text-black p-2 rounded" onClick={handleSignOut}>登出</button>
       ) : (
@@ -97,10 +100,31 @@ const EmailLogComponent  = () => {
             )}
 
             <div className="mt-4 flex gap-2">
-              <button className="bg-green-400 text-blue-500 p-2 px-3 rounded" onClick={handleSignUp}>註冊</button>
-              <button className="bg-blue-400 text-white p-2 px-3 rounded" onClick={handleSignIn}>登入</button>
+              <button className="bg-amber-700 text-white p-2 px-3 rounded" onClick={handleSignUp}><i className="fas mr-1 fa-user-plus"></i>註冊</button>
+              <button className="bg-amber-500 text-black p-2 px-3 rounded" onClick={handleSignIn}>登入</button>
               <button className="bg-gray-300 text-black p-2 rounded " onClick={fillDemoCredentials}>
                 Demo Account
+              </button>
+            </div>
+            <hr className="mt-4 mb-4"></hr>
+            <div className="flex justify-center items-center space-x-3 space-y-3 mb-6">
+              <i className="fa-brands fa-2xl fa-ethereum mt-2.5"></i>
+              <i className="fa-brands fa-lg fa-discord m-0"></i>
+              <i className="fa-brands fa-lg fa-github m-0"></i>
+              <i className="fa-brands fa-lg fa-facebook m-0"></i>
+              <i className="fa-brands fa-lg fa-microsoft m-0"></i>
+              <i className="fa-brands fa-lg fa-line m-0 ml-[-10px]"></i>
+              <i className="fa-brands fa-lg fa-tiktok m-0"></i>
+              <i className="fa-solid fa-lg fa-n"></i>
+            </div>
+            <div className="flex justify-center items-center mt-4 gap-2">
+              <button title="clerk-sign-up" className="bg-red-500 flex-1 flex justify-center items-center text-white-500 p-2 px-3 rounded" >
+              <i className="fa-solid fa-user-ninja mr-1"><span className="p-2">其他</span></i>
+                <SignUpButton />
+              </button>
+              <button title="clerk-sign-in" className="bg-black flex-1 flex justify-center items-center text-white p-2 px-3 rounded">
+              <i className="fa-solid fa-user-ninja mr-1"><span className="p-2">其他</span></i>
+                <SignInButton />
               </button>
             </div>
           </div>

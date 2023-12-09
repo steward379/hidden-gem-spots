@@ -88,21 +88,19 @@ const Navbar: React.FC = () => {
                   </div>
                 </>
               ) : (
-                <div className={`mt-4 sm:mt-0 ${isMenuOpen ? 'flex' : 'hidden'} sm:flex flex flex-col justify-center items-center  sm:flex-row`}>
+                <div className={`mt-4 sm:mt-0 ${isMenuOpen ? 'flex' : 'hidden'} sm:flex flex flex-col justify-center items-center sm:flex-row lg:mr-10`}>
                   <EmailLogComponent />
                   <GoogleLogComponent />
                   {/* <SignInWithMetamaskButton /> */}
-                  <div className="flex items-center mt-3 lg:mt-0 lg:ml-3">
+                  {/* <div className="flex items-center mt-3 lg:mt-0 lg:ml-3">
                   <SignInButton />
                   </div>
                   <div className="flex items-center mt-3 lg:mt-0 lg:ml-3">
                   <SignOutButton />
-                  </div>
+                  </div> */}
                 </div>
               )}
             </div>
-            
-            
           </div>
           {/* )} */}
         </div>
