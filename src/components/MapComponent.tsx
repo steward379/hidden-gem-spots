@@ -383,7 +383,7 @@ const MapComponent = ({
         <div class="coordinates-container p-2">
           <span id="coords-${place.id}">${formatCoordinates(place.coordinates.lat, place.coordinates.lng)}</span>
         </div>
-        ${isDragModeEnabled ?
+        ${isPublishing ?
         `<button id="add-to-publish-${place.id}" class="mt-2 bg-green-500 text-wh
         ite py-2 px-3 rounded hover:bg-green-600 focus:outline-none  text-white">
           加入發佈區
@@ -391,7 +391,7 @@ const MapComponent = ({
         }
         </div>`
 
-        if (isDragModeEnabled) {
+        if (isPublishing) {
           const addToPublishButton = popupElement.querySelector(`#add-to-publish-${place.id}`);
           addToPublishButton.addEventListener('click', () => {
             onAddToPublish(place);
