@@ -7,7 +7,7 @@ import 'react-lazy-load-image-component/src/effects/blur.css';
 
 import Link from 'next/link';
 import GlobeComponent from "../components/animation/GlobeComponent";
-import RainbowButtonModule from '@/src/styles/RainbowButton.module.css';
+import RainbowButtonModule from '@/src/styles/rainbowButton.module.css';
 
 export default function MintPage() {
   const [message, setMessage] = useState("")
