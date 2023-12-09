@@ -61,8 +61,11 @@ const MapDemoPage: React.FC = () => {
   const handleFileSelected = (selectedFile) => {
     setFile(selectedFile);
   };
-  const handleUploadClick = async () => {
-    confirm("確定要匯入嗎？")
+  const handleUploadClick =  () => {
+      setShowImportConfirm(true);
+  };
+
+  const confirmUpload = async () => {
     if (file) {
       setIsProcessing(true);
       try {
@@ -114,6 +117,7 @@ const MapDemoPage: React.FC = () => {
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showImportConfirm, setShowImportConfirm] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -553,7 +557,7 @@ const MapDemoPage: React.FC = () => {
       <div className="relative md:overflow-x-visible lg:overflow-x-visible md:overflow-y-auto
         lg:w-4/7 md:w-1/2 w-full lg:mb-10 lg:mt-10 md:mt-5 mt-7 lg:mr-10 md:mr-5 
          bg-white shadow rounded pb-5">
-       <div className="sticky top-0 bg-white shadow-lg z-50 flex items-center py-2 pl-3 space-x-3">
+       <div className="sticky top-0 bg-white shadow-lg z-10 flex items-center py-2 pl-3 space-x-3">
 
           <div className="flex">
              <button title="rainbow-route-btn" className="flex items-center space-x-1">
@@ -1133,6 +1137,13 @@ const MapDemoPage: React.FC = () => {
       </>
     )}
     </div>
+    <AlertModal 
+      isOpen={showImportConfirm}
+      onClose={() => setShowImportConfirm(false)}
+      onConfirm={confirmUpload}
+      message="您確定要匯入嗎？"
+      showConfirmButton={true}
+    />
     <AlertModal 
       isOpen={showDeleteConfirm}
       onClose={() => setShowDeleteConfirm(false)}
