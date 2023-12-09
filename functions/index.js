@@ -24,7 +24,7 @@ exports.addNewMapNotification = functions.firestore
         const mapId = context.params.mapId;
 
         // 您可以在這裡發送通知、更新統計數據等
-        console.log(`New map published by user ${userId}: ${mapId}`, newMap);
+        // console.log(`New map published by user ${userId}: ${mapId}`, newMap);
 
         // 假設您有一個全域通知集合
         const notificationRef = admin.firestore().collection('globalNotifications');

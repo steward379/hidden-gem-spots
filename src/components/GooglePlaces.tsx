@@ -39,7 +39,7 @@ const GooglePlaces = ({ latitude, longitude, isFetchingAPI = false,
           }
 
           try {
-            console.log('fetching');
+            // console.log('fetching');
 
             const response = await fetch(`/api/googlePlaces?latitude=${lat}&longitude=${lng}`);
             const data = await response.json();
