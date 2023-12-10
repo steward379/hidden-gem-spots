@@ -7,6 +7,11 @@ import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/blur.css';
 import RainbowButtonModule from '@/src/styles/rainbowButton.module.css';
 
+
+import QuillEditor from '@/src/components/QuillEditor';
+// import SlateEditor from '@/src/components/SlateEditor';
+// import { Editor } from '@tinymce/tinymce-react';
+
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 // react modules
@@ -35,16 +40,20 @@ import { selectPlacesRedux } from '../store/slices/placesSlice'
 import { categoryMapping } from '../constants'
 import { formatCoordinates, decimalToDms } from '../utils/decimalCoordinates';
 
+
 const MapComponentWithNoSSR = dynamic(
     () => import('../components/MapComponent'),
     { ssr: false }
 );
-const ReactQuill = dynamic(() => import('react-quill'), {
-    ssr: false,
-    loading: () => <p>Loading...</p>,
-});
+
+// const ReactQuill = dynamic(() => import('react-quill'), {
+//     ssr: false,
+//     loading: () => <p>Loading...</p>,
+// });
+
 const PublishMapPage = () => {
 
+  
   const [activeTab, setActiveTab] = useState('places'); 
 
   const { user } = useAuth();
@@ -90,6 +99,8 @@ const PublishMapPage = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [hideRoutingMode, setHideRoutingMode] = useState(false);
 
+  const [isTyping, setIsTyping] = useState(false);
+
   const showIsRoutingMode = () => {
     setHideRoutingMode(false);
   };
@@ -126,7 +137,9 @@ const PublishMapPage = () => {
   const currentPlaces = filteredPlaces.slice(indexOfFirstItem, indexOfLastItem);
 
   const handleMarkerClick = (place) => {
-    setSelectedPlace(place);
+    // if ( selectedPlace == null||!selectedPlace || selectedPlace.id !== place.id) {
+      setSelectedPlace(place);
+    // }  
   };
 
 
@@ -188,6 +201,7 @@ const PublishMapPage = () => {
     // setPublishedPlaces([]);
     Router.push('/map/');
   };
+
   const handleConfirmPublish = async () => {
     if (!title.trim() || !content.trim() || publishedPlaces.length === 0 ) {
       showAlert('請確保已正確填寫標題跟內容，並且至少有一個發佈景點加入發佈區。');
@@ -266,8 +280,11 @@ const PublishMapPage = () => {
     
   };
   const handleSelectPlace = (place) => {
-    setSelectedPlace(place); 
+    if (selectedPlace === null || !selectedPlace || selectedPlace.id !== place.id ) {
+      setSelectedPlace(place);
+    }
   };
+  
   const handleRemoveFromPublish = (placeId) => {
     setPublishedPlaces(prev => prev.filter(p => p.id !== placeId));
   };
@@ -312,6 +329,7 @@ const PublishMapPage = () => {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, selectedCategory]);
+  
 
   return (
     <DndProvider backend={HTML5Backend}>
@@ -327,13 +345,14 @@ const PublishMapPage = () => {
             publishedPlaces={publishedPlaces}
             onMarkerClick={setSelectedPlace}
             selectedPlace={selectedPlace}
+            isTyping = {isTyping}
           />
         </div>
 
         <div className="relative md:overflow-x-visible lg:overflow-x-visible md:overflow-y-auto
           lg:w-4/7 md:w-1/2 w-full lg:mb-10 lg:mt-10 md:mt-5 mt-7 lg:mr-10 md:mr-5 
          bg-white shadow rounded ">
-          <div className="sticky top-0 bg-white shadow-lg z-50 flex items-center space-x-3 px-3 py-2">
+          <div className="sticky top-0 bg-white shadow-lg z-10 flex items-center space-x-3 px-3 py-2">
 
             <button
               className="p-2 rounded-3xl  flex-column justify-center items-center border-2 border-dashed border-gray-300 cursor-pointer hover:border-gray-500 hover:bg-gray-200"
@@ -378,7 +397,7 @@ const PublishMapPage = () => {
               <label htmlFor="toggle-tab" className="flex items-center cursor-pointer">
                 <div className="relative">
                   <input type="checkbox" id="toggle-tab" className="sr-only"
-                        onChange={() => setActiveTab(activeTab === 'places' ? 'content' : 'places')}
+                           onChange={() => setActiveTab(activeTab === 'places' ? 'content' : 'places')}
                         checked={activeTab === 'content'} />
                   <div className={`flex items-center justify-${activeTab === 'content' ? 'start' : 'end'} w-16 h-9 rounded-full transition-colors ${activeTab === 'content' ? 'bg-yellow-500' : 'bg-blue-300'}`}>
                     <i className={`fas ${activeTab === 'content' ? 'fa-mountain-sun text-stone-500 pl-2' : 'fa-pencil text-gray-900 pr-2.5'} `} ></i>
@@ -488,6 +507,8 @@ const PublishMapPage = () => {
                           type="text"
                           value={searchTerm}
                           onChange={(e) => setSearchTerm(e.target.value)}
+                          onFocus={() => setIsTyping(true)}
+                          onBlur={() => setIsTyping(false)}
                           placeholder="搜尋景點名稱或標籤"
                           className="p-2 w-full border border-gray-300 rounded-md text-black focus:ring-blue-500 focus:border-blue-500"
                         />
@@ -628,13 +649,25 @@ const PublishMapPage = () => {
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
+                  onFocus={() => setIsTyping(true)}
+                  onBlur={() => setIsTyping(false)}
                   placeholder="地圖標題"
                   className=" mb-5 p-2 w-full border rounded-xl text-black focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                 />
                 <div className="font-medium text-lg mb-3"> 內容 </div>
-                <div className="bg-white text-black z-100 overflow-visible rounded-3xl">
+
+                <QuillEditor content={content} onContentChange={setContent}    
+                // @ts-ignore
+                onFocus={() => setIsTyping(true)}
+                onBlur={() => setIsTyping(false)} />
+
+
+                {/* <div className="bg-white text-black  rounded-xl border-2">
+          
                   <ReactQuill theme="snow" value={content} onChange={handleContentChange} />
+           
                 </div>
+                
                 <button
                   className={`mb-5 mt-5 p-3 flex justify-center items-center rounded-lg 
               cursor-pointer ${showSourceCode ? 'hover:bg-red-100 bg-gray-200' : 'hover:bg-green-200 bg-green-100'}
@@ -652,13 +685,16 @@ const PublishMapPage = () => {
                     // readOnly // 如果不希望用戶在這裡編輯，可以設為只讀
                     className="mb-2 p-2 w-full border text-gray-500 rounded-xl"
                   />
-                )}
+                )} */}
+
                 <div className="font-medium text-lg mb-3"> 文章標籤 </div>
                 
                 <input 
                   type="text" 
                   placeholder="標籤 (用逗號分隔)" 
                   value={articleTags} 
+                  onFocus={() => setIsTyping(true)}
+                  onBlur={() => setIsTyping(false)}
                   onChange={(e) => setArticleTags(e.target.value)} 
                   className="p-2 w-full mb-2 border  text-black rounded-xl"
                 />

@@ -63,7 +63,8 @@ const MapComponent = ({
   isFreeMode = false,
   isDragModeEnabled=false,
   onRouteCalculated = undefined,
-  onModeChange = undefined
+  onModeChange = undefined,
+  isTyping = false,
 }) => {
 
   // zustand
@@ -314,13 +315,13 @@ const MapComponent = ({
 
   useEffect(() => {
 
-    if (isPublishing) {
+    if (isPublishing && !isTyping) {
       markers.forEach(marker => {
         const isPublished = publishedPlaces.some(place => place.id === marker.options.id);
         marker.setIcon(isPublished ? customGoogleIcon : defaultIcon);
       });
     }
-  }, [publishedPlaces, markers, defaultIcon, customGoogleIcon, isPublishing]);
+  }, [publishedPlaces, markers, defaultIcon, customGoogleIcon, isPublishing, isTyping]);
 
 
   // 'places' rendering
@@ -923,7 +924,7 @@ const MapComponent = ({
 
   //  search marker
   useEffect(() => {
-    if (map && selectedPlace) {
+    if (map && selectedPlace && !isTyping) {
       // 將地圖視圖中心移動到選中地點
       // map.setView(new L.LatLng(selectedPlace.coordinates.lat, selectedPlace.coordinates.lng), 13);
       // 如果有與 selectedPlace 相關的 marker，打開它的彈出窗口
@@ -935,7 +936,7 @@ const MapComponent = ({
         relevantMarker.openPopup();
       }
     }
-  }, [map, selectedPlace, markers]);
+  }, [map, selectedPlace, markers, isTyping]);
 
   // useEffect(() => {
   //   if(isLoading) {
