@@ -609,7 +609,7 @@ const PublishedMapDetail = () => {
                 className="relative lg:overflow-auto md:overflow-auto lg:w-1/3 md:w-1/2 w-full lg:mb-10
       lg:mt-10 md:mt-5 mt-7 lg:mr-10 md:mr-5  bg-white shadow rounded"
             >
-                <div className="sticky top-0 bg-white shadow-lg z-50 flex items-center py-2 pl-3 space-x-3">
+                <div className="sticky top-0 bg-white shadow-lg z-10 flex items-center py-2 pl-3 space-x-3">
                     <div className="flex items-center justify-center space-x-3 py-2">
                         <button
                             className={`rounded-full  ${showMapContent ? 'bg-gray-200' : 'bg-red-100'} p-3 `}
@@ -1067,9 +1067,9 @@ const PublishedMapDetail = () => {
                                                                 }
                                                             >
                                                                 {place.isLiked ? (
-                                                                    <i className="fas fa-heart text-red-500"></i>
+                                                                    <i className="fa-solid fa-heart text-red-500"></i>
                                                                 ) : (
-                                                                    <i className="far fa-heart"></i>
+                                                                    <i className="fa-regular fa-heart "></i>
                                                                 )}
                                                             </button>
                                                         </div>

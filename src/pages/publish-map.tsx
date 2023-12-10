@@ -349,10 +349,10 @@ const PublishMapPage = () => {
           />
         </div>
 
-        <div className="relative md:overflow-x-visible lg:overflow-x-visible md:overflow-y-auto
+        <div className="relative md:overflow-y-auto overflow-hidden 
           lg:w-4/7 md:w-1/2 w-full lg:mb-10 lg:mt-10 md:mt-5 mt-7 lg:mr-10 md:mr-5 
          bg-white shadow rounded ">
-          <div className="sticky top-0 bg-white shadow-lg z-10 flex items-center space-x-3 px-3 py-2">
+          <div className="sticky top-0 bg-white shadow-lg z-10 flex items-center space-x-3 px-3 py-2 overflow-hidden ">
 
             <button
               className="p-2 rounded-3xl  flex-column justify-center items-center border-2 border-dashed border-gray-300 cursor-pointer hover:border-gray-500 hover:bg-gray-200"
