@@ -9,7 +9,7 @@ const ReactQuill = dynamic(() => import('react-quill'), {
 });
 
 
-const QuillEditor = ({ content, onContentChange }) => {
+const QuillEditor = ({ content, onContentChange, onFocus, onBlur }) => {
     const [showSourceCode, setShowSourceCode] = useState(false);
   
     const handleContentChange = (content) => {
@@ -19,7 +19,13 @@ const QuillEditor = ({ content, onContentChange }) => {
     return (
       <>
         <div className="bg-white text-black  rounded-xl border-2">
-          <ReactQuill theme="snow" value={content} onChange={handleContentChange} />
+          <ReactQuill 
+            theme="snow" 
+            value={content} 
+            onFocus={onFocus}
+            onBlur={onBlur}
+            onChange={handleContentChange} 
+          />
         </div>
         <button
           className={`mb-5 mt-5 p-3 flex justify-center items-center rounded-lg 
@@ -34,6 +40,9 @@ const QuillEditor = ({ content, onContentChange }) => {
           <textarea
             title="地圖內容原始碼"
             value={content}
+            onFocus={onFocus}
+            onBlur={onBlur}
+            
             readOnly // 如果不希望用戶在這裡編輯，可以設為只讀
             className="mb-2 p-2 w-full border text-gray-500 rounded-xl"
           />

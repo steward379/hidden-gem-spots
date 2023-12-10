@@ -656,10 +656,11 @@ const PublishMapPage = () => {
                 />
                 <div className="font-medium text-lg mb-3"> 內容 </div>
 
-                <QuillEditor content={content} onContentChange={setContent}    
-                // @ts-ignore
-                onFocus={() => setIsTyping(true)}
-                onBlur={() => setIsTyping(false)} />
+                <QuillEditor 
+                  content={content} 
+                  onContentChange={setContent}    
+                  onFocus={() => setIsTyping(true)}
+                  onBlur={() => setIsTyping(false)} />
 
 
                 {/* <div className="bg-white text-black  rounded-xl border-2">
