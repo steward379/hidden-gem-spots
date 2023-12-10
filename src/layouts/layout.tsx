@@ -5,10 +5,12 @@ import { askNotificationPermission } from '../utils/notification';
 import useAuthListeners from '../hooks/useAuthListeners';
 import Footer from '../components/Footer'; 
 
-import { Inter } from 'next/font/google'
+// import { Inter } from 'next/font/google'
 
 // If loading a variable font, you don't need to specify the font weight
-const inter = Inter({ subsets: ['latin'] })
+// const inter = Inter({ subsets: ['latin'] })
+
+// ${inter.className}
 
 const Layout = ({ children }) => {
   const { user, loaded } = useAuth();
@@ -23,7 +25,7 @@ const Layout = ({ children }) => {
   return (
     <>
       <Navbar />
-      <main className={` ${inter.className} mt-20`}>{children}</main>
+      <main className={`  mt-20`}>{children}</main>
       <Footer /> 
     </>
   );

@@ -312,7 +312,6 @@ const MapComponent = ({
     tempMarker.on('dragend', () => handleDragEnd(place, tempMarker, originalMarker));
   }, [map, customFreeIcon, handleDragEnd]);
 
-
   useEffect(() => {
 
     if (isPublishing && !isTyping) {
@@ -366,6 +365,8 @@ const MapComponent = ({
           <div class="flex items-center justify-center mt-2 ">
             <div class="like-section flex items-center justify-center mr-2">
               ${allowLikes ? `<button class="like-button" data-place-id="${place.id}">
+
+              
                 <i class="fas fa-heart text-lg text-red-300 hover:text-red-500"></i>
                 <span class="like-count ml-2"> ${place.likes} 枚</span>
               </button>` : ''}
