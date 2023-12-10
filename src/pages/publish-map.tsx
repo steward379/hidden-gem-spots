@@ -12,6 +12,11 @@ import QuillEditor from '@/src/components/QuillEditor';
 // import SlateEditor from '@/src/components/SlateEditor';
 // import { Editor } from '@tinymce/tinymce-react';
 
+
+import QuillEditor from '@/src/components/QuillEditor';
+// import SlateEditor from '@/src/components/SlateEditor';
+// import { Editor } from '@tinymce/tinymce-react';
+
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 // react modules
@@ -41,6 +46,7 @@ import { categoryMapping } from '../constants'
 import { formatCoordinates, decimalToDms } from '../utils/decimalCoordinates';
 
 
+
 const MapComponentWithNoSSR = dynamic(
     () => import('../components/MapComponent'),
     { ssr: false }
@@ -51,7 +57,15 @@ const MapComponentWithNoSSR = dynamic(
 //     loading: () => <p>Loading...</p>,
 // });
 
+
+// const ReactQuill = dynamic(() => import('react-quill'), {
+//     ssr: false,
+//     loading: () => <p>Loading...</p>,
+// });
+
 const PublishMapPage = () => {
+
+  
 
   
   const [activeTab, setActiveTab] = useState('places'); 
@@ -101,6 +115,8 @@ const PublishMapPage = () => {
 
   const [isTyping, setIsTyping] = useState(false);
 
+  const [isTyping, setIsTyping] = useState(false);
+
   const showIsRoutingMode = () => {
     setHideRoutingMode(false);
   };
@@ -137,6 +153,9 @@ const PublishMapPage = () => {
   const currentPlaces = filteredPlaces.slice(indexOfFirstItem, indexOfLastItem);
 
   const handleMarkerClick = (place) => {
+    // if ( selectedPlace == null||!selectedPlace || selectedPlace.id !== place.id) {
+      setSelectedPlace(place);
+    // }  
     // if ( selectedPlace == null||!selectedPlace || selectedPlace.id !== place.id) {
       setSelectedPlace(place);
     // }  
@@ -201,6 +220,7 @@ const PublishMapPage = () => {
     // setPublishedPlaces([]);
     Router.push('/map/');
   };
+
 
   const handleConfirmPublish = async () => {
     if (!title.trim() || !content.trim() || publishedPlaces.length === 0 ) {
@@ -283,6 +303,9 @@ const PublishMapPage = () => {
     if (selectedPlace === null || !selectedPlace || selectedPlace.id !== place.id ) {
       setSelectedPlace(place);
     }
+    if (selectedPlace === null || !selectedPlace || selectedPlace.id !== place.id ) {
+      setSelectedPlace(place);
+    }
   };
   
   const handleRemoveFromPublish = (placeId) => {
@@ -346,13 +369,14 @@ const PublishMapPage = () => {
             onMarkerClick={setSelectedPlace}
             selectedPlace={selectedPlace}
             isTyping = {isTyping}
+            isTyping = {isTyping}
           />
         </div>
 
         <div className="relative md:overflow-y-auto overflow-hidden 
           lg:w-4/7 md:w-1/2 w-full lg:mb-10 lg:mt-10 md:mt-5 mt-7 lg:mr-10 md:mr-5 
          bg-white shadow rounded ">
-          <div className="sticky top-0 bg-white shadow-lg z-10 flex items-center space-x-3 px-3 py-2 overflow-hidden ">
+          <div className="sticky top-0 bg-white shadow-lg z-10 flex items-center space-x-3 px-3 py-2">
 
             <button
               className="p-2 rounded-3xl  flex-column justify-center items-center border-2 border-dashed border-gray-300 cursor-pointer hover:border-gray-500 hover:bg-gray-200"
@@ -397,6 +421,7 @@ const PublishMapPage = () => {
               <label htmlFor="toggle-tab" className="flex items-center cursor-pointer">
                 <div className="relative">
                   <input type="checkbox" id="toggle-tab" className="sr-only"
+                           onChange={() => setActiveTab(activeTab === 'places' ? 'content' : 'places')}
                            onChange={() => setActiveTab(activeTab === 'places' ? 'content' : 'places')}
                         checked={activeTab === 'content'} />
                   <div className={`flex items-center justify-${activeTab === 'content' ? 'start' : 'end'} w-16 h-9 rounded-full transition-colors ${activeTab === 'content' ? 'bg-yellow-500' : 'bg-blue-300'}`}>
@@ -694,6 +719,8 @@ const PublishMapPage = () => {
                   type="text" 
                   placeholder="標籤 (用逗號分隔)" 
                   value={articleTags} 
+                  onFocus={() => setIsTyping(true)}
+                  onBlur={() => setIsTyping(false)}
                   onFocus={() => setIsTyping(true)}
                   onBlur={() => setIsTyping(false)}
                   onChange={(e) => setArticleTags(e.target.value)} 
