@@ -13,10 +13,6 @@ import QuillEditor from '@/src/components/QuillEditor';
 // import { Editor } from '@tinymce/tinymce-react';
 
 
-import QuillEditor from '@/src/components/QuillEditor';
-// import SlateEditor from '@/src/components/SlateEditor';
-// import { Editor } from '@tinymce/tinymce-react';
-
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 // react modules
@@ -112,8 +108,6 @@ const PublishMapPage = () => {
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [hideRoutingMode, setHideRoutingMode] = useState(false);
-
-  const [isTyping, setIsTyping] = useState(false);
 
   const [isTyping, setIsTyping] = useState(false);
 
@@ -369,7 +363,6 @@ const PublishMapPage = () => {
             onMarkerClick={setSelectedPlace}
             selectedPlace={selectedPlace}
             isTyping = {isTyping}
-            isTyping = {isTyping}
           />
         </div>
 
@@ -421,7 +414,6 @@ const PublishMapPage = () => {
               <label htmlFor="toggle-tab" className="flex items-center cursor-pointer">
                 <div className="relative">
                   <input type="checkbox" id="toggle-tab" className="sr-only"
-                           onChange={() => setActiveTab(activeTab === 'places' ? 'content' : 'places')}
                            onChange={() => setActiveTab(activeTab === 'places' ? 'content' : 'places')}
                         checked={activeTab === 'content'} />
                   <div className={`flex items-center justify-${activeTab === 'content' ? 'start' : 'end'} w-16 h-9 rounded-full transition-colors ${activeTab === 'content' ? 'bg-yellow-500' : 'bg-blue-300'}`}>
@@ -719,8 +711,6 @@ const PublishMapPage = () => {
                   type="text" 
                   placeholder="標籤 (用逗號分隔)" 
                   value={articleTags} 
-                  onFocus={() => setIsTyping(true)}
-                  onBlur={() => setIsTyping(false)}
                   onFocus={() => setIsTyping(true)}
                   onBlur={() => setIsTyping(false)}
                   onChange={(e) => setArticleTags(e.target.value)} 
