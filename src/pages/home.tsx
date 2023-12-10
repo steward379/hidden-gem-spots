@@ -147,7 +147,7 @@ export default function Home() {
                                 前往你的景點地圖
                             </div>
                         </Link>
-                        <button className={`${RainbowButtonModule.rainbowButton} bg-red-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-600 my-2`}
+                        <button title="mamory-nft" className={`${RainbowButtonModule.rainbowButton} bg-red-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-600 my-2`}
                                 style={{ // @ts-ignore 
                                     '--button-width': '200px', '--button-height': '50px', '--button-border-radius': '100px' }}>
                             <Link href="/mintNFT">
