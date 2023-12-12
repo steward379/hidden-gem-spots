@@ -37,7 +37,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
               <meta property="og:description" content="Travel, Note & Discover the hidden gems around you."/>
               <meta property="og:url" content="https://hidden-gem.xyz/" />
               <meta property="og:type" content="website" />
-              <meta property="og:image" content="https://hidden-gem.xyz/og-image.png" />
+              <meta property="og:image" content="https://hidden-gem.xyz/images/og-image.png" />
               <meta property="og:site_name" content="Hidden Gem" />
               <meta property="og:locale" content="zh_TW" />
               {/* 其他需要的標籤 */}
