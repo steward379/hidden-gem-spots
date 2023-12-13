@@ -265,7 +265,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await signOut(auth);
       setUser(null);
       setLoginMethod(LoginMethod.None);
-      router.push('/home'); 
+      router.push('/'); 
     } catch (error) {
       console.error("登出失敗", error);
     }
@@ -321,8 +321,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       } else {
         setUser(null);
-        if (router.asPath.startsWith("/accounting") || router.asPath.startsWith("/map")) {
-          router.push({ pathname: "/home", query: { message: "請先登入" } });
+        if ((router.asPath.startsWith("/accounting") || router.asPath.startsWith("/publish-map") || router.asPath.startsWith("/map"))  && !router.asPath.startsWith("/home")) {
+          router.push({ pathname: "/", query: { message: "請先登入" } });
         }
       }
 
@@ -331,9 +331,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoaded(true);
     });
 
-    return () => {
-      unsubscribeAuth();
-    };
+    return () => unsubscribeAuth();
   }, [router, clerkUser, getToken]);
 
   if (loading) {

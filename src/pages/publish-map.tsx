@@ -464,7 +464,7 @@ const PublishMapPage = () => {
               </button>
               <div className={`transition-all duration-500 ease-in-out pl-2 pt-2 mb-1 mt-3 ${isCollapsed ?
                 'max-h-0' : 'max-h-36'} overflow-hidden`}>
-                <h1 className="mb-2 text-xl font-bold text-gray-800"> {user.name}即將發佈地圖</h1>
+                <h1 className="mb-2 text-xl font-bold text-gray-800"> {user?.name}即將發佈地圖</h1>
                 <div className="text-gray-600 mb-2">
                   新增你想發佈的景點群。你也可開啟拖曳模式，點擊查看後產生 <i className="fas fa-star"></i> 後稍微拖曳就能加入發佈地點。
                   並輸入本地圖的標題、內容、上傳封面照片(可選)。

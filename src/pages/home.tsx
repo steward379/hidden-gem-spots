@@ -35,11 +35,15 @@ export default function Home() {
     };
 
     useEffect(() => {
-        if (!user && router.query.message) {
+        if (!user && router.asPath !== "/home" && (router.asPath.startsWith("/accounting") || router.asPath.startsWith("/map")  || router.asPath.startsWith("/publish-map"))) {
+            router.push({ pathname: "/index", query: { message: "請先登入" } });
+          }
+
+        if (router.query.message) {
           setIsAlertOpen(true);
           setAlertMessage(router.query.message as string);
         }
-      }, [user, router.query.message]);
+    }, [user, router]);
 
     const fetchMaps = async (tab: string, startAfterDoc?: any) => {
         let queryRef;
@@ -143,7 +147,8 @@ export default function Home() {
                             定義你的私房景點<br></br>分享你的探險故事
                         </p>
                         <Link href="/map">
-                            <div className="cursor-pointer lg:text-lg text-xs px-8 py-2 bg-teal-100 hover:bg-rose-700 hover:text-white rounded-3xl shadow transition-btn text-blue-600 mb-4">
+                            <div className="cursor-pointer lg:text-lg text-normal px-8 py-2 bg-teal-100 hover:bg-rose-700 hover:text-white 
+                                            rounded-3xl shadow transition-btn text-blue-600 mb-4">
                                 前往你的景點地圖
                             </div>
                         </Link>
