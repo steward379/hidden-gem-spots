@@ -3,7 +3,7 @@ import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
 import { askNotificationPermission } from '../utils/notification';
 import useAuthListeners from '../hooks/useAuthListeners';
-import Footer from '../components/Footer'; 
+
 
 // import { Inter } from 'next/font/google'
 
@@ -26,7 +26,6 @@ const Layout = ({ children }) => {
     <>
       <Navbar />
       <main className={`  mt-20`}>{children}</main>
-      <Footer /> 
     </>
   );
 };

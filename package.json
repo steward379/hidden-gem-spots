@@ -1,7 +1,7 @@
 {
-  "name": "accounting-tool",
-  "version": "0.1.0",
-  "private": true,
+  "name": "hidden-gem",
+  "version": "3.1.0",
+  "private": false,
   "scripts": {
     "dev": "next dev",
     "build": "next build",

@@ -118,12 +118,12 @@ const EmailLogComponent  = () => {
               <i className="fa-solid fa-lg fa-n"></i>
             </div>
             <div className="flex justify-center items-center mt-4 gap-2">
-              <button title="clerk-sign-up" className="bg-red-500 flex-1 flex justify-center items-center text-white-500 p-2 px-3 rounded" >
-              <i className="fa-solid fa-user-ninja mr-1"><span className="p-2">其他</span></i>
+              <button title="clerk-sign-up" className="bg-red-500 flex-1 flex justify-center items-center text-white p-2 rounded" >
+              <i className="fa-solid fa-user-ninja mr-1"><span className="p-2">註冊</span></i>
                 <SignUpButton />
               </button>
-              <button title="clerk-sign-in" className="bg-black flex-1 flex justify-center items-center text-white p-2 px-3 rounded">
-              <i className="fa-solid fa-user-ninja mr-1"><span className="p-2">其他</span></i>
+              <button title="clerk-sign-in" className="bg-black flex-1 flex justify-center items-center text-white p-2 rounded">
+              <i className="fa-solid fa-user-ninja mr-1"><span className="p-2">登入</span></i>
                 <SignInButton />
               </button>
             </div>

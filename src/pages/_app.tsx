@@ -40,7 +40,6 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
               <meta property="og:image" content="https://hidden-gem.xyz/images/og-image.png" />
               <meta property="og:site_name" content="Hidden Gem" />
               <meta property="og:locale" content="zh_TW" />
-              {/* 其他需要的標籤 */}
             </Head>
             <Layout>
               <Component {...pageProps} />
