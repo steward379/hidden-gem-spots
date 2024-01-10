@@ -671,7 +671,7 @@ const MapDemoPage: React.FC = () => {
               想分享給他人？沒問題！至少發佈一個景點，點選發佈地圖，選擇你的景點，寫下地圖標題跟內容分享吧！ ❤️
           </div>
         </div>
-        <div> {isAddingMarker && !newMarker && ( <div className="absolute top-[80px] bg-green-200 shadow-lg  p-2 rounded-2xl  right-[70px] max-w-[120px] text-sm text-black-600"> 🤌 在地圖上點選位置以新增景點</div>)} </div>
+        <div> {isAddingMarker && !newMarker && ( <div className="absolute top-[80px] bg-green-200 shadow-lg mt-6 p-2 rounded-2xl right-[70px] max-w-[120px] text-sm text-black-600"> 🤌 在地圖上點選位置以新增景點</div>)} </div>
         <div> {isRoutingMode && !selectedPlace && ( <div className="absolute top-[80px] bg-green-200 shadow-lg  p-2 rounded-2xl  right-[70px] max-w-[120px] text-sm text-black-600"> 👈選擇第一個景點，接著選擇第二個，會自動連線，以此類推</div>)} </div>
         {activeTab === 'places' && (
           <>
