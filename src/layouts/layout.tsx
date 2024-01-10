@@ -25,7 +25,7 @@ const Layout = ({ children }) => {
   return (
     <>
       <Navbar />
-      <main className={`  mt-20`}>{children}</main>
+      <main className={`mt-20`}>{children}</main>
     </>
   );
 };

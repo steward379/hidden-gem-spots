@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@blocto/sdk": "^0.9.0-beta.2",
     "@clerk/clerk-react": "^4.28.2",
     "@clerk/nextjs": "^4.27.3",
     "@clerk/themes": "^1.7.9",
@@ -55,7 +56,7 @@
     "tailwindcss": "3.3.3",
     "three": "^0.158.0",
     "typescript": "5.2.2",
-    "web3": "^1.2.0",
+    "web3": "^1.10.3",
     "web3-utils": "^4.1.0",
     "xml2js": "^0.6.2",
     "zustand": "^4.4.7"
