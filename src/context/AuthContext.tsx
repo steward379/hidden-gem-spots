@@ -29,7 +29,7 @@ const AuthContext = createContext<{
   user: IUser | null;
   loading: boolean;
   loginMethod: LoginMethod;
-  // loaded: boolean;
+  loaded: boolean;
   setLoginMethod: (method: LoginMethod) => void;
   loginWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string) => Promise<void>;
@@ -49,7 +49,7 @@ const AuthContext = createContext<{
   signUpWithEmail: async () => {},
   loginWithGoogle: async () => {},
   logout: async () => {},
-  // loaded: false,
+  loaded: false,
   updateUserProfile: async () => {},
   showLoginAlert: false,
   setShowLoginAlert: () => {},
@@ -63,7 +63,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   
   const [loginMethod, setLoginMethod] = useState<LoginMethod>(LoginMethod.None);
-  // const [loaded, setLoaded] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   const router = useRouter();
 
   // const auth = getAuth();
@@ -356,7 +356,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       setLoading(false); 
 
-      // setLoaded(true);
+      setLoaded(true);
     });
 
     return () => unsubscribeAuth();
@@ -380,10 +380,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, loginMethod, showLoginAlert, setShowLoginAlert, hasNavigated, setHasNavigated,
+    <AuthContext.Provider value={{ user, loading, loaded, loginMethod, showLoginAlert, setShowLoginAlert, hasNavigated, setHasNavigated, 
     setLoginMethod, loginWithEmail, signUpWithEmail, loginWithGoogle, logout,
     updateUserProfile}}>
-      {children}
+      {loaded && children}
     </AuthContext.Provider>
   );
 };
