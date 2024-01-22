@@ -13,6 +13,8 @@ import { Metadata } from "next";
 import Script from "next/script";
 import Head from 'next/head';
 
+import { GlobeProvider } from '../context/GlobeContext';
+
 export const metadata: Metadata = {
   title: "Hidden Gem Spot 旅圓",
   description:
@@ -30,22 +32,23 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
         >
         <AuthProvider>
           <LastUpdateProvider>
-            <Head>
-                <title>Hidden Gem Spot 旅圓</title>
-                <meta name="description" content="Hidden Gem 旅圓，讓你記錄每一趟生活冒險。" />
-                <meta property="og:title" content="Hidden Gem 旅圓" />
-                <meta property="og:description" content="Travel, Note & Discover the hidden gems around you."/>
-                <meta property="og:url" content="https://hidden-gem.xyz/" />
-                <meta property="og:type" content="website" />
-                <meta property="og:image" content="https://hidden-gem.xyz/images/og-image.png" />
-                <meta property="og:site_name" content="Hidden Gem" />
-                <meta property="og:locale" content="zh_TW" />
-            </Head>
+            <GlobeProvider>
+              <Head>
+                  <title>Hidden Gem Spot 旅圓</title>
+                  <meta name="description" content="Hidden Gem 旅圓，讓你記錄每一趟生活冒險。" />
+                  <meta property="og:title" content="Hidden Gem 旅圓" />
+                  <meta property="og:description" content="Travel, Note & Discover the hidden gems around you."/>
+                  <meta property="og:url" content="https://hidden-gem.xyz/" />
+                  <meta property="og:type" content="website" />
+                  <meta property="og:image" content="https://hidden-gem.xyz/images/og-image.png" />
+                  <meta property="og:site_name" content="Hidden Gem" />
+                  <meta property="og:locale" content="zh_TW" />
+              </Head>
 
-            <Layout>
-                <Component {...pageProps} />
-            </Layout>  
-            
+              <Layout>
+                  <Component {...pageProps} />
+              </Layout>  
+            </GlobeProvider>
           </LastUpdateProvider>
         </AuthProvider>
       </ClerkProvider>
