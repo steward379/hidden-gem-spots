@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
@@ -8,9 +8,12 @@ import firebaseServices from '../utils/firebase';
 const { db } = firebaseServices;
 
 import GlobeComponent from '../components/animation/GlobeComponent';
+import { useGlobe } from '../context/GlobeContext';
+
 import AlertModal from '../components/AlertModal';
 import MapCard from '../components/MapCard';
 import RainbowButtonModule from '@/src/styles/rainbowButton.module.css'
+
 import { useAuth } from '@/src/context/AuthContext';
 
 const ITEMS_PER_PAGE = 8;
@@ -18,7 +21,7 @@ const INITIAL_PAGES_TO_LOAD = 3; // Load 3 pages initially
 
 export default function Home() {
     const router = useRouter();
-    const { user } = useAuth();
+    const { user, showLoginAlert, setShowLoginAlert } = useAuth();
     const [maps, setMaps] = useState([]);
     const [currentTab, setCurrentTab] = useState('latest'); 
     const [lastVisible, setLastVisible] = useState(null);
@@ -29,21 +32,25 @@ export default function Home() {
     const [isVisible, setIsVisible] = useState(true);
     const [isAlertOpen, setIsAlertOpen] = useState(false);
     const [alertMessage, setAlertMessage] = useState('錯誤');
+    
 
     const handleClick = () => {
         isVisible ? setIsVisible(false) : setIsVisible(true);
     };
 
     useEffect(() => {
-        if (!user && router.asPath !== "/home" && (router.asPath.startsWith("/accounting") || router.asPath.startsWith("/map")  || router.asPath.startsWith("/publish-map"))) {
-            router.push({ pathname: "/index", query: { message: "請先登入" } });
-          }
-
-        if (router.query.message) {
-          setIsAlertOpen(true);
-          setAlertMessage(router.query.message as string);
+        if (showLoginAlert) {
+            setIsAlertOpen(true);
+            setAlertMessage("請先登入");
         }
-    }, [user, router]);
+    }, [showLoginAlert]);    
+
+    const handleClose = () => {
+        setIsAlertOpen(false);
+        setAlertMessage('');
+        setShowLoginAlert(false); 
+        // router.replace('/home', undefined, { shallow: true });
+    };
 
     const fetchMaps = async (tab: string, startAfterDoc?: any) => {
         let queryRef;
@@ -143,16 +150,30 @@ export default function Home() {
                              className="object-cover mix-blend-color-burn" />
                         <LazyLoadImage effects="blur" src="/images/hidden_gem.png" alt="logo Image" width="300" height="300" 
                             className="object-cover mix-blend-color-burn" />
-                        <p className="mt-5 px-10 py-3 rounded-3xl text-sm lg:text-lg mb-6 text-teal-300 bg-gray-600 opacity-90">
-                            定義你的私房景點<br></br>分享你的探險故事
-                        </p>
-                        <Link href="/map">
-                            <div className="cursor-pointer lg:text-lg text-normal px-8 py-2 bg-teal-100 hover:bg-rose-700 hover:text-white 
-                                            rounded-3xl shadow transition-btn text-blue-600 mb-4">
-                                前往你的景點地圖
+                        {user ? (
+                            <Link href="/map">
+                            <div className="mt-5 text-teal-800 opacity-90 p-3 border-rose-600 border-2 rounded-3xl">
+                                <div className="bg-teal-100 bg-opacity-60 rounded-xl flex flex-col items-center justify-center px-10 py-3 text-sm lg:text-lg mb-6  ">
+                                    <p>定義你的私房景點</p>
+                                    <p>分享你的探險故事</p>
+                                </div>
+                                <div className="cursor-pointer lg:text-lg text-normal px-8 py-2 bg-rose-500 hover:bg-rose-700 hover:text-white rounded-3xl shadow transition-btn text-white mb-4">
+                                    前往你的景點地圖
+                                </div>
                             </div>
-                        </Link>
-                        <button title="mamory-nft" className={`${RainbowButtonModule.rainbowButton} bg-red-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-600 my-2`}
+                            </Link>
+                        ) : (
+                            <div className="mt-5 text-teal-800 opacity-90 p-3 border-rose-600 border-2 rounded-3xl">
+                                <div className="bg-teal-100 bg-opacity-60 rounded-xl flex flex-col items-center justify-center px-10 py-3 text-sm lg:text-lg mb-6  ">
+                                    <p>定義你的私房景點</p>
+                                    <p>分享你的探險故事</p>
+                                </div>
+                                <div className="cursor-pointer lg:text-lg text-normal px-8 py-2 bg-rose-500 hover:bg-rose-700 hover:text-white rounded-3xl shadow transition-btn text-white mb-4 pointer-events-none opacity-50">
+                                    請先登入才能前往地圖
+                                </div>
+                            </div>
+                        )}
+                        <button title="memory-nft" className={`${RainbowButtonModule.rainbowButton} mt-6 bg-red-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-600 my-2`}
                                 style={{ // @ts-ignore 
                                     '--button-width': '200px', '--button-height': '50px', '--button-border-radius': '100px' }}>
                             <Link href="/mintNFT">
@@ -224,7 +245,7 @@ export default function Home() {
                 </div>
          
                 <div className='w-full text-center flex-1 md:w-1/2 mx-auto mt-16 bg-blue-500'>
-                    <AlertModal isOpen={isAlertOpen} onClose={() => setIsAlertOpen(false)} message={alertMessage} />
+                    <AlertModal isOpen={isAlertOpen}  message={alertMessage} onClose ={handleClose}  />
                 </div>
             </div>
         </div>
