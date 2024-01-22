@@ -282,7 +282,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setShowLoginAlert(false);
       setHasNavigated(true); 
     
-      router.push('/home'); 
+      router.push('/'); 
     } catch (error) {
       console.error("登出失敗", error);
     }
