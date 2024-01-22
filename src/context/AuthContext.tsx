@@ -29,13 +29,17 @@ const AuthContext = createContext<{
   user: IUser | null;
   loading: boolean;
   loginMethod: LoginMethod;
-  loaded: boolean;
+  // loaded: boolean;
   setLoginMethod: (method: LoginMethod) => void;
   loginWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   updateUserProfile: (updatedData: Partial<IUser>) => Promise<void>;
+  showLoginAlert : boolean;
+  setShowLoginAlert: (show: boolean) => void;
+  hasNavigated: boolean; // 新增狀態
+  setHasNavigated: (hasNavigated: boolean) => void; // 新增設置函數
 }>({
   user: null,
   loading: true,
@@ -45,8 +49,12 @@ const AuthContext = createContext<{
   signUpWithEmail: async () => {},
   loginWithGoogle: async () => {},
   logout: async () => {},
-  loaded: false,
-  updateUserProfile: async () => {}
+  // loaded: false,
+  updateUserProfile: async () => {},
+  showLoginAlert: false,
+  setShowLoginAlert: () => {},
+  hasNavigated: false,
+  setHasNavigated: () => {}
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children}) => {
@@ -55,7 +63,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   
   const [loginMethod, setLoginMethod] = useState<LoginMethod>(LoginMethod.None);
-  const [loaded, setLoaded] = useState(false);
+  // const [loaded, setLoaded] = useState(false);
   const router = useRouter();
 
   // const auth = getAuth();
@@ -63,7 +71,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { user: clerkUser } = useClerk();
 
   const { signOut: clerkSignOut } = useClerk();
+  
 
+
+  const [showLoginAlert, setShowLoginAlert] = useState(false);
+  const [hasNavigated, setHasNavigated] = useState(false);
+  
   // // clerk
 
   // const { isSignedIn, user: clerkUser } = useClerk();
@@ -321,28 +334,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       } else {
         setUser(null);
-        if ((router.asPath.startsWith("/accounting") || router.asPath.startsWith("/publish-map") || router.asPath.startsWith("/map"))  && !router.asPath.startsWith("/home")) {
-          router.push({ pathname: "/", query: { message: "請先登入" } });
+
+        // if ((router.asPath.startsWith("/accounting") || router.asPath.startsWith("/publish-map") || router.asPath.startsWith("/map"))  && !router.asPath.startsWith("/home")) {
+        //   router.push({ pathname: "/", query: { message: "請先登入" } });
+        // }
+
+        const restrictedPaths = ["/map", "/publish-map"];
+
+        const currentPath = router.pathname;
+        if (restrictedPaths.includes(currentPath) && !hasNavigated) {
+          setShowLoginAlert(true); // 設置顯示警告視窗
+          setHasNavigated(true); // 設置已經導航過
+          router.push("/home"); // 直接導航到 /home
         }
+  
       }
 
       setLoading(false); 
 
-      setLoaded(true);
+      // setLoaded(true);
     });
 
     return () => unsubscribeAuth();
-  }, [router, clerkUser, getToken]);
+  }, [router, clerkUser, getToken, hasNavigated]);
+
+   // 監聽路由變化並重置 hasNavigated 狀態
+   useEffect(() => {
+    const handleRouteChange = () => {
+      setHasNavigated(false); // 在路徑更改時重置導航標記
+    };
+
+    router.events.on('routeChangeStart', handleRouteChange);
+
+    return () => {
+      router.events.off('routeChangeStart', handleRouteChange);
+    };
+  }, [router.events]);
 
   if (loading) {
     return <LoadingIndicator />;
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, loaded, loginMethod, 
+    <AuthContext.Provider value={{ user, loading, loginMethod, showLoginAlert, setShowLoginAlert, hasNavigated, setHasNavigated,
     setLoginMethod, loginWithEmail, signUpWithEmail, loginWithGoogle, logout,
     updateUserProfile}}>
-      {loaded && children}
+      {children}
     </AuthContext.Provider>
   );
 };
