@@ -119,11 +119,11 @@ const EmailLogComponent  = () => {
             </div>
             <div className="flex justify-center items-center mt-4 gap-2">
               <button title="clerk-sign-up" className="bg-red-500 flex-1 flex justify-center items-center text-white p-2 rounded" >
-              <i className="fa-solid fa-user-ninja mr-1"><span className="p-2">註冊</span></i>
+                <i className="fa-solid fa-user-ninja mr-1"><span className="p-2"></span></i>
                 <SignUpButton />
               </button>
               <button title="clerk-sign-in" className="bg-black flex-1 flex justify-center items-center text-white p-2 rounded">
-              <i className="fa-solid fa-user-ninja mr-1"><span className="p-2">登入</span></i>
+                <i className="fa-solid fa-user-ninja mr-1"><span className="p-2"></span></i>
                 <SignInButton />
               </button>
             </div>
