@@ -3,6 +3,9 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 # About Hidden Gem Spot
 
 This is a Next.js Project using tailwind and Typescript aimed at providing people a platfrom to create contents for their attractions.
+
+![1706188709352](image/README/1706188709352.png)
+
 People can gather their private attractions and publish it to the public as a "Map post" with contents attached.
 While others can like your map post, like your attractions with ❤️ and duplicate any attraction to their own private map.
 
@@ -31,6 +34,20 @@ What Else:
    We will convert them into attractions and saved them into database.
 
 ![1705783671706](image/README/1705783671706.png)
+
+React
+
+* Context
+* Redux / zustand
+
+Next.js
+
+* SSR (Server-Side Rendering) => Home Page, Member Page
+* SSG (Static Static Generation) => Landing Page
+
+Firestore
+
+* Index
 
 ## Map
 
