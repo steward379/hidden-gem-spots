@@ -1,8 +1,8 @@
+// SSR
 // member/[userId].tsx
 import { useEffect, useState, useRef  } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import Image from 'next/image';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/blur.css';
 // auth
@@ -24,7 +24,40 @@ const { db, storage } = firebaseServices;
 
 type AuthListener = (message: string) => void | {};
 
-const MemberPage = () => {
+export async function getServerSideProps(context) {
+  const { userId } = context.params;
+  const db = firebaseServices.db;
+
+  const memberRef = doc(db, 'users', userId);
+  const memberSnap = await getDoc(memberRef);
+
+  if (memberSnap.exists()) {
+    const memberData = memberSnap.data();
+
+    // 檢查是否有日期對象並轉換為 ISO 字符串
+   // 檢查並轉換日期對象
+   if (memberData.lastNotificationCheck && memberData.lastNotificationCheck.toDate) {
+    memberData.lastNotificationCheck = memberData.lastNotificationCheck.toDate().toISOString();
+  }
+        
+    return {
+      props: {
+        initialMemberData: {
+          id: memberRef.id,
+          ...memberData
+        }
+      }
+    };
+  } else {
+    return {
+      props: {
+        initialMemberData: null
+      }
+    };
+  }
+} 
+
+const MemberPage = ({  initialMemberData }) => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -66,7 +99,6 @@ const MemberPage = () => {
     ));
   };
 
-  
   const router = useRouter();
   const { userId } = router.query;
 
@@ -76,12 +108,9 @@ const MemberPage = () => {
   // edit profile
   const [isEditing, setIsEditing] = useState(false);
   // name 
-  const [name, setName] = useState(null);
   const [tempName, setTempName] = useState('');
   // avatar
-  const [avatar, setAvatar] = useState(null);
   const [tempAvatar, setTempAvatar] = useState(null);
-  const [avatarPreview, setAvatarPreview] = useState(null);
 
   const [userDetails, setUserDetails] = useState({});
   const [isFollowingState, setIsFollowingState] = useState(false);
@@ -115,13 +144,15 @@ const MemberPage = () => {
     }
   }
 
-  const [memberData, setMemberData] = useState({
-    id: null,
-    name: null,
-    avatar: null,
-    following: [],
-    followers: []
-  });
+  const [memberData, setMemberData] = useState(
+    // {
+    // id: null,
+    // name: null,
+    // avatar: null,
+    // following: [],
+    // followers: []
+  // }
+  initialMemberData);
 
   const fetchMemberData = async (memberId) => {
     const memberRef = doc(db, 'users', memberId);
@@ -295,8 +326,6 @@ const MemberPage = () => {
     setTempAvatar(null);
   }
 
-  
-
   const isCurrentlyFollowing = memberData.followers.includes(user?.uid);
 
   const renderFollowList = (list, title) => {
@@ -326,6 +355,23 @@ const MemberPage = () => {
         </div>
       </div>
     );
+  };
+
+  const [newEmail, setNewEmail] = useState('');
+  const handleEmailChange = async () => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+  
+    if (user) {
+      try {
+        await updateEmail(user, newEmail);
+        await sendEmailVerification(user);
+        alert('請檢查您的電子郵件以驗證新的電子郵件地址。');
+      } catch (error) {
+        console.error('更新電子郵件失敗:', error);
+        alert('更新電子郵件失敗。');
+      }
+    }
   };
 
   return (
@@ -461,7 +507,6 @@ const MemberPage = () => {
           ))}
         </div>
     </div>
-    
     )}
       </div>
     </div>

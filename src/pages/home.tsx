@@ -1,4 +1,6 @@
-import React, { useEffect, useState, useMemo } from 'react';
+// SSR 
+// home.tsx
+import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
@@ -8,7 +10,7 @@ import firebaseServices from '../utils/firebase';
 const { db } = firebaseServices;
 
 import GlobeComponent from '../components/animation/GlobeComponent';
-import { useGlobe } from '../context/GlobeContext';
+// import { useGlobe } from '../context/GlobeContext';
 
 import AlertModal from '../components/AlertModal';
 import MapCard from '../components/MapCard';
@@ -17,12 +19,42 @@ import RainbowButtonModule from '@/src/styles/rainbowButton.module.css'
 import { useAuth } from '@/src/context/AuthContext';
 
 const ITEMS_PER_PAGE = 8;
-const INITIAL_PAGES_TO_LOAD = 3; // Load 3 pages initially
+const INITIAL_PAGES_TO_LOAD = 3; // Load 3 pages initially、
 
-export default function Home() {
+export async function getServerSideProps(context) {
+    const db = firebaseServices.db;
+    const tab = 'latest'; 
+  
+    let queryRef = query(collectionGroup(db, "maps"), orderBy("publishDate", "desc"), limit(INITIAL_PAGES_TO_LOAD * ITEMS_PER_PAGE));
+  
+    const querySnapshot = await getDocs(queryRef);
+    const fetchedMaps = await Promise.all(querySnapshot.docs.map(async (docSnapshot) => {
+      const mapData = docSnapshot.data(); 
+      const userRef = doc(db, "users", mapData.userId);
+      const userSnapshot = await getDoc(userRef);
+      const userData = userSnapshot.data();
+      const userName = userSnapshot.exists() ? userData.name : "未知用戶";
+  
+      return {
+        ...mapData,
+        id: docSnapshot.id,
+        authorName: userName
+      };
+    }));
+  
+    return {
+      props: {
+        initialMaps: fetchedMaps
+      },
+    };
+  }
+
+export default function Home({ initialMaps = [] }) {
     const router = useRouter();
     const { user, showLoginAlert, setShowLoginAlert } = useAuth();
-    const [maps, setMaps] = useState([]);
+    // const [maps, setMaps] = useState([]);
+    const [maps, setMaps] = useState(initialMaps);
+ 
     const [currentTab, setCurrentTab] = useState('latest'); 
     const [lastVisible, setLastVisible] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
@@ -85,12 +117,20 @@ export default function Home() {
         return fetchedMaps;
     };
 
-    useEffect(() => {
+    const updateData = useCallback(() => {
         fetchMaps(currentTab).then(fetchedMaps => {
-            setMaps(fetchedMaps);
-            setTotalPages(Math.ceil(fetchedMaps.length / ITEMS_PER_PAGE));
+          setMaps(fetchedMaps);
+          setTotalPages(Math.ceil(fetchedMaps.length / ITEMS_PER_PAGE));
         });
-    }, [currentTab]);
+      }, [currentTab]);
+
+    useEffect(() => {
+        // fetchMaps(currentTab).then(fetchedMaps => {
+        //     setMaps(fetchedMaps);
+        //     setTotalPages(Math.ceil(fetchedMaps.length / ITEMS_PER_PAGE));
+        // });
+        updateData();
+    }, [updateData]);
 
     const loadMoreMaps = async () => {
         const newMaps = await fetchMaps(currentTab, lastVisible);
@@ -193,7 +233,7 @@ export default function Home() {
                         {isVisible ? '隱藏地球' : '顯示地球'}
                     </div>
                 </div>
-                
+                <div className="fas fa-sync-alt text-2xl text-center mb-5 cursor-pointer" onClick={updateData}>獲取最新地圖資料</div>
                 <div className="flex mb-4">
                     <button onClick={() => setCurrentTab('latest')} 
                             className={`px-4 py-2 text-lg font-medium rounded-tl-lg rounded-tr-lg ${currentTab === 'latest' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-600'}`}>

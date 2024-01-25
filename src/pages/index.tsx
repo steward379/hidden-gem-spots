@@ -1,12 +1,12 @@
+// SSG
 // pages/landing.tsx
 import Link from 'next/link';
 import React from 'react';
-import Image from 'next/image';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/blur.css';
 import Footer from '../components/Footer'; 
+import { GetStaticProps } from 'next';
 
-import { useRouter } from 'next/router';
 // import { Inter } from "next/font/google";
 // const inter = Inter({ subsets: ["latin"] });
 
@@ -15,8 +15,6 @@ import { useRouter } from 'next/router';
 // import Main from "./components/Main";
 
 const LandingPage = () => {
-  // const router = useRouter();
-  // const message = router.query.message;
 
   return (
     <div className="flex flex-col font-sans">
@@ -36,9 +34,6 @@ const LandingPage = () => {
                       className="object-cover mix-blend-color-burn hidden lg:flex" effect="blur" />
                 </div>
                   <p className="mt-4 text-2xl mb-8"> Hidden Gem 旅圓，讓你記錄每一趟生活冒險。</p>
-                  <div className="flex justify-center items-center mb-8">
-                    {/* {message && <p className=" bg-red-500 px-5 py-3 w-40 opacity-90 p-5 rounded-lg">{message}</p>} */}
-                  </div>
                   <Link href="/home">
                       <button className="bg-yellow-400 text-gray-600 text-xl font-semibold py-3
                       px-5 rounded hover:bg-red-500 transition duration-300
@@ -130,6 +125,12 @@ const LandingPage = () => {
       <Footer /> 
   </div>
   );
+};
+
+export const getStaticProps: GetStaticProps = async () => {
+  return {
+    props: {}, 
+  };
 };
 
 export default LandingPage;
