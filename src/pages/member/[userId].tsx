@@ -61,8 +61,24 @@ const MemberPage = ({  initialMemberData }) => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
+  // const [newEmail, setNewEmail] = useState('');
+  // const handleEmailChange = async () => {
+  //   const auth = getAuth();
+  //   const user = auth.currentUser;
+  
+  //   if (user) {
+  //     try {
+  //       await updateEmail(user, newEmail);
+  //       await sendEmailVerification(user);
+  //       alert('請檢查您的電子郵件以驗證新的電子郵件地址。');
+  //     } catch (error) {
+  //       console.error('更新電子郵件失敗:', error);
+  //       alert('更新電子郵件失敗。');
+  //     }
+  //   }
+  // };
 
-  // Algolia 搜索
+  // Algolia 搜尋
 
   const handleSearch = async () => {
     try {
@@ -355,23 +371,6 @@ const MemberPage = ({  initialMemberData }) => {
         </div>
       </div>
     );
-  };
-
-  const [newEmail, setNewEmail] = useState('');
-  const handleEmailChange = async () => {
-    const auth = getAuth();
-    const user = auth.currentUser;
-  
-    if (user) {
-      try {
-        await updateEmail(user, newEmail);
-        await sendEmailVerification(user);
-        alert('請檢查您的電子郵件以驗證新的電子郵件地址。');
-      } catch (error) {
-        console.error('更新電子郵件失敗:', error);
-        alert('更新電子郵件失敗。');
-      }
-    }
   };
 
   return (
