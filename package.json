@@ -11,7 +11,7 @@
   "dependencies": {
     "@blocto/sdk": "^0.9.0-beta.2",
     "@clerk/clerk-react": "^4.28.2",
-    "@clerk/nextjs": "^4.27.3",
+    "@clerk/nextjs": "^4.29.3",
     "@clerk/themes": "^1.7.9",
     "@firebase/firestore": "^4.3.0",
     "@fortawesome/fontawesome-svg-core": "^6.5.0",
@@ -41,6 +41,7 @@
     "leaflet-minimap": "^3.6.1",
     "leaflet-routing-machine": "^3.2.12",
     "next": "13.5.6",
+    "next-i18next": "^15.2.0",
     "postcss": "8.4.31",
     "react": "18.2.0",
     "react-dnd": "^16.0.1",

@@ -81,7 +81,7 @@ const PublishedMapDetail = () => {
 
     const [showPlacesList, setShowPlacesList] = useState(false);
     // accordion
-    const [detailsExpanded, setDetailsExpanded] = useState(false);
+    const [detailsExpanded, setDetailsExpanded] = useState(true);
     const toggleDetails = () => {
         setDetailsExpanded(!detailsExpanded);
     };
@@ -99,6 +99,12 @@ const PublishedMapDetail = () => {
     // total
     const [totalDuplicates, setTotalDuplicates] = useState(0);
     const [totalPlacesLikes, setTotalPlacesLikes] = useState(0);
+
+    useEffect(() => {
+        if (selectedPlace !== null) {
+          setShowMapContent(false);
+        }
+      }, [selectedPlace]);
 
     // like heart changed
     useEffect(() => {
@@ -546,7 +552,6 @@ const PublishedMapDetail = () => {
         setSelectedPlace(null);
     };
 
-    // 篩選喜愛的景點
     useEffect(() => {
         if (!user || !mapData) return;
 
@@ -831,7 +836,7 @@ const PublishedMapDetail = () => {
                         <div
                             className={`relative selected-place-detail mt-4 border rounded-3xl shadow p-5
                         transition-all duration-300 
-                        ${detailsExpanded ? "max-h-full" : "max-h-12"}`}
+                        ${detailsExpanded ? "max-h-full" : "max-h-20"}`}
                         >
                             <p
                                 className="absolute right-0 top-0 cursor-pointer p-5"
@@ -842,7 +847,7 @@ const PublishedMapDetail = () => {
                             <button
                                 title="toggle-details"
                                 onClick={toggleDetails}
-                                className="absolute right-1/2 top-0 p-5"
+                                className="absolute right-10 top-0 p-5"
                             >
                                 <i
                                     className={`fas ${detailsExpanded
@@ -951,10 +956,19 @@ const PublishedMapDetail = () => {
                                                 </span>
                                             </button>
                                         </Link>
-
-                                        <button onClick={() => handleGooglePlacesToggle(selectedPlace)}>
-                                            查看附近景点
-                                        </button>
+                                        <button className="flex items-center mr-3 bg-blue-100 text-black p-2 rounded hover:bg-blue-400 hover:text-white
+                                  focus:outline-none focus:ring-2 focus:ring-blue-300" 
+                                            onClick={() => handleGooglePlacesToggle(selectedPlace)} >
+                                    <i className="fa-solid fa-directions mr-1.5"></i>                           
+                                     {showGooglePlaces ?
+                                        <span className="hidden lg:flex"> 
+                                        隱藏附近景點
+                                        </span> :
+                                        <span className="hidden lg:flex"> 
+                                        列出附近景點
+                                        </span> 
+                                    }
+                                    </button>
                                     </div>
                                 </>
                             )}
