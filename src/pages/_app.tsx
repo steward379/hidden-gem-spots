@@ -1,4 +1,7 @@
-// /pages/_app.tsx
+import React, { useEffect } from 'react';
+import { appWithTranslation, useTranslation } from 'next-i18next';
+import nextI18NextConfig from '../../next-i18next.config.js';
+
 import { AuthProvider } from "../context/AuthContext";
 import 'leaflet/dist/leaflet.css';
 import { AppProps } from 'next/app';
@@ -10,10 +13,10 @@ import { Provider } from 'react-redux';
 import { store } from '../store/store';
 import '../styles/globals.css'
 import { Metadata } from "next";
-import Script from "next/script";
 import Head from 'next/head';
 
 import { GlobeProvider } from '../context/GlobeContext';
+import { useRouter } from 'next/router';
 
 export const metadata: Metadata = {
   title: "Hidden Gem Spot 旅圓",
@@ -23,6 +26,22 @@ export const metadata: Metadata = {
 };
 
 const MyApp = ({ Component, pageProps }: AppProps) => {
+  const router = useRouter();
+
+  const { i18n } = useTranslation(); 
+
+  useEffect(() => {
+    const loadTranslations = async () => {
+      if (!i18n.hasResourceBundle(router.locale, 'common')) {
+        const response = await fetch(`/locales/${router.locale}/common.json`);
+        const translations = await response.json();
+        i18n.addResourceBundle(router.locale, 'common', translations, true, true);
+      }
+    };
+
+    loadTranslations();
+  }, [router.locale, i18n]);
+
   return (
     <Provider store={store}>
       <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
@@ -56,4 +75,6 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
   );
 }
 
-export default MyApp;
+// export default MyApp;
+// @ts-ignore
+export default appWithTranslation(MyApp, nextI18NextConfig);
