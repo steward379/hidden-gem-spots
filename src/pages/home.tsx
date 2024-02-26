@@ -1,5 +1,4 @@
 // SSR 
-// home.tsx
 import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
@@ -18,10 +17,16 @@ import RainbowButtonModule from '@/src/styles/rainbowButton.module.css'
 
 import { useAuth } from '@/src/context/AuthContext';
 
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { useTranslation } from 'next-i18next';
+
 const ITEMS_PER_PAGE = 8;
 const INITIAL_PAGES_TO_LOAD = 3; // Load 3 pages initially、
 
 export async function getServerSideProps(context) {
+
+    const { locale } = context;
+
     const db = firebaseServices.db;
     const tab = 'latest'; 
   
@@ -33,7 +38,7 @@ export async function getServerSideProps(context) {
       const userRef = doc(db, "users", mapData.userId);
       const userSnapshot = await getDoc(userRef);
       const userData = userSnapshot.data();
-      const userName = userSnapshot.exists() ? userData.name : "未知用戶";
+      const userName = userSnapshot.exists() ? userData.name : "Unknown user 未知用戶";
   
       return {
         ...mapData,
@@ -44,16 +49,18 @@ export async function getServerSideProps(context) {
   
     return {
       props: {
-        initialMaps: fetchedMaps
+        initialMaps: fetchedMaps,
+        ...(await serverSideTranslations(locale, ['common'])),
       },
     };
   }
 
 export default function Home({ initialMaps = [] }) {
-    const router = useRouter();
+    const { t } = useTranslation('common');
+
+    // const router = useRouter();
     const { user, showLoginAlert, setShowLoginAlert } = useAuth();
-    // const [maps, setMaps] = useState([]);
-    const [maps, setMaps] = useState(initialMaps);
+    const [maps, setMaps] = useState(initialMaps); //[]
  
     const [currentTab, setCurrentTab] = useState('latest'); 
     const [lastVisible, setLastVisible] = useState(null);
@@ -63,7 +70,7 @@ export default function Home({ initialMaps = [] }) {
     const [isSearching, setIsSearching] = useState(false);
     const [isVisible, setIsVisible] = useState(true);
     const [isAlertOpen, setIsAlertOpen] = useState(false);
-    const [alertMessage, setAlertMessage] = useState('錯誤');
+    const [alertMessage, setAlertMessage] = useState("error 錯誤");
     
 
     const handleClick = () => {
@@ -73,9 +80,9 @@ export default function Home({ initialMaps = [] }) {
     useEffect(() => {
         if (showLoginAlert) {
             setIsAlertOpen(true);
-            setAlertMessage("請先登入");
+            setAlertMessage(t('please-login'));
         }
-    }, [showLoginAlert]);    
+    }, [showLoginAlert, t]);    
 
     const handleClose = () => {
         setIsAlertOpen(false);
@@ -104,7 +111,7 @@ export default function Home({ initialMaps = [] }) {
             const userRef = doc(db, "users", mapData.userId);
             const userSnapshot = await getDoc(userRef);
             const userData = userSnapshot.data() as any; 
-            const userName = userSnapshot.exists() ? userData.name : "未知用戶";
+            const userName = userSnapshot.exists() ? userData.name : t('unknown-user');
     
             return {
                 ...mapData,
@@ -192,24 +199,24 @@ export default function Home({ initialMaps = [] }) {
                             className="object-cover mix-blend-color-burn" />
                         {user ? (
                             <Link href="/map">
-                            <div className="mt-5 text-teal-800 opacity-90 p-3 border-rose-600 border-2 rounded-3xl">
+                            <div className="mt-5 text-teal-800 opacity-90 p-3 border-rose-600 border-2 rounded-3xl flex flex-col items-center justify-center">
                                 <div className="bg-teal-100 bg-opacity-60 rounded-xl flex flex-col items-center justify-center px-10 py-3 text-sm lg:text-lg mb-6  ">
-                                    <p>定義你的私房景點</p>
-                                    <p>分享你的探險故事</p>
+                                    <p>{t('home-slogan-former')}<br></br>
+                                    {t('home-slogan-latter')} </p>
                                 </div>
                                 <div className="cursor-pointer lg:text-lg text-normal px-8 py-2 bg-rose-500 hover:bg-rose-700 hover:text-white rounded-3xl shadow transition-btn text-white mb-4">
-                                    前往你的景點地圖
+                                {t('home-cta')}
                                 </div>
                             </div>
                             </Link>
                         ) : (
-                            <div className="mt-5 text-teal-800 opacity-90 p-3 border-rose-600 border-2 rounded-3xl">
+                            <div className="mt-5 text-teal-800 opacity-90 p-3 border-rose-600 border-2 rounded-3xl flex flex-col items-center justify-center">
                                 <div className="bg-teal-100 bg-opacity-60 rounded-xl flex flex-col items-center justify-center px-10 py-3 text-sm lg:text-lg mb-6  ">
-                                    <p>定義你的私房景點</p>
-                                    <p>分享你的探險故事</p>
+                                     <p>{t('home-slogan-former')}<br></br>
+                                    {t('home-slogan-latter')} </p>
                                 </div>
                                 <div className="cursor-pointer lg:text-lg text-normal px-8 py-2 bg-rose-500 hover:bg-rose-700 hover:text-white rounded-3xl shadow transition-btn text-white mb-4 pointer-events-none opacity-50">
-                                    請先登入才能前往地圖
+                                    {t('home-login-alert')}
                                 </div>
                             </div>
                         )}
@@ -218,7 +225,7 @@ export default function Home({ initialMaps = [] }) {
                                     '--button-width': '200px', '--button-height': '50px', '--button-border-radius': '100px' }}>
                             <Link href="/mintNFT">
                                 <button className="bg-red-500 rounded-full text-white font-bold py-2 px-10 text-sm hover:bg-blue-600 my-2">
-                                    首發紀念 NFT
+                                    {t('home-nft')}
                                 </button>
                             </Link>
                         </button>
@@ -228,35 +235,37 @@ export default function Home({ initialMaps = [] }) {
 
             <div className="mr-5 ml-5 mt-10">
                 <div className="flex justify-center items-center">
-                    <div className="mb-5 cursor-pointer text-center border-dotted border border:black rounded-full p-4 pt-9 pb-9" 
+                    <div className="mb-5 cursor-pointer text-center border-dotted border border:black rounded-full p-4 pt-9 pb-9 hover:bg-gray-400 hover:text-white" 
                         onClick={handleClick}>
-                        {isVisible ? '隱藏地球' : '顯示地球'}
+                        {isVisible ?  t('home-hideHeader') : t('home-showHeader')}
                     </div>
                 </div>
-                <div className="fas fa-sync-alt text-2xl text-center mb-5 cursor-pointer" onClick={updateData}>獲取最新地圖資料</div>
+                <div className="text-xl text-center md:text-left mb-5 cursor-pointer hover:text-white" onClick={updateData}> 
+                    <i className="fas fa-sync-alt"></i> {t('home-update-mapData')}
+                </div>
                 <div className="flex mb-4">
                     <button onClick={() => setCurrentTab('latest')} 
-                            className={`px-4 py-2 text-lg font-medium rounded-tl-lg rounded-tr-lg ${currentTab === 'latest' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-600'}`}>
-                        最新地圖
+                            className={`px-4 py-2 text-lg font-medium rounded-tl-lg rounded-tr-lg hover:bg-yellow-500 ${currentTab === 'latest' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-600'}`}>
+                        {t('home-latest-map-sort')}
                     </button>
                     <button onClick={() => setCurrentTab('popular')} 
-                            className={`ml-2 px-4 py-2 text-lg font-medium rounded-tl-lg rounded-tr-lg ${currentTab === 'popular' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-600'}`}>
-                        熱門地圖
-                        </button>
+                            className={`ml-2 px-4 py-2 text-lg font-medium rounded-tl-lg rounded-tr-lg hover:bg-yellow-500 ${currentTab === 'popular' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-600'}`}>
+                        {t('home-popular-map-sort')}
+                    </button>
                 </div>
 
                 <div className="flex items-center justify-center">
                     <div className="flex items-center justify-center mt-4 mb-8 w-[500px] h-10 overflow-hidden">
                         <input 
                             type="text" 
-                            placeholder="搜尋地圖" 
+                            placeholder={t('home-searchMaps')}
                             onChange={(e) => setSearchTerm(e.target.value)} 
                             className="w-full md:w-1/2 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
                         />
                         <button 
                             title="search"
                             onClick={handleSearch} 
-                            className="bg-blue-500 text-white px-6  py-2 rounded-r-lg hover:bg-blue-600 transition-colors duration-300">
+                            className="bg-blue-500 text-white px-6 py-2 rounded-r-lg hover:bg-blue-600 transition-colors duration-300">
                                 <i className="fas fa-search"></i>
                         </button>
                     </div>
@@ -273,14 +282,14 @@ export default function Home({ initialMaps = [] }) {
                     onClick={() => goToPreviousPage()} 
                     disabled={currentPage === 1} 
                         className="px-4 py-2 bg-blue-500 text-white rounded-lg disabled:bg-gray-300 hover:bg-blue-600 transition-colors duration-300">
-                        上一頁
+                        {t('home-last-page')}
                     </button>
-                    <span>第 {currentPage} 頁，共 {totalPages} 頁</span>
+                    <span>{t('home-page-count-1')} {currentPage} {t('home-page-count-2')} {totalPages} {t('home-page-count-3')} </span>
                     <button 
                         onClick={() => goToNextPage()} 
                         disabled={currentPage === totalPages} 
                         className="px-4 py-2 bg-blue-500 text-white rounded-lg disabled:bg-gray-300 hover:bg-blue-600 transition-colors duration-300">
-                        下一頁
+                        {t('home-next-page')}
                     </button>
                 </div>
          
