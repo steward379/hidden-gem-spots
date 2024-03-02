@@ -67,7 +67,10 @@ Since Clerk provide us with an intergration kit that saves any user data to the 
 
 ### See the slides for a complete pitch here:
 
-[https://www.slideshare.net/slideshows/hidden-gem-traveling-attractions-platform/265599252]()
+[https://www.slideshare.net/slideshows/hiddengem-attraction-recording-platform-slide/266594257]()
+
+<iframe src="https://www.slideshare.net/slideshow/embed_code/key/E6YY8rWoZaJAnr?hostedIn=slideshare&page=upload" width="476" height="400" frameborder="0" marginwidth="0" marginheight="0" scrolling="no"></iframe>
+
 
 Getting Started with Next
 
