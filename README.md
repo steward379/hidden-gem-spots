@@ -1,5 +1,7 @@
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
+<iframe src="https://www.slideshare.net/slideshow/embed_code/key/E6YY8rWoZaJAnr?hostedIn=slideshare&page=upload" width="476" height="400" frameborder="0" marginwidth="0" marginheight="0" scrolling="no"></iframe>
+
 # About Hidden Gem Spot
 
 This is a Next.js Project using tailwind and Typescript aimed at providing people a platfrom to create contents for their attractions.
