@@ -80,7 +80,7 @@ I use i18N for users to browse my projects in either English or Mandarin (Taiwan
 
 ## OnBoarding Process (Private Personal Map)
 
-    ![1709396036153](image/README/1709396036153.png)
+![1709396036153](image/README/1709396036153.png)
 
 ![1705785886777](image/README/1705785886777.png)
 
