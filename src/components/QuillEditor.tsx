@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 // import ReactQuill from 'react-quill';
 
 import dynamic from 'next/dynamic';
+import { useTranslation } from 'next-i18next';
 
 const ReactQuill = dynamic(() => import('react-quill'), {
   ssr: false,
@@ -11,9 +12,10 @@ const ReactQuill = dynamic(() => import('react-quill'), {
 
 const QuillEditor = ({ content, onContentChange, onFocus, onBlur }) => {
     const [showSourceCode, setShowSourceCode] = useState(false);
+    const { t } = useTranslation('common');
   
     const handleContentChange = (content) => {
-      onContentChange(content); // 調用從父組件傳遞的函數
+      onContentChange(content); 
     };
   
     return (
@@ -34,16 +36,16 @@ const QuillEditor = ({ content, onContentChange, onFocus, onBlur }) => {
           onClick={() => setShowSourceCode(!showSourceCode)}
         >
           <i className={`fas ${showSourceCode ? 'fa-eye-slash' : 'fa-eye'} mr-2`}></i>
-          <div>{showSourceCode ? "隱藏原始碼" : "顯示原始碼"}</div>
+          <div>{showSourceCode ? t('hide-source-code') : t('show-source-code') }</div>
         </button>
         {showSourceCode && (
           <textarea
-            title="地圖內容原始碼"
+            title="map-source-code"
             value={content}
             onFocus={onFocus}
             onBlur={onBlur}
             
-            readOnly // 如果不希望用戶在這裡編輯，可以設為只讀
+            readOnly
             className="mb-2 p-2 w-full border text-gray-500 rounded-xl"
           />
         )}

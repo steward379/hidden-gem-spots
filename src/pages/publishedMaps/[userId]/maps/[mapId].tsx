@@ -3,31 +3,29 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import Image from "next/image";
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/blur.css';
 import GooglePlaces from "@/src/components/GooglePlaces";
-// firebase
 import { doc, getDoc, getDocs,
     collection, arrayUnion,arrayRemove, runTransaction
 } from "firebase/firestore";
 import firebaseServices from "../../../../utils/firebase";
 const { db } = firebaseServices;
-// context
 import { useAuth } from "../../../../context/AuthContext";
-// function
 import { decimalToDms } from "../../../../utils/decimalCoordinates";
-// components
+
 import AlertModal from "../../../../components/AlertModal";
 import LoadingIndicator from "@/src/components/LoadingIndicator";
-// Redux
+
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../../../../store/store";
 import { setMapDataRedux } from "../../../../store/slices/mapSlice";
-// css&json
+
 import RainbowButtonModule from "@/src/styles/rainbowButton.module.css";
 import "react-quill/dist/quill.snow.css";
 import { categoryMapping } from "@/src/constants";
+import { categoryMappingEN } from '@/src/constants';
+import { useTranslation } from 'next-i18next';
 
 const MapComponentWithNoSSR = dynamic(
     () => import("../../../../components/MapComponent"),
@@ -38,22 +36,26 @@ const ReactQuill = dynamic(() => import("react-quill"), {
     loading: () => <p>Loading...</p>,
 });
 const PublishedMapDetail = () => {
+    const { t, i18n } = useTranslation('common'); 
 
+    function getCategoryText(categoryKey, language) {
+        const categoryMappingNow = language === 'en-US' ? categoryMappingEN : categoryMapping;
+        return categoryMappingNow[categoryKey]?.text || 'Unknown 不明';
+    }
+    
     const [showGooglePlaces, setShowGooglePlaces] = useState(false);
     const [googlePlacesCoords, setGooglePlacesCoords] = useState({ lat: 0, lng: 0 });
 
     const handleGooglePlacesToggle = (place) => {
         setShowGooglePlaces(!showGooglePlaces);
         setGooglePlacesCoords({ lat: place.coordinates.lat, lng: place.coordinates.lng });
-      };
+    };
     
-    // redux
     const dispatch = useDispatch();
     const mapDataRedux = useSelector(
         (state: RootState) => state.map.mapDataRedux
     );
 
-    // alert&Confirm
     const [isAlertOpen, setIsAlertOpen] = useState(false);
     const [alertMessage, setAlertMessage] = useState("");
     const showAlert = (message) => {
@@ -62,43 +64,109 @@ const PublishedMapDetail = () => {
     };
 
     const router = useRouter();
-    // auth
+
     const { user } = useAuth();
     const { userId, mapId } = router.query;
 
-    // routing mode
     const [isRoutingMode, setIsRoutingMode] = useState(false);
 
     const quillModules = {
         toolbar: false,
     };
 
-    //show
     const [showMapContent, setShowMapContent] = useState(true);
 
     const [mapData, setMapData] = useState(null);
     const [selectedPlace, setSelectedPlace] = useState(null);
 
     const [showPlacesList, setShowPlacesList] = useState(false);
-    // accordion
+
     const [detailsExpanded, setDetailsExpanded] = useState(true);
+
     const toggleDetails = () => {
         setDetailsExpanded(!detailsExpanded);
     };
 
-    // search and filter
+    const [likedPlaces, setLikedPlaces] = useState([]);
+    const [showLikedPlacesList, setShowLikedPlacesList] = useState(false);
+    // const [alreadyMapLiked, setAlreadyMapLiked] = useState(false);
+    const [isMapLiked, setIsMapLiked] = useState(false);
+
+    const [totalDuplicates, setTotalDuplicates] = useState(0);
+    const [totalPlacesLikes, setTotalPlacesLikes] = useState(0);
+
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedCategory, setSelectedCategory] = useState("");
 
-    // likes
-    const [likedPlaces, setLikedPlaces] = useState([]);
-    const [showLikedPlacesList, setShowLikedPlacesList] = useState(false);
-    const [alreadyMapLiked, setAlreadyMapLiked] = useState(false);
-    const [isMapLiked, setIsMapLiked] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [likedCurrentPage, setLikedCurrentPage] = useState(1);
+    const itemsPerPage = 5; 
+    const maxPageButtons = 5;
+    const pagesPerGroup = 5;
 
-    // total
-    const [totalDuplicates, setTotalDuplicates] = useState(0);
-    const [totalPlacesLikes, setTotalPlacesLikes] = useState(0);
+    const filteredPlaces = mapData?.publishedPlaces.filter(
+        (place) =>
+            (place.name
+                .toLowerCase()
+                .includes(searchTerm.trim().toLowerCase()) ||
+                place.tags.some((tag) =>
+                    tag.toLowerCase().includes(searchTerm.toLowerCase())
+                )) &&
+            (place.category === selectedCategory || selectedCategory === "")
+    );
+
+    const filteredLikesPlaces = likedPlaces?.filter(
+        (place) =>
+            (place.name
+                .toLowerCase()
+                .includes(searchTerm.trim().toLowerCase()) ||
+                place.tags.some((tag) =>
+                    tag.toLowerCase().includes(searchTerm.toLowerCase())
+                )) &&
+            (place.category === selectedCategory || selectedCategory === "")
+    );
+
+    const totalPageCount = Math.ceil(filteredPlaces?.length / itemsPerPage);
+    const totalLikedPageCount = Math.ceil(filteredLikesPlaces?.length / itemsPerPage);
+
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const currentPlaces = filteredPlaces?.slice(startIndex, endIndex);
+
+    const likedStartIndex = (likedCurrentPage - 1) * itemsPerPage;
+    const likedEndIndex = likedStartIndex + itemsPerPage;
+    const currentLikedPlaces = filteredLikesPlaces?.slice(likedStartIndex, likedEndIndex);
+
+    const renderPagination = (currentPage, setPage, totalCount, isLiked = false) => {
+        const totalPages = Math.ceil(totalCount / itemsPerPage);
+        // let startPage = Math.floor((currentPage - 1) / maxPageButtons) * maxPageButtons + 1;
+        // const pageNumbers = Array.from({ length: Math.min(maxPageButtons, totalPages - startPage + 1) }, (_, i) => i + startPage);
+        const totalGroups = Math.ceil(totalPages / pagesPerGroup);
+        const currentGroupIndex = Math.floor((currentPage - 1) / pagesPerGroup);
+
+        let startPage = currentGroupIndex * pagesPerGroup + 1;
+        let endPage = Math.min(startPage + pagesPerGroup - 1, totalPages);
+        
+        return (
+            <div className="flex justify-center items-center gap-2 mt-4">
+            {currentGroupIndex > 0 && (
+                    <button onClick={() => setPage((currentGroupIndex - 1) * pagesPerGroup + 1)} className="pagination-prev mx-1 px-3 py-1 rounded-lg bg-sky-300 text-black">
+                        {t('<-')}
+                    </button>
+                )}
+                {Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i).map(pageIndex => (
+                    <button key={pageIndex} onClick={() => setPage(pageIndex)} className={`mx-1 px-3 py-1 rounded-lg ${currentPage === pageIndex ? 'bg-sky-500 text-white' : 'bg-white text-black'}`}>
+                        {pageIndex}
+                    </button>
+                ))}
+                {currentGroupIndex < totalGroups - 1 && (
+                    <button onClick={() => setPage((currentGroupIndex + 1) * pagesPerGroup + 1)} className="pagination-next mx-1 px-3 py-1 rounded-lg bg-sky-300 text-black">
+                        {t('->')}
+                    </button>
+                )}
+            </div>
+        );
+    };
 
     useEffect(() => {
         if (selectedPlace !== null) {
@@ -106,14 +174,12 @@ const PublishedMapDetail = () => {
         }
       }, [selectedPlace]);
 
-    // like heart changed
     useEffect(() => {
         if (mapData && user) {
             setIsMapLiked(mapData.likedBy.includes(user.uid));
         }
     }, [mapData, user]);
 
-    // get Map
     useEffect(() => {
         const fetchMapData = async () => {
             if (typeof mapId === "string" && typeof userId === "string") {
@@ -137,7 +203,7 @@ const PublishedMapDetail = () => {
                     const placesSnap = await getDocs(placesRef);
                     mapDetails.publishedPlaces = placesSnap.docs.map((doc) => ({
                         ...doc.data(),
-                        id: doc.id, // 添加新的 placeId
+                        id: doc.id, 
                     }));
 
                     mapDetails.publishedPlaces.forEach((place) => {
@@ -159,7 +225,6 @@ const PublishedMapDetail = () => {
                     );
                     setTotalPlacesLikes(totalPlacesLikes);
 
-                    // redux
                     const transformedMapDetails = {
                         title: mapDetails.title,
                         content: mapDetails.content,
@@ -170,7 +235,6 @@ const PublishedMapDetail = () => {
                             const placeData = doc.data();
                             return {
                                 id: doc.id,
-                                // 確保包括 Place 類型所需的所有屬性
                                 name: placeData.name,
                                 description: placeData.description,
                                 tags: placeData.tags || [],
@@ -192,8 +256,8 @@ const PublishedMapDetail = () => {
 
                     dispatch(setMapDataRedux(transformedMapDetails));
                 } else {
-                    console.log("找不到地圖資料");
-                    showAlert("找不到地圖資料");
+                    console.log("Map not found!");
+                    showAlert(t('mapId-not-found'));
                     router.push(`/user-maps/${user.uid}`);
                 }
             }
@@ -201,7 +265,15 @@ const PublishedMapDetail = () => {
         };
 
         fetchMapData();
-    }, [mapId, userId, router, dispatch, user, user?.uid]);
+    }, [mapId, userId, router, dispatch, user, user?.uid, t]);
+
+    const handleMarkerClick = (place) => {
+        setSelectedPlace(place);
+    };
+    const handleMarkerClose = () => {
+        setSelectedPlace(null);
+    };
+
 
     const handleLikeClick = async () => {
         if (!mapData || typeof mapId !== "string") return;
@@ -406,9 +478,17 @@ const PublishedMapDetail = () => {
         }
     };
 
+    const arraysEqual = (a, b) => {
+        if (a.length !== b.length) return false;
+        for (let i = 0; i < a.length; i++) {
+            if (a[i] !== b[i]) return false;
+        }
+        return true;
+    };
+
     const handlePlaceDuplicate = async (placeId) => {
         if (!user) {
-            showAlert("請先登入才能複製景點");
+            showAlert(t('mapId-login-copy-alert'))
             return;
         }
 
@@ -443,10 +523,8 @@ const PublishedMapDetail = () => {
                         arraysEqual(data.images, placeData.images)
                     );
                 });
-
-                // 如果找到相同的景點，阻止複製並給出提示
                 if (existingPlace) {
-                    showAlert("此景點已存在於您的地圖中，無法重複複製");
+                    showAlert(t('mapId-cant-duplicate-alert'));
                     return;
                 }
 
@@ -456,14 +534,12 @@ const PublishedMapDetail = () => {
                 )
                     ? placeData.duplicatedBy
                     : arrayUnion(user.uid);
-                // arrayUnion(user.uid) 會將 user.uid 加入到陣列中，但如果 user.uid 已經存在於陣列中，則不會有任何變化
 
                 transaction.update(placeRef, {
                     duplicatedBy: updatedDuplicatedBy,
                     duplicates: updatedDuplicates,
                 });
 
-                // 複製景點到使用者的地圖中
                 // const placeDataToDuplicate = { ...placeData, likes: 0, likedBy: [], duplicates: 0, duplicatedBy: [] };
 
                 const placeDataForUserMap = {
@@ -476,10 +552,9 @@ const PublishedMapDetail = () => {
                     createdTime: new Date().toISOString(),
                     updatedTime: "",
                 };
-                // delete placeDataToDuplicate.id; // 移除原有的 id
+                // delete placeDataToDuplicate.id; 
                 await transaction.set(doc(userPlacesRef), placeDataForUserMap);
 
-                // 更新地圖的 duplicates 和 duplicatedBy
                 if (!mapDoc.exists()) {
                     throw "Map Document does not exist!";
                 }
@@ -496,7 +571,7 @@ const PublishedMapDetail = () => {
                     duplicates: newMapDuplicates,
                     duplicatedBy: newMapDuplicatedBy,
                 });
-                // 更新本地狀態
+
                 setMapData((prevData) => {
                     const updatedPlaces = prevData.publishedPlaces.map(
                         (place) => {
@@ -530,32 +605,14 @@ const PublishedMapDetail = () => {
                     };
                 });
                 setTotalDuplicates((prev) => prev + 1);
-
-                showAlert("景點已複製到您的地圖");
+                showAlert(t('map-spot-duplicate-success'));
             });
         }
-    };
-
-    // 比較兩個陣列是否相同
-    const arraysEqual = (a, b) => {
-        if (a.length !== b.length) return false;
-        for (let i = 0; i < a.length; i++) {
-            if (a[i] !== b[i]) return false;
-        }
-        return true;
-    };
-
-    const handleMarkerClick = (place) => {
-        setSelectedPlace(place);
-    };
-    const handleMarkerClose = () => {
-        setSelectedPlace(null);
     };
 
     useEffect(() => {
         if (!user || !mapData) return;
 
-        // 假設每個景點都有likedBy陣列，包含喜愛該景點的用戶ID
         const likedPlacesArray = mapData.publishedPlaces.filter(
             (place) => place.likedBy && place.likedBy.includes(user.uid)
         );
@@ -563,36 +620,11 @@ const PublishedMapDetail = () => {
         setLikedPlaces(likedPlacesArray);
     }, [mapData, user]);
 
-    // 根據搜尋關鍵詞和類別篩選景點
-    const filteredPlaces = mapData?.publishedPlaces.filter(
-        (place) =>
-            (place.name
-                .toLowerCase()
-                .includes(searchTerm.trim().toLowerCase()) ||
-                place.tags.some((tag) =>
-                    tag.toLowerCase().includes(searchTerm.toLowerCase())
-                )) &&
-            (place.category === selectedCategory || selectedCategory === "")
-    );
-
-    // 根據喜愛搜尋關鍵詞和類別篩選景點
-    const filteredLikesPlaces = likedPlaces?.filter(
-        (place) =>
-            (place.name
-                .toLowerCase()
-                .includes(searchTerm.trim().toLowerCase()) ||
-                place.tags.some((tag) =>
-                    tag.toLowerCase().includes(searchTerm.toLowerCase())
-                )) &&
-            (place.category === selectedCategory || selectedCategory === "")
-    );
+    const isMapCreator = user && mapData && user.uid === mapData.userId;
 
     if (!mapData) {
         return <LoadingIndicator />;
     }
-
-    // 登入者是否為地圖作者
-    const isMapCreator = user && mapData && user.uid === mapData.userId;
 
     return (
         <div className="flex flex-col h-screen-without-navbar md:flex-row text-black bg-gray-200">
@@ -610,10 +642,8 @@ const PublishedMapDetail = () => {
                 />
             </div>
 
-            <div
-                className="relative lg:overflow-auto md:overflow-auto lg:w-1/3 md:w-1/2 w-full lg:mb-10
-      lg:mt-10 md:mt-5 mt-7 lg:mr-10 md:mr-5  bg-white shadow rounded"
-            >
+            <div className="relative lg:overflow-auto md:overflow-auto lg:w-1/3 md:w-1/2 w-full lg:mb-10
+                            lg:mt-10 md:mt-5 mt-7 lg:mr-10 md:mr-5  bg-white shadow rounded">
                 <div className="sticky top-0 bg-white shadow-lg z-10 flex items-center py-2 pl-3 space-x-3">
                     <div className="flex items-center justify-center space-x-3 py-2">
                         <button
@@ -628,7 +658,7 @@ const PublishedMapDetail = () => {
                                         <i className="fas fa-eye-slash"></i>
                                     </div>
                                     <div className="hidden lg:inline text-sm">
-                                        地圖文
+                                        {t('mapId-essay')}
                                     </div>
                                 </>
                             ) : (
@@ -638,7 +668,7 @@ const PublishedMapDetail = () => {
                                     </div>
                                     <div className="hidden lg:inline text-sm">
                                         {" "}
-                                        地圖文{" "}
+                                        {t('mapId-essay')}{" "}
                                     </div>
                                 </>
                             )}
@@ -664,11 +694,11 @@ const PublishedMapDetail = () => {
                                 </button>
                                 </button>
                                 <div className="hidden lg:inline text-sm font-medium">
-                                        {isRoutingMode ? "停止路徑" : "規劃路徑"}
+                                        {isRoutingMode ? t('map-route-stop') : t("map-route-machine")}
                                 </div>
                             </button>
                         </div>
-
+                        
                         <div className="place-list flex items-center justify-center mb-5 mt-5">
                             <label htmlFor="toggle-place" className="flex items-center cursor-pointer">
                             <div className="relative">
@@ -702,16 +732,158 @@ const PublishedMapDetail = () => {
                             </div>
                             </label>
                         </div>
-
                     </div>
                 </div>
                 <div className="container lg:px-6 md:px-4 px-3 py-3">
 
+                {(showPlacesList || showLikedPlacesList) && (
+                        <div className="places-list mt-4">
+                            <div className="search-and-filter mb-4">
+                                <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-2 mb-4">
+                                    <div className="flex-1">
+                                        <input
+                                            type="text"
+                                            value={searchTerm}
+                                            onChange={(e) =>
+                                                setSearchTerm(e.target.value)
+                                            }
+                                            placeholder={t('map-search-name-tag')}
+                                            className="p-2 w-full border border-gray-300 rounded-md text-black focus:ring-blue-500 focus:border-blue-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <select title="category-select"
+                                                value={selectedCategory}
+                                                onChange={(e) => setSelectedCategory(e.target.value)}
+                                                className="p-2 w-full border border-gray-300 rounded-md text-black focus:ring-blue-500 
+                                                        focus:border-blue-500">
+                                            <option value="">{t('map-search-cat')}</option>
+                                            {Object.entries(categoryMapping).map(
+                                                ([key, { text }]) => (
+                                                    <option key={key} value={key}>
+                                                        {getCategoryText(key, i18n.language)}
+                                                    </option>
+                                                )
+                                            )}
+                                        </select>
+                                    </div>
+                                </div>
+                                {searchTerm || selectedCategory ? (
+                                    <>
+                                        <h2 className="text-lg font-semibold mb-2">
+                                            {showPlacesList
+                                                ? t('map-search-list')
+                                                : t('map-liked-search-list')}
+                                        </h2>
+                                        {(showPlacesList &&
+                                            filteredPlaces.length === 0) ||
+                                            (showLikedPlacesList &&
+                                                filteredLikesPlaces.length === 0) ? (
+                                            <p className="text-center">
+                                                {t('map-search-not-found')}
+                                            </p>
+                                        ) : (
+                                            <>
+                                                {(showPlacesList
+                                                    ? filteredPlaces
+                                                    : filteredLikesPlaces
+                                                ).map((place) => (
+                                                    <div
+                                                        key={place.id}
+                                                        className="hover:bg-yellow-50 place-item flex justify-between items-center p-2 border border-gray-300 rounded m-2 cursor-pointer"
+                                                        onClick={() =>
+                                                            handleMarkerClick(place)
+                                                        }
+                                                    >
+                                                        {place.name}
+                                                    </div>
+                                                ))}
+                                            </>
+                                        )}
+                                    </>
+                                ) : (
+                                    <>
+                                        {showPlacesList && (
+                                            <>
+                                                <h2 className="text-lg font-semibold mb-2">
+                                                    {t('map-search-list')}
+                                                </h2>
+
+                                                {currentPlaces.length === 0 ? (
+                                                    <p className="text-center">{t('map-search-not-found')}</p>
+                                                ) : (
+                                                    currentPlaces.map(
+                                                    (place) => (
+                                                        <div
+                                                            key={place.id}
+                                                            className="hover:bg-green-100 place-item flex justify-between items-center p-2 border border-gray-300 rounded m-2 cursor-pointer"
+                                                            onClick={() =>
+                                                                handleMarkerClick(
+                                                                    place
+                                                                )
+                                                            }
+                                                        >
+                                                            {place.name}
+                                                            <button
+                                                                onClick={() =>
+                                                                    handlePlaceLikeClick(
+                                                                        place.id
+                                                                    )
+                                                                }
+                                                            >
+                                                                {place.isLiked ? (
+                                                                    <i className="fa-solid fa-heart text-red-500"></i>
+                                                                ) : (
+                                                                    <i className="fa-regular fa-heart "></i>
+                                                                )}
+                                                            </button>
+                                                        </div>
+                                                    ))
+                                                )}
+                                                {renderPagination(currentPage, setCurrentPage, filteredPlaces.length)}
+                                            </>
+                                        )}
+                                        {showLikedPlacesList && (
+                                            <div className="liked-places-list mt-4 mb-4">
+                                                <h2 className="text-lg font-semibold mb-2">
+                                                    {t('map-liked-search-list')}
+                                                </h2>
+                                                {currentLikedPlaces.length === 0 ? (
+                                                    <p className="text-center">
+                                                        {t('map-liked-no-spots')}
+                                                    </p>
+                                                ) : (
+                                                    <>
+                                                        {currentLikedPlaces.map(
+                                                            (place) => (
+                                                                <div
+                                                                    key={place.id}
+                                                                    className="hover:bg-yellow-50 place-item flex justify-between items-center p-2 border border-gray-300 rounded m-2 cursor-pointer"
+                                                                    onClick={() =>
+                                                                        handleMarkerClick(
+                                                                            place
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    {place.name}
+                                                                </div>
+                                                            )
+                                                        )}
+                                                        {renderPagination(likedCurrentPage, setLikedCurrentPage, filteredLikesPlaces.length, true)}
+                                                    </>
+                                                )}
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                    
                     <h1 className="text-2xl font-bold  ">
                         <i className="fas fa-map-location-dot mr-2"></i>
                         {mapData.title}
                     </h1>
-
 
                     <div className="flex items-center mb-4">
                         <div className="flex items-center mr-2">
@@ -730,12 +902,10 @@ const PublishedMapDetail = () => {
                                 {mapData.likes == 0 ? (
                                     <>
                                         <span className="hidden lg:flex text-sm">
-                                            {" "}
-                                            還沒人喜歡，當第一個吧！{" "}
+                                            {" "}{t('mapId-no-likes')}{" "}
                                         </span>
                                         <span className="md:hidden lg:hidden flex">
-                                            {" "}
-                                            0{" "}
+                                            {" "}0{" "}
                                         </span>
                                     </>
                                 ) : (
@@ -743,20 +913,20 @@ const PublishedMapDetail = () => {
                                 )}
                             </span>
                         </div>
-
+                        
                         <div className="border-2 p-1 rounded-3xl">
-                            <span className="text-sm ml-2"> 景點共 </span>
+                            <span className="text-sm ml-2"> {t('mapId-total')} </span>
                             <span className="ml-1 text-sm">
-                                {totalDuplicates} 次
+                                {totalDuplicates} {t('mapId-total-copy')}
                                 <i className="fas fa-copy ml-1 mr-1 text-black"></i>
                             </span>
                             <span className="ml-1 text-sm">
-                                {totalPlacesLikes} 次
+                                {totalPlacesLikes} {t('mapId-total-likes')}
                                 <i className="fas fa-heart ml-1 mr-1 text-black"></i>
                             </span>
                         </div>
                     </div>
-
+                    
                     {showMapContent && (
                         <div className="relative border shadow p-3 rounded-3xl">
                             <div className="flex-column items-center mb-4">
@@ -794,7 +964,7 @@ const PublishedMapDetail = () => {
                                         width={400}
                                         height={250}
                                         className="object-cover"
-                                        layout="responsive" // 设置布局方式为响应式
+                                        layout="responsive" 
                                     />
                                 </div>
                             )}
@@ -817,15 +987,15 @@ const PublishedMapDetail = () => {
                             )}
                             {mapData.updatedDate && (
                                 <p className="text-sm mb-4">
-                                    最後更新時間: {new Date(mapData.updatedDate).toLocaleString("zh-TW", { hour12: true })}
+                                    {t('mapId-last-update-time')}{new Date(mapData.updatedDate).toLocaleString("zh-TW", { hour12: true })}
                                 </p>
                             )}
                             {isMapCreator && (
                                 <Link href={`/edit-map/${user.uid}/${mapId}`}>
                                     <button
                                         title="edit-map-content"
-                                        className=" h-12 w-12 absolute bg-sky-100 right-0 top-0 rounded-full mb-5 mt-5 m-2 flex-column justify-center items-center border-2 border-dashed border-gray-300 cursor-pointer hover:border-gray-500 hover:bg-green-300"
-                                    >
+                                        className=" h-12 w-12 absolute bg-sky-100 right-0 top-0 rounded-full mb-5 mt-5 m-2 flex-column justify-center 
+                                        items-center border-2 border-dashed border-gray-300 cursor-pointer hover:border-gray-500 hover:bg-green-300" >
                                         <i className="fa fa-edit"></i>
                                     </button>
                                 </Link>
@@ -833,28 +1003,17 @@ const PublishedMapDetail = () => {
                         </div>
                     )}
                     {selectedPlace && (
-                        <div
-                            className={`relative selected-place-detail mt-4 border rounded-3xl shadow p-5
-                        transition-all duration-300 
-                        ${detailsExpanded ? "max-h-full" : "max-h-20"}`}
-                        >
-                            <p
-                                className="absolute right-0 top-0 cursor-pointer p-5"
-                                onClick={handleMarkerClose}
-                            >
+                        <div className={`relative selected-place-detail mt-4 border rounded-3xl shadow p-5 transition-all duration-300 
+                                        ${detailsExpanded ? "max-h-full" : "max-h-20"}`} >
+                            <p  className="absolute right-0 top-0 cursor-pointer p-5"
+                                onClick={handleMarkerClose} >
                                 <i className="fas fa-times"></i>
                             </p>
                             <button
                                 title="toggle-details"
                                 onClick={toggleDetails}
-                                className="absolute right-10 top-0 p-5"
-                            >
-                                <i
-                                    className={`fas ${detailsExpanded
-                                        ? "fa-chevron-up"
-                                        : "fa-chevron-down"
-                                        }`}
-                                ></i>
+                                className="absolute right-10 top-0 p-5" >
+                                <i className={`fas ${detailsExpanded ? "fa-chevron-up" : "fa-chevron-down"}`}></i>
                             </button>
                             <h3 className="text-xl font-bold ">
                                 {selectedPlace.name}
@@ -864,13 +1023,15 @@ const PublishedMapDetail = () => {
                                     <p className="text-gray-700 mt-2">
                                         {selectedPlace.description}
                                     </p>
-                                    <div
-                                        className={`text-sm ${categoryMapping[selectedPlace.category]
-                                            ?.color || "bg-gray-200"
-                                            } p-1 rounded mt-2`}
-                                    >
+                                    {/* <div className={`text-sm ${categoryMapping[selectedPlace.category]
+                                            ?.color || "bg-gray-200" } p-1 rounded mt-2`} >
                                         {categoryMapping[selectedPlace.category]
-                                            ?.text || "不明"}
+                                            ?.text || t('unknown')}
+                                    </div> */}
+
+                                     <div className={`${categoryMapping[selectedPlace.category]?.color || 'bg-gray-200'} p-2 rounded mb-4 w-24`}>
+                                        {/* {categoryMapping[selectedPlace.category]?.text || t('unknown')} */}
+                                        {getCategoryText(selectedPlace.category, i18n.language) || t('unknown')}
                                     </div>
                                     {selectedPlace.tags &&
                                         selectedPlace.tags.filter(
@@ -878,10 +1039,8 @@ const PublishedMapDetail = () => {
                                         ).length > 0 && (
                                             <div className="flex flex-wrap gap-2 mt-2">
                                                 {selectedPlace.tags.map((tag) => (
-                                                    <span
-                                                        key={tag}
-                                                        className="text-xs bg-blue-200 px-2 py-1 rounded-full"
-                                                    >
+                                                    <span key={tag}
+                                                        className="text-xs bg-blue-200 px-2 py-1 rounded-full">
                                                         {tag}
                                                     </span>
                                                 ))}
@@ -889,24 +1048,21 @@ const PublishedMapDetail = () => {
                                         )}
                                     <div className="mt-4">
                                         {selectedPlace.images.map((url, index) => (
-                                            <div
-                                                key={index}
-                                                className="image-preview mb-2 relative w-[200px] h-[200px] overflow-hidden"
-                                            >
+                                            <div key={index}
+                                                className="image-preview mb-2 relative w-[200px] h-[200px] overflow-hidden">
                                                 <LazyLoadImage effect="blur"
                                                     src={url}
                                                     alt={`${selectedPlace.name} image ${index}`}
                                                     width={200}
                                                     height={200}
                                                     className="object-cover"
-                                                    layout="responsive" // 设置布局方式为响应式
-                                                />
+                                                    layout="responsive" />
                                             </div>
                                         ))}
                                     </div>
                                     {selectedPlace?.createdTime && (
                                         <p className="text-sm">
-                                            最初發佈時間:{" "}
+                                            {t('mapId-first-publish-time')}:{" "}
                                             {new Date(
                                                 selectedPlace.createdTime
                                             ).toLocaleString("zh-TW", {
@@ -916,7 +1072,7 @@ const PublishedMapDetail = () => {
                                     )}
                                     {selectedPlace?.updatedTime && (
                                         <p className="text-sm">
-                                            最後更新時間:{" "}
+                                            {t('mapId-last-update-time')}{" "}
                                             {new Date(
                                                 selectedPlace.updatedTime
                                             ).toLocaleString("zh-TW", {
@@ -925,17 +1081,14 @@ const PublishedMapDetail = () => {
                                         </p>
                                     )}
                                     <div className="flex">
-                                        <Link
-                                            href={`https://www.google.com/maps/place/?q=place_name:${selectedPlace.name}`}
+                                        <Link href={`https://www.google.com/maps/place/?q=place_name:${selectedPlace.name}`}
                                             target="_blank"
-                                            passHref
-                                        >
+                                            passHref >
                                             <button className="flex items-center mr-3 bg-blue-100 text-black p-2 rounded hover:bg-blue-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-300">
                                                 <i className="fab fa-google mr-1"></i>
                                                 <i className="fa-solid fa-magnifying-glass mr-1.5"></i>
                                                 <span className="hidden lg:flex">
-                                                    {" "}
-                                                    名稱
+                                                    {" "}{t('map-spot-title')}
                                                 </span>
                                             </button>
                                         </Link>
@@ -951,21 +1104,20 @@ const PublishedMapDetail = () => {
                                                 <i className="fab fa-google mr-1"></i>
                                                 <i className="fa-solid fa-globe mr-1.5"></i>
                                                 <span className="hidden lg:flex">
-                                                    {" "}
-                                                    經緯
+                                                    {" "}{t("map-spot-coordinates")}
                                                 </span>
                                             </button>
                                         </Link>
                                         <button className="flex items-center mr-3 bg-blue-100 text-black p-2 rounded hover:bg-blue-400 hover:text-white
-                                  focus:outline-none focus:ring-2 focus:ring-blue-300" 
+                                                            focus:outline-none focus:ring-2 focus:ring-blue-300" 
                                             onClick={() => handleGooglePlacesToggle(selectedPlace)} >
                                     <i className="fa-solid fa-directions mr-1.5"></i>                           
-                                     {showGooglePlaces ?
+                                    {showGooglePlaces ?
                                         <span className="hidden lg:flex"> 
-                                        隱藏附近景點
+                                            {t('mapId-hide-spots')}
                                         </span> :
                                         <span className="hidden lg:flex"> 
-                                        列出附近景點
+                                            {t('mapId-show-spots')}
                                         </span> 
                                     }
                                     </button>
@@ -974,7 +1126,6 @@ const PublishedMapDetail = () => {
                             )}
                         </div>
                     )}
-                    
                     {showGooglePlaces && (
                         <GooglePlaces
                             latitude={googlePlacesCoords.lat}
@@ -982,149 +1133,7 @@ const PublishedMapDetail = () => {
                             isFetchingAPI={showGooglePlaces}
                             onSelectPlace={()=>{}}
                             placeName={selectedPlace?.name}
-                        // 其他需要的props
                         />
-                    )}
-                    {(showPlacesList || showLikedPlacesList) && (
-                        <div className="places-list mt-4">
-                            <div className="search-and-filter">
-                                <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-2 mb-4">
-                                    <div className="flex-1">
-                                        <input
-                                            type="text"
-                                            value={searchTerm}
-                                            onChange={(e) =>
-                                                setSearchTerm(e.target.value)
-                                            }
-                                            placeholder="搜尋景點名稱或標籤"
-                                            className="p-2 w-full border border-gray-300 rounded-md text-black focus:ring-blue-500 focus:border-blue-500"
-                                        />
-                                    </div>
-                                    <div>
-                                        <select
-                                            title="category-select"
-                                            value={selectedCategory}
-                                            onChange={(e) =>
-                                                setSelectedCategory(e.target.value)
-                                            }
-                                            className="p-2 w-full border border-gray-300 rounded-md text-black focus:ring-blue-500 focus:border-blue-500"
-                                        >
-                                            <option value="">搜尋類別</option>
-                                            {Object.entries(categoryMapping).map(
-                                                ([key, { text }]) => (
-                                                    <option key={key} value={key}>
-                                                        {text}
-                                                    </option>
-                                                )
-                                            )}
-                                        </select>
-                                    </div>
-                                </div>
-
-                                {searchTerm || selectedCategory ? (
-                                    <>
-                                        <h2 className="text-lg font-semibold mb-2">
-                                            {showPlacesList
-                                                ? "搜尋後景點列表"
-                                                : "搜尋後喜愛景點列表"}
-                                        </h2>
-                                        {(showPlacesList &&
-                                            filteredPlaces.length === 0) ||
-                                            (showLikedPlacesList &&
-                                                filteredLikesPlaces.length === 0) ? (
-                                            <p className="text-center">
-                                                找不到符合條件的景點
-                                            </p>
-                                        ) : (
-                                            <>
-                                                {(showPlacesList
-                                                    ? filteredPlaces
-                                                    : filteredLikesPlaces
-                                                ).map((place) => (
-                                                    <div
-                                                        key={place.id}
-                                                        className="hover:bg-yellow-50 place-item flex justify-between items-center p-2 border border-gray-300 rounded m-2 cursor-pointer"
-                                                        onClick={() =>
-                                                            handleMarkerClick(place)
-                                                        }
-                                                    >
-                                                        {place.name}
-                                                    </div>
-                                                ))}
-                                            </>
-                                        )}
-                                    </>
-                                ) : (
-                                    <>
-                                        {showPlacesList && (
-                                            <>
-                                                <h2 className="text-lg font-semibold mb-2">
-                                                    景點列表
-                                                </h2>
-                                                {mapData.publishedPlaces.map(
-                                                    (place) => (
-                                                        <div
-                                                            key={place.id}
-                                                            className="hover:bg-green-100 place-item flex justify-between items-center p-2 border border-gray-300 rounded m-2 cursor-pointer"
-                                                            onClick={() =>
-                                                                handleMarkerClick(
-                                                                    place
-                                                                )
-                                                            }
-                                                        >
-                                                            {place.name}
-                                                            <button
-                                                                onClick={() =>
-                                                                    handlePlaceLikeClick(
-                                                                        place.id
-                                                                    )
-                                                                }
-                                                            >
-                                                                {place.isLiked ? (
-                                                                    <i className="fa-solid fa-heart text-red-500"></i>
-                                                                ) : (
-                                                                    <i className="fa-regular fa-heart "></i>
-                                                                )}
-                                                            </button>
-                                                        </div>
-                                                    )
-                                                )}
-                                            </>
-                                        )}
-                                        {showLikedPlacesList && (
-                                            <div className="liked-places-list mt-4">
-                                                <h2 className="text-lg font-semibold mb-2">
-                                                    喜愛景點列表
-                                                </h2>
-                                                {likedPlaces.length === 0 ? (
-                                                    <p className="text-center">
-                                                        您還沒有喜愛任何景點
-                                                    </p>
-                                                ) : (
-                                                    <>
-                                                        {likedPlaces.map(
-                                                            (place) => (
-                                                                <div
-                                                                    key={place.id}
-                                                                    className="hover:bg-yellow-50 place-item flex justify-between items-center p-2 border border-gray-300 rounded m-2 cursor-pointer"
-                                                                    onClick={() =>
-                                                                        handleMarkerClick(
-                                                                            place
-                                                                        )
-                                                                    }
-                                                                >
-                                                                    {place.name}
-                                                                </div>
-                                                            )
-                                                        )}
-                                                    </>
-                                                )}
-                                            </div>
-                                        )}
-                                    </>
-                                )}
-                            </div>
-                        </div>
                     )}
                 </div>
             </div>

@@ -10,8 +10,8 @@ class MyDocument extends Document {
     return (
       <Html lang="zh-TW">
         <Head>
-          <meta name="description" content="旅遊景點" />
-          <meta name="keywords" content="關鍵字1, 關鍵字2" />
+          <meta name="description" content="attractions map" />
+          <meta name="keywords" content="map, spot, google map" />
           {/* Preconnect to Google Fonts */}
           <link rel="preconnect" href="https://fonts.googleapis.com" />
           <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

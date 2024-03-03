@@ -1,4 +1,6 @@
+import React from 'react';
 import { Entry } from '../types/entry';
+// import { useTranslation } from 'next-i18next';
 interface EntryListProps {
     accountings: Entry[];
     // onDelete: (index: number) => void;
@@ -7,7 +9,10 @@ interface EntryListProps {
 
 export default function EntryList({ accountings, onDelete }: EntryListProps) {
 
-    if (!accountings) return <div>資料載入中...</div>; 
+    // const { t } = useTranslation('common'); 
+    if (!accountings || accountings.length === 0) {
+        return <div>Loading...</div>;
+    }
 
     return (
         <div>
@@ -17,7 +22,9 @@ export default function EntryList({ accountings, onDelete }: EntryListProps) {
                         {accounting.type === '支出' ? '-' : '+'}{accounting.amount}
                     </span>
                     <span className="mr-4 text-white">{accounting.description}</span>
-                    <button onClick={() => { if(accounting.id) onDelete(accounting.id); }} className="bg-red-400 text-white hover:bg-red-500 px-4 py-1.5 rounded">刪除</button>
+                    <button onClick={() => { if(accounting.id) onDelete(accounting.id); }} className="bg-red-400 text-white hover:bg-red-500 px-4 py-1.5 rounded">
+                        刪除 Delete
+                    </button>
                 </div>
             ))}
         </div>

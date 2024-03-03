@@ -8,7 +8,7 @@ const ImageUploader = ({ onImageUpload }) => {
     if (event.target.files) {
       const selectedFiles = Array.from(event.target.files);
       setImages(selectedFiles);
-      onImageUpload(selectedFiles); // 呼叫父組件的回調函數
+      onImageUpload(selectedFiles);
     }
   };
 
@@ -16,7 +16,7 @@ const ImageUploader = ({ onImageUpload }) => {
     <div>
       {images.map((image, index) => (
         <div key={index}>
-          {/* 顯示圖片預覽 */}
+          {/* review */}
         </div>
       ))}
       <input 

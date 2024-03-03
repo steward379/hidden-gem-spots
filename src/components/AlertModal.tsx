@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'next-i18next';
 
 interface AlertModalProps {
   isOpen: boolean;
@@ -10,6 +11,7 @@ interface AlertModalProps {
 }
 
 const AlertModal: React.FC<AlertModalProps> = ({ isOpen, onClose=()=>{}, onConfirm = () => {}, message='', showConfirmButton=false, isALoadingAlert=false }) => {
+  const { t } = useTranslation('common'); 
   if (!isOpen) return null;
 
   return (
@@ -24,12 +26,12 @@ const AlertModal: React.FC<AlertModalProps> = ({ isOpen, onClose=()=>{}, onConfi
           )}
           {showConfirmButton && (
             <button onClick={onConfirm} className="mt-4 bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600">
-              確認
+              {t('alert-button')}
             </button>
           )}
           {!isALoadingAlert && (
             <button onClick={onClose} className="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">
-              {showConfirmButton ? '取消' : '確定'}
+              {showConfirmButton ? t('confirm-button-no') : t('confirm-button-yes')}
             </button>
           )}
         </div>

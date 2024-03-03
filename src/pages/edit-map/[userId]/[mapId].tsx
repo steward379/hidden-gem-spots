@@ -1,26 +1,22 @@
 // pages/edit-map/[userId]/[mapId].tsx
 import { useRouter } from 'next/router';
-import Image from 'next/image';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/blur.css';
 import dynamic from 'next/dynamic';
 import React, { useState, useEffect } from 'react';
-// redux
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from  '../../../store/store';
-import { setMapDataRedux } from '../../../store/slices/mapSlice';
-// firebase
+// import { setMapDataRedux } from '../../../store/slices/mapSlice';
 import { doc, getDoc, updateDoc, collection, getDocs } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import firebaseServices from  '../../../utils/firebase';
 const { db, storage } = firebaseServices;
 import { useAuth } from '../../../context/AuthContext';
-// component, dnd
 import DropzoneImage from '../../../components/DropzoneImage';
 import LoadingIndicator from '@/src/components/LoadingIndicator';
 import AlertModal from '@/src/components/AlertModal';
-// static
 import 'react-quill/dist/quill.snow.css'; 
+import { useTranslation } from 'next-i18next';
 
 const MapComponentWithNoSSR = dynamic(
     () => import('../../../components/MapComponent'),
@@ -31,17 +27,16 @@ const ReactQuill = dynamic(() => import('react-quill'), {
     loading: () => <p>Loading...</p>,
 });
 const EditMap = () => {
-
+  const { t } = useTranslation('common'); 
+  
   const router = useRouter();
 
   const { user } = useAuth();
-
   const { mapId } = router.query;
 
   const reduxMapData = useSelector((state: RootState) => state.map.mapDataRedux);
   
   const [mapData, setMapData] = useState(null);
-
   const [tags, setTags] = useState('');
 
   const [coverImageFile, setCoverImageFile] = useState(null);
@@ -70,13 +65,13 @@ const EditMap = () => {
             title: data.title || '',
             content: data.content || '',
             coverImage: data.coverImage || '',
-            authorName: '', // 初始化 authorName
-            publishedPlaces: [] // 初始化 publishedPlaces
+            authorName: '', 
+            publishedPlaces: []
           };
           const authorRef = doc(db, 'users', user.uid);
           const authorSnap = await getDoc(authorRef);
           if (authorSnap.exists()) {
-            mapDetails.authorName = authorSnap.data().name || '未知';
+            mapDetails.authorName = authorSnap.data().name || 'Unknown';
           }
           const placesRef = collection(db, `publishedMaps/${user.uid}/maps/${mapId}/places`);
           const placesSnap = await getDocs(placesRef);
@@ -88,11 +83,10 @@ const EditMap = () => {
           setMapData(mapDetails); 
           setCoverImagePreview(data.coverImage || '');
         } else {
-          console.log('找不到地圖資料');
+          console.log('Map Data not Found');
         }
       }
     };
-
     fetchMapData();
 
   }, [mapId, user.uid, reduxMapData]);
@@ -101,16 +95,7 @@ const EditMap = () => {
     setCoverImageFile(file);
     setCoverImagePreview(URL.createObjectURL(file));
   };
-
-  // const handleCoverImageChange = (event) => {
-  //     const file = event.target.files[0];
-
-  //     if (file) {
-  //         setCoverImageFile(file);
-  //         setCoverImagePreview(URL.createObjectURL(file));
-  //     }
-  // };
-
+  
   const handleRemoveImage = () => {
       setCoverImageFile(null);
       setCoverImagePreview('');
@@ -136,7 +121,7 @@ const EditMap = () => {
       const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
       return downloadURL;
     } catch (error) {
-      console.error('上傳圖片時發生錯誤: ', error);
+      console.error('An error occurred while uploading: ', error);
       return null;
     }
   };
@@ -165,9 +150,8 @@ const EditMap = () => {
       router.push(`/publishedMaps/${user.uid}/maps/${mapId}`);
     }
   };
-
   const resetChanges = () => {
-    setConfirmMessage('您確定要取消發佈嗎？文章將清空');
+    setConfirmMessage(t('edit-cancel-confirm'));
     setConfirmFunction(()=>confirmResetChanges);
     setShowResetConfirm(true);
   };
@@ -195,10 +179,10 @@ const EditMap = () => {
               className="p-2 mb-5 rounded-3xl flex-column justify-center items-center border-2 border-dashed border-gray-300 cursor-pointer hover:border-gray-500 hover:bg-gray-200"
               onClick={resetChanges}>
               <i className="fas fa-circle-arrow-left"></i>
-              <span className="ml-1.5 hidden lg:inline-block text-sm">取消變更</span>
+              <span className="ml-1.5 hidden lg:inline-block text-sm">{t('edit-cancel-editing')}</span>
             </button>
             <form className="space-y-4" onSubmit={handleSubmit}>
-                    <div className="font-medium text-lg"> 標題更改 </div>
+                    <div className="font-medium text-lg"> {t('edit-map-title-edit')} </div>
                     <input
                         className="text-black border rounded mb-2 w-full p-2"
                         title="map-title"
@@ -206,7 +190,7 @@ const EditMap = () => {
                         value={mapData.title}
                         onChange={(e) => setMapData({ ...mapData, title: e.target.value })}
                     />
-                    <div className="font-medium text-lg mb-3"><label> 內容更改 </label></div>
+                    <div className="font-medium text-lg mb-3"><label>{t('edit-map-contents')} </label></div>
 
                     <ReactQuill theme="snow" value={mapData.content} onChange={(e) => setMapData({ ...mapData, content: e })} />
 
@@ -218,7 +202,7 @@ const EditMap = () => {
                       onClick={() => setShowSourceCode(!showSourceCode)}
                     >
                       <i className={`fas ${showSourceCode ? 'fa-eye-slash' : 'fa-eye'} mr-2`}></i>
-                      <div>{showSourceCode ? "隱藏原始碼" : "顯示原始碼"}</div>
+                      <div>{showSourceCode ? t('show-source-code') : t('hide-source-code')}</div>
                     </button>
                     
                     {showSourceCode && (
@@ -230,7 +214,7 @@ const EditMap = () => {
                     />
                     )}
 
-                    <label className="font-medium text-lg mb-3"> Tags 更改 </label>
+                    <label className="font-medium text-lg mb-3"> {t('edit-map-tags')} </label>
                     <input 
                       className="text-black border rounded mb-2 w-full p-2"
                       title="map-tags"
@@ -246,7 +230,7 @@ const EditMap = () => {
                     onChange={(e) => setMapData({ ...mapData, content: e.target.value })}
                 /> */}
                 <div className="mb-4 text-lg font-medium">
-                  <label className="font-medium text-lg mb-3"> 變更封面圖片 </label>
+                  <label className="font-medium text-lg mb-3"> {t('edit-map-cover')} </label>
                   {/* <input 
                       title="cover-photo"
                       type="file" 
@@ -257,7 +241,9 @@ const EditMap = () => {
                   {coverImageFile ? (
                     <div className="mb-5">{coverImageFile.name}</div>
                   ) : (
-                    <div className="text-gray-500 mb-5 text-sm">沒有選擇檔案</div>
+                    <div className="text-gray-500 mb-5 text-sm">
+                      {t('edit-no-files-selected')}
+                    </div>
                   )}
                  {coverImagePreview && (
                     <div className="relative mt-2 mb-10 w-full h-300 w-100 overflow-hidden">
@@ -268,15 +254,17 @@ const EditMap = () => {
                                   layout="responsive"
                                     />
                       <button onClick={handleRemoveImage} className="absolute top-0 right-0 bg-red-500 text-white p-2 rounded-full hover:bg-red-700">
-                        移除圖片
+                        {t('publish-delete-cover')}
                       </button>
                     </div>
                   )}
                   <button type="submit" className="mb-3 m-2 bg-green-100 flex-column justify-center items-center border-2 border-dashed border-gray-300 rounded-lg h-12 w-40 cursor-pointer hover:border-green-500 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium">
-                    <i className="fas fa-check-circle mr-1"></i> 保存變更
+                    <i className="fas fa-check-circle mr-1"></i> 
+                    <span>{t('edit-map-post-save')}</span>
                   </button>
                   <button type="button" onClick={resetChanges} className="mb-5 m-2 bg-red-100 flex-column justify-center items-center border-2 border-dashed border-gray-300 rounded-lg h-12 w-40 cursor-pointer hover:border--500 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium">
-                    <i className="fas fa-times-circle mr-1"></i>取消變更
+                    <i className="fas fa-times-circle mr-1"></i>
+                    <span>{t('edit-cancel-post-save')}</span>
                   </button>
                 </div>
             </form>

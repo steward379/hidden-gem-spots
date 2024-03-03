@@ -18,13 +18,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const response = await client.placesNearby({
         params: {
           location: `${latitude},${longitude}`,
-          radius: 2000, // 搜索半径为2000米
+          radius: 2000, 
           key: process.env.GOOGLE_MAPS_API_KEY,
         },
         timeout: 1000,
       });
 
-      // 只保留前 50 個結果
       const topResults = response.data.results.slice(0, 50);
 
       res.status(200).json({ ...response.data, results: topResults });
@@ -45,7 +44,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 // async function fetchPlaces(latitude, longitude) {
 //     const response = await fetch(`/api/places?latitude=${latitude}&longitude=${longitude}`);
 //     const data = await response.json();
-//     // 處理資料
 //   }
 
 // 新版的搜尋附近地點功能，使用 'findplacefromtext' 方法

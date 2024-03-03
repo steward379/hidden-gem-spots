@@ -8,8 +8,6 @@ const DropzoneImage = ({ onFileUploaded }) => {
       onFileUploaded(acceptedFiles[0]);
     }
   });
-// Multiple Files
-
   return (
     <div {...getRootProps()} className="mb-5 mt-5 flex justify-center items-center border-2 border-dashed
                             border-gray-300 rounded-lg h-32 w-32 cursor-pointer hover:border-gray-500">

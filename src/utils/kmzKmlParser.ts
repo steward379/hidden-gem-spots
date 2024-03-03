@@ -33,21 +33,18 @@ const extractPlaces = (kmlData) => {
     folders.forEach(folder => {
       const placemarks = folder?.Placemark || [];
       const extractedPlacemarks = placemarks.map(placemark => {
-        // 切割坐標字串
         let coordinatesStr = placemark.Point && placemark.Point[0].coordinates[0].trim();
         let coordinates = coordinatesStr ? coordinatesStr.split(',') : null;
         let warningTag = '';
-  
-        // 檢查並處理 [0, 0] 坐標
         if (!coordinates || coordinates.length < 2) {
-          coordinates = [121.56, 25.03]; // 替換為預設值
-          warningTag = '缺乏經緯度';
+          coordinates = [121.56, 25.03]; 
+          warningTag = 'Lack of coordinates';
         }
   
   
         return {
           name: placemark.name[0],
-          description: placemark.description ? placemark.description[0] : '無描述',
+          description: placemark.description ? placemark.description[0] : 'NO descriptions',
           tags:warningTag ? [warningTag] : [],
           category: 'others', 
           coordinates: {
@@ -58,7 +55,7 @@ const extractPlaces = (kmlData) => {
           images: [],
           updatedTime: '',
         };
-      }).filter(p => p !== null); // 過濾掉無效的結果
+      }).filter(p => p !== null); 
   
       allPlacemarks = [...allPlacemarks, ...extractedPlacemarks];
     });
@@ -66,7 +63,6 @@ const extractPlaces = (kmlData) => {
     return allPlacemarks;
   };
 
-  // 解析 JSON 檔案
 export const parseJSONFile = async (file) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -81,7 +77,7 @@ export const parseJSONFile = async (file) => {
           reject(err);
         }
       } else {
-        reject(new Error('無效的 JSON 檔案'));
+        reject(new Error('Invalid JSON File'));
       }
     };
     reader.onerror = (err: Event) => reject(err);
@@ -89,7 +85,6 @@ export const parseJSONFile = async (file) => {
   });
 };
 
-// 從 GeoJSON 數據中提取地點
 const extractPlacesFromJSON = (jsonData) => {
   const features = jsonData?.features || [];
   return features.map(feature => {
@@ -101,16 +96,16 @@ const extractPlacesFromJSON = (jsonData) => {
 
     let warningTag = '';
     if (coordinates[0] === 0 && coordinates[1] === 0) {
-      warningTag = '缺乏經緯度';
+      warningTag = 'Lack of coordinates';
     }
 
     if (!coordinates || coordinates.length < 2 || (coordinates[0] === 0 && coordinates[1] === 0)) {
-      return null;  // 當經緯度為 0,0 時不返回該項目
+      return null;
     }
 
     return {
-      name: properties.location?.name || '未命名地點',
-      description: properties.Comment || '無描述',
+      name: properties.location?.name || 'Unnamed Place',
+      description: properties.Comment || 'No description',
       tags: warningTag ? [warningTag] : [],
       category: 'others',
       coordinates: {
@@ -133,6 +128,6 @@ export const parseFile = async (file) => {
     case 'json':
       return parseJSONFile(file);
     default:
-      throw new Error('不支持的文件類型');
+      throw new Error('The file type is not supported');
   }
 };

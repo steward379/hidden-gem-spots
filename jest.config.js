@@ -4,8 +4,8 @@ module.exports = {
   // testPathIgnorePatterns: ["/node_modules/", "/.next/"],
   setupFilesAfterEnv: ["<rootDir>/setupTests.ts"],
   transform: {
-    "^.+\\.(ts|tsx)$": "ts-jest", // 處理 TypeScript 檔案
-    // "^.+\\.(js|jsx)$": "babel-jest" // 處理 JavaScript 檔案
+    "^.+\\.(ts|tsx)$": "ts-jest",
+    // "^.+\\.(js|jsx)$": "babel-jest" 
   },
   moduleNameMapper: {
     "\\.(css|less|sass|scss)$": "identity-obj-proxy",
