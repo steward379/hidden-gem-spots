@@ -5,6 +5,7 @@ import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/blur.css';
 import Link from 'next/link';
 import { categoryMapping } from '@/src/constants';
+import { useTranslation } from 'next-i18next';
 
 // zustand
 import useGooglePlacesStore from '../store/googlePlacesStore'
@@ -14,10 +15,11 @@ const GooglePlaces = ({ latitude, longitude, isFetchingAPI = false,
   onSelectPlace = null,
   placeName = '',
 }) => {
-    const [allData, setAllData] = useState(null); // 存儲 API 返回的完整數據
+  const { t } = useTranslation('common'); 
+    const [allData, setAllData] = useState(null);
 
     const [data, setData] = useState(null);
-    const [displayData, setDisplayData] = useState(null); // 存儲當前頁面要顯示的數據
+    const [displayData, setDisplayData] = useState(null);
 
     const [error, setError] = useState('');
 
@@ -69,13 +71,12 @@ const GooglePlaces = ({ latitude, longitude, isFetchingAPI = false,
     const totalPages = allData ? Math.ceil(allData.results.length / itemsPerPage) : 0;
 
     const mapGooglePlaceToPlace = (googlePlace) => {
-      // 尋找第一個匹配的類別
       const foundCategory = googlePlace.types.find(type => categoryMapping[type]) || 'others';
     
       // return {
       const googlePlaceMapping = {
         name: googlePlace.name,
-        description: googlePlace.vicinity, // 或自定義
+        description: googlePlace.vicinity, 
         tags: googlePlace.types,
         category: foundCategory,
         coordinates: {
@@ -123,11 +124,11 @@ const GooglePlaces = ({ latitude, longitude, isFetchingAPI = false,
       {error && <p className="text-red-500">{error}</p>}
 
       <div className="space-y-4">
-        { placeName ? (<div><h3 className="text-lg font-medium"> {placeName} 附近有以下 Google 景點 </h3></div> ): ''}
-        {displayData && displayData.status === 'ZERO_RESULTS' && <p>No results found</p>}
+        { placeName ? (<div><h3 className="text-lg font-medium"> {placeName} {t('Google-nearby-places')} </h3></div> ): ''}
+        {displayData && displayData.status === 'ZERO_RESULTS' && <p>{t('Google-no-results')}</p>}
         {displayData && displayData.results.map((place, index) => (
           <div key={index} className="p-4 border border-gray-300 rounded shadow space-y-1">
-            <p className="text-sm">緯度 {place.geometry.location.lat}, 經度 {place.geometry.location.lng}</p>
+            <p className="text-sm">{t('Google-lng')} {place.geometry.location.lng} , {t('Google-lat')} {place.geometry.location.lat}</p>
             <h4 className="font-bold text-lg">{place.name}</h4>
             <div className="flex space-x-3">            
             <LazyLoadImage className="w-5 h-5" src={place.icon} alt={place.name} width="100" height="100" effect="blur" />
@@ -138,7 +139,7 @@ const GooglePlaces = ({ latitude, longitude, isFetchingAPI = false,
                 onClick={() => mapGooglePlaceToPlace(place)}
                 className=" bg-amber-600 text-white px-4 py-1 rounded hover:bg-green-600 mt-2">
                 <div className="flex">
-                  <p className="hidden lg:block mr-2">查看位置</p>
+                  <p className="hidden lg:block mr-2">{t('Google-place-show-map')}</p>
                   <p>
                     <i className="fas fa-map-marker-alt"></i>
                   </p>

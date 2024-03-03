@@ -3,8 +3,11 @@ import React, {useEffect} from 'react';
 import { useDrop } from 'react-dnd';
 // import { Place } from '../types/Place';
 import useDragPlacesStore from '../store/dragPlacesStore';
+import { useTranslation } from 'next-i18next';
 
 const PublishArea = ({ publishedPlaces, onAddToPublish = undefined, onRemoveFromPublish, onSelectPlace }) => {
+
+  const { t } = useTranslation('common'); 
 
   const draggedPlace = useDragPlacesStore(state => (state as any).draggedPlace);
 
@@ -36,8 +39,10 @@ const PublishArea = ({ publishedPlaces, onAddToPublish = undefined, onRemoveFrom
     
     return (
       <div ref={drop} className="mt-5 p-2 border border-gray-300 rounded">
-        <h3 className="mb-3 text-xl font-semibold text-gray-700">發佈區</h3>
+        <h3 className="mb-3 text-xl font-semibold text-gray-700"> {t('publish-map-area')}</h3>
         <ul>
+        { publishedPlaces === '[]' ? 
+          <>
           {publishedPlaces.map(place => (
             <li key={place.id} className="cursor-pointer place-item flex justify-between hover:bg-green-100 items-center p-2 border border-gray-300 rounded m-2" 
                  onClick={() => onSelectPlace(place)}>
@@ -51,6 +56,9 @@ const PublishArea = ({ publishedPlaces, onAddToPublish = undefined, onRemoveFrom
               </button>
             </li>
           ))}
+          </> :
+          <li className="text-gray-600 text-center"> {t('publish-no-place')} </li>
+        }
         </ul>
       </div>
     );

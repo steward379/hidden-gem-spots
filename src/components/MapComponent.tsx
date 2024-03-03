@@ -1,29 +1,23 @@
-// pages/components/MapComponent.tsx
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/blur.css';
-
 import L from 'leaflet';
 import 'leaflet-minimap';
 import 'leaflet-routing-machine';
 import { GeoSearchControl, OpenStreetMapProvider } from 'leaflet-geosearch';
 import 'leaflet/dist/leaflet.css';
-import 'leaflet-geosearch/dist/geosearch.css'; // geosearch_css
-import 'leaflet-minimap/dist/Control.MiniMap.min.css'; // minimap_css
+import 'leaflet-geosearch/dist/geosearch.css'; 
+import 'leaflet-minimap/dist/Control.MiniMap.min.css'; 
 import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
-// function
 import { decimalToDms, formatCoordinates } from '../utils/decimalCoordinates'
-// components
 import AlertModal from './AlertModal';
-// zustand
 import useGooglePlacesStore from '../store/googlePlacesStore';
 import useKmzPlacesStore from '../store/kmzPlacesStore';
 import useDragPlacesStore from '../store/dragPlacesStore';
-
 import { categoryMapping } from '../constants';
-import { doc } from '@firebase/firestore';
-import { clear } from 'console';
+import { categoryMappingEN } from '../constants';
+import { useTranslation } from 'next-i18next';
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -46,10 +40,8 @@ const MapComponent = ({
   isAddingMarker = false, 
   onMarkerClick = undefined, 
   onCancel = undefined, 
-
   isEditing = false, 
   isPublishing = false,
-
   onAddToPublish = undefined,
   onRemoveFromPublish = undefined,
   publishedPlaces = [],
@@ -67,20 +59,20 @@ const MapComponent = ({
   isTyping = false,
 }) => {
 
-  // zustand
+  const { t, i18n } = useTranslation('common'); 
+
+  function getCategoryText(categoryKey, language) {
+    const categoryMappingNow = language === 'en-US' ? categoryMappingEN : categoryMapping;
+    return categoryMappingNow[categoryKey]?.text || 'Unknown 不明';
+  }
+
   const { googlePlace, clearGooglePlace } = useGooglePlacesStore();
   const { kmzPlace, clearKmzPlace } = useKmzPlacesStore();
-  // Taipei 101
   const defaultLat = 25.0330;
   const defaultLng = 121.5654;
-
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [ showDeleteConfirm, setShowDeleteConfirm ] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
-    // const showAlert = (message) => {
-  //   setAlertMessage(message);
-  //   setIsAlertOpen(true);
-  // };
 
   const mapRef = useRef(null);
   const [map, setMap] = useState(null)
@@ -89,24 +81,20 @@ const MapComponent = ({
 
   const [isLoading, setLoading] = useState(false);
   const [userPosition, setUserPosition] = useState(null);
-
   const handleFetchLocationClick = () => {
     fetchLocation();
   };
 
-  // routing machine
   const [routeWaypoints, setRouteWaypoints] = useState([]);
   const [routingControl, setRoutingControl] = useState(null);
   
-  const [waypoints, setWaypoints] = useState([]);
+  // const [waypoints, setWaypoints] = useState([]);
 
   const [startMarker, setStartMarker] = useState(null);
   const [endMarker, setEndMarker] = useState(null);
   const [freeModeMarkers, setFreeModeMarkers] = useState([]);
-
   const [isRoutingPaused, setIsRoutingPaused] = useState(false);
 
-  // 當 routeWaypoints 改變時，更新路徑
   useEffect(() => {
     if (routingControl) {
       routingControl.setWaypoints(routeWaypoints);
@@ -118,7 +106,6 @@ const MapComponent = ({
       iconUrl: '/images/marker-add.png', 
       iconRetinaUrl: '/images/marker-add.png',
       shadowUrl: '/images/marker-shadow.png',
-      // iconSize: [25, 41], 
       iconSize: [25, 35], 
       iconAnchor: [12, 35],
       popupAnchor: [-3, -36], 
@@ -131,8 +118,6 @@ const MapComponent = ({
       iconUrl: '/images/marker-free.png', 
       iconRetinaUrl: '/images/marker-free.png',
       shadowUrl: '/images/marker-shadow.png',
-      
-      // iconSize: [25, 41], 
       iconSize: [25, 35], 
       iconAnchor: [12, 35],
       popupAnchor: [-3, -36], 
@@ -145,8 +130,6 @@ const MapComponent = ({
       iconUrl: '/images/marker-icon-2x.png', 
       iconRetinaUrl: '/images/marker-icon-2x.png',
       shadowUrl: '/images/marker-shadow.png',
-      
-      // iconSize: [25, 41], 
       iconSize: [25, 35], 
       iconAnchor: [12, 35],
       popupAnchor: [-3, -36], 
@@ -159,8 +142,6 @@ const MapComponent = ({
       iconUrl: '/images/marker.png', 
       iconRetinaUrl: '/images/marker.png',
       shadowUrl: '/images/marker-shadow.png',
-      
-      // iconSize: [25, 41], 
       iconSize: [25, 35], 
       iconAnchor: [12, 35],
       popupAnchor: [-3, -36], 
@@ -173,8 +154,6 @@ const MapComponent = ({
       iconUrl: '/images/marker-free-purple.png', 
       iconRetinaUrl: '/images/marker-free-purple.png',
       shadowUrl: '/images/marker-shadow.png',
-      
-      // iconSize: [25, 41], 
       iconSize: [25, 35], 
       iconAnchor: [12, 35],
       popupAnchor: [-3, -36], 
@@ -182,8 +161,6 @@ const MapComponent = ({
     });
   }, []); 
 
-
-  // kill new markers while canceling
   useEffect(() => {
     if (!isAddingMarker && newMarker ) {
       newMarker.remove(); 
@@ -206,7 +183,6 @@ const MapComponent = ({
   //   setGoogleMarkers([]);
   // };
 
-  // fetch user location while permitted
   const fetchLocation = () => {
     setLoading(true);
 
@@ -215,7 +191,7 @@ const MapComponent = ({
         const newPosition = [position.coords.latitude, position.coords.longitude];
         setUserPosition(newPosition);
         if (map) {
-          map.setView(newPosition, 13); // 更新地圖視圖
+          map.setView(newPosition, 13);
         }
         setLoading(false);
       },
@@ -224,7 +200,7 @@ const MapComponent = ({
         const defaultPosition = [defaultLat, defaultLng];
         setUserPosition(defaultPosition);
         if (map) {
-          map.setView(defaultPosition, 13); // 更新地圖視圖
+          map.setView(defaultPosition, 13); 
         }
         setLoading(false);
       },
@@ -232,7 +208,6 @@ const MapComponent = ({
     );
   };
 
-  // Initialize the map
   useEffect(()  => {
     let newMap = null;
 
@@ -244,8 +219,6 @@ const MapComponent = ({
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         // attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(newMap);
-
-        // 設置路徑規劃控件但不設置路徑
   
       const newRoutingControl = (L as any).Routing.control({
         waypoints: [],
@@ -299,7 +272,8 @@ const MapComponent = ({
       onAddToPublish({ ...originalPlace, coordinates: newCoordinates });
     }
 
-    tempMarker.remove(); // 移除臨時標記
+    tempMarker.remove();
+
     setDraggedPlace(null);
   }, [onAddToPublish, setDraggedPlace, isMarkerInImageArea]);
 
@@ -322,8 +296,6 @@ const MapComponent = ({
     }
   }, [publishedPlaces, markers, defaultIcon, customGoogleIcon, isPublishing, isTyping]);
 
-
-  // 'places' rendering
   useEffect(() => {
     if (!map || !places) return;
 
@@ -334,7 +306,8 @@ const MapComponent = ({
     const newMarkers = places.map(place => {
       if (!place.coordinates) return null;
 
-      const category = categoryMapping[place.category] || { color: 'bg-gray-200', text: '不明' }; 
+      const categoryText = getCategoryText(place.category, i18n.language) || t('unknown');
+      // const category = categoryMapping[place.category] || { color: 'bg-gray-200', text: 'unknown' }; 
 
       const latestImages = place?.images?.slice(-2);
       const imageElements = latestImages?.map(image => 
@@ -351,9 +324,11 @@ const MapComponent = ({
         <b class="text-lg">${place.name}</b>
         <p>${place.description}</p>
         ${imageElements}
-        <div class="mt-3 mb-3 text-sm text-gray-500 ${category.color} p-1 rounded">
-          ${category.text}
+
+        <div class="mt-3 mb-3 text-sm text-gray-500 ${categoryMapping[place.category]?.color || 'bg-gray-200'} p-1 rounded">
+          ${categoryText}
         </div>
+
         <div class="flex flex-wrap gap-2" >
           ${
             place.tags && Array.isArray(place.tags) 
@@ -368,14 +343,14 @@ const MapComponent = ({
 
               
                 <i class="fas fa-heart text-lg text-red-300 hover:text-red-500"></i>
-                <span class="like-count ml-2"> ${place.likes} 枚</span>
+                <span class="like-count ml-2"> ${place.likes}</span>
               </button>` : ''}
  
             </div>
             <div class="duplicate-section flex items-center justify-center">
               ${allowDuplicate ? `<button class="duplicate-button mr-2" data-place-id="${place.id}">
                 <i class="fas fa-copy text-lg text-gray-600 hover:text-green-500"></i>
-                <span class="duplicate-count">${place.duplicates} 次</span>
+                <span class="duplicate-count">${place.duplicates}</span>
               </button>` : ''}
             </div>
           </div>` : ''
@@ -386,7 +361,7 @@ const MapComponent = ({
         ${isPublishing ?
         `<button id="add-to-publish-${place.id}" class="mt-2 bg-green-500 text-wh
         ite py-2 px-3 rounded hover:bg-green-600 focus:outline-none  text-white">
-          加入發佈區
+          ➕ Add
         </button>` : ''
         }
         </div>`
@@ -418,7 +393,6 @@ const MapComponent = ({
     // setMarkers(newMarkers); 
 
     setMarkers(prevMarkers => {
-      // 移除舊的標記
       prevMarkers.forEach(marker => {
         if (!newMarkers.includes(marker) && !freeModeMarkers.includes(marker)) {
           marker.remove();
@@ -463,20 +437,19 @@ const MapComponent = ({
       
       map.on('geosearch/showlocation', (event) => {
         const marker = event.marker;
-        const locationName = event.location.label; // 從 event 獲取位置名稱
+        const locationName = event.location.label; 
     
         const popupContent = `
           <div class="text-center">
-            <p class="font-bold">${locationName}</p> <!-- 顯示位置名稱 -->
-            <p>經度: ${marker.getLatLng().lng.toFixed(5)}</p>
-            <p>緯度: ${marker.getLatLng().lat.toFixed(5)}</p>
+            <h5 class="font-bold">${locationName}</h5> 
+            <p>${marker.getLatLng().lng.toFixed(5)}, ${marker.getLatLng().lat.toFixed(5)}</p>
 
             <a href=${`https://www.google.com/maps/place/${decimalToDms(marker.getLatLng().lat, marker.getLatLng().lng)}`} target="_blank" passHref>
               <button className="bg-blue-100 text-black p-2 rounded hover:bg-blue-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-300">
-                在 G 中查看
+                Google Map
               </button>
             </a>
-            <button id="delete-marker-btn" class="mt-2 bg-red-500 text-white py-1 px-2 rounded hover:bg-red-600 focus:outline-none">刪除標記</button>
+            <button id="delete-marker-btn" class="mt-2 bg-red-500 text-white py-1 px-2 rounded hover:bg-red-600 focus:outline-none">刪除 Delete </button>
           </div>
         `;
 
@@ -493,13 +466,12 @@ const MapComponent = ({
         });
       });
 
-      // 初始化迷你地圖
-      const isMobile = window.innerWidth <= 768; // 假設手機版為寬度小於或等於 768px
+      const isMobile = window.innerWidth <= 768;
       const miniMap = new (L as any).Control.MiniMap(
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'), 
         {
           toggleDisplay: true,
-          minimized: isMobile, // 根據螢幕尺寸設置迷你地圖是否最小化
+          minimized: isMobile,
           position: 'bottomright'
         }
       ).addTo(map);
@@ -515,10 +487,10 @@ const MapComponent = ({
     }
   }, [map, isEditing, customIcon]);
 
-  // google marker
   useEffect(() => {
     if (map && googlePlace ) {
       const { lat, lng, name, description } = googlePlace.coordinates;
+      const categoryText = getCategoryText(googlePlace.category, i18n.language) || t('unknown');
 
       const tempMarker = L.marker([googlePlace.coordinates.lat, googlePlace.coordinates.lng], {
         icon: customGoogleIcon,
@@ -528,17 +500,17 @@ const MapComponent = ({
         <div class="text-center z-20" style="width:150px">
           <b class="text-lg">${googlePlace.name}</b>
           <p>${googlePlace.description == undefined ? '' : googlePlace.description }</p>
-          <div class="${categoryMapping[googlePlace.category]?.color || 'bg-gray-200'} p-2 rounded mb-4 w-full">
-            ${categoryMapping[googlePlace.category]?.text || '不明'}
+
+          <div class="mt-3 mb-3 text-sm text-gray-500 ${categoryMapping[googlePlace.category]?.color || 'bg-gray-200'} p-1 rounded">
+            ${categoryText}
           </div>
+
           <div class="coordinates-container p-2">
             <span>${formatCoordinates(googlePlace.coordinates.lat, googlePlace.coordinates.lng)}</span>
           </div>
-          <button id="delete-temp-marker-btn" class="mt-2 bg-red-500 text-white py-1 px-2 rounded hover:bg-red-600 focus:outline-none">刪除標記</button>
+          <button id="delete-temp-marker-btn" class="mt-2 bg-red-500 text-white py-1 px-2 rounded hover:bg-red-600 focus:outline-none">Delete</button>
         </div>
       `;
-
-  
 
       tempMarker.on('popupopen', () => {
         const deleteButton = document.getElementById('delete-temp-marker-btn');
@@ -564,6 +536,7 @@ const MapComponent = ({
   useEffect(() => {
     if (map && kmzPlace ) {
       const { lat, lng, name, description } = kmzPlace.coordinates;
+      const categoryText = getCategoryText(kmzPlace.category, i18n.language) || t('unknown');
 
       const tempMarker = L.marker([kmzPlace.coordinates.lat, kmzPlace.coordinates.lng], {
         icon: customGoogleIcon,
@@ -573,8 +546,9 @@ const MapComponent = ({
         <div class="text-center z-20" style="width:150px">
           <b class="text-lg">${kmzPlace.name}</b>
           <p>${kmzPlace.description == undefined ? '' : kmzPlace.description }</p>
-          <div class="${categoryMapping[kmzPlace.category]?.color || 'bg-gray-200'} p-2 rounded mb-4 w-full">
-            ${categoryMapping[kmzPlace.category]?.text || '不明'}
+
+          <div class="mt-3 mb-3 text-sm text-gray-500 ${categoryMapping[kmzPlace.category]?.color || 'bg-gray-200'} p-1 rounded">
+            ${categoryText}
           </div>
           <div> 
           ${
@@ -706,7 +680,6 @@ const MapComponent = ({
   useEffect(() => {
     if(map){
       if (isEditing) {
-        // 禁用地圖的所有交互功能
         map.dragging.disable();
         map.touchZoom.disable();
         map.doubleClickZoom.disable();
@@ -714,10 +687,9 @@ const MapComponent = ({
         map.boxZoom.disable();
         map.keyboard.disable();
         if (newMarker) {
-          newMarker.dragging.disable(); // 確保新標記也不可拖動
+          newMarker.dragging.disable(); 
         }
       } else {
-        // 啟用地圖的所有交互功能
         map.dragging.enable();
         map.touchZoom.enable();
         map.doubleClickZoom.enable();
@@ -726,7 +698,7 @@ const MapComponent = ({
         map.keyboard.enable();
 
         if (newMarker) {
-          newMarker.dragging.enable(); // 確保新標記可拖動
+          newMarker.dragging.enable(); 
         }
       }
     }
@@ -744,19 +716,18 @@ const MapComponent = ({
     }
   }, [routingControl, isRoutingPaused]);
 
-  // 自由模式下移除標記的函數，未使用
+
   const removeMarker = useCallback((marker) => {
     marker.remove();
     setFreeModeMarkers(prev => {
       const updatedMarkers = prev.filter(m => m !== marker);
       if (!isRoutingPaused) {
-        updateFreeModeRoute(updatedMarkers); // 只有當不在暫停模式時才更新路徑
+        updateFreeModeRoute(updatedMarkers); 
       }
       return updatedMarkers;
     });
   }, [updateFreeModeRoute, isRoutingPaused]);
 
-  // 自由模式下添加標記的函數，未使用
   const onRouteMapClick = useCallback((event) => {
     if (!isRoutingMode && !isFreeMode) return;
 
@@ -802,12 +773,11 @@ const MapComponent = ({
       }).addTo(map);
 
    
-     // newMarker._leaflet_id = L.Util.stamp(newMarker); // 給新標記一個唯一ID
+     // newMarker._leaflet_id = L.Util.stamp(newMarker);
 
       const popupContent = `
-      <p>經度: ${event.latlng.lng.toFixed(5)}</p>
-      <p>緯度: ${event.latlng.lat.toFixed(5)}</p>
-      <button class="delete-marker-btn">刪除標記</button>
+      <p>${event.latlng.lng.toFixed(5)}, ${event.latlng.lat.toFixed(5)}</p>
+      <button class="delete-marker-btn">Delete</button>
       `;
 
       const tempDiv = document.createElement('div');
@@ -824,7 +794,7 @@ const MapComponent = ({
       setFreeModeMarkers(prev => {
         const updatedMarkers = [...prev, newMarker];
 
-        updateFreeModeRoute(updatedMarkers); // 立即更新路徑
+        updateFreeModeRoute(updatedMarkers);
 
         return updatedMarkers;
       });
@@ -860,7 +830,6 @@ const MapComponent = ({
   //   }
   // }, [routingControl, waypoints]);
 
-  // 清理路徑和標記
   useEffect(() => {
     if (!isRoutingMode && !isFreeMode && routingControl) {
       routingControl.setWaypoints([]);
@@ -884,12 +853,12 @@ const MapComponent = ({
       if (isEditing) return;
 
       if (onMapClick && typeof onMapClick === 'function') {
-        onMapClick(); // 確保 onMapClick 存在且是一個函數
+        onMapClick(); 
       }
 
       if (isAddingMarker && !isFreeMode) {
         if (newMarker) {
-          newMarker.setLatLng(e.latlng); // 改變位置
+          newMarker.setLatLng(e.latlng); 
         } else {
           const marker = L.marker(e.latlng, {
             icon: L.icon({
@@ -898,8 +867,8 @@ const MapComponent = ({
               iconRetinaUrl: 'images/marker-icon-2x.png',
               iconUrl: 'images/marker-icon.png',
               shadowUrl: 'images/marker-shadow.png',
-              iconSize: [25, 41], // 標記圖標的大小，
-              iconAnchor: [12, 41], // 尖端正確指向位置
+              iconSize: [25, 41], 
+              iconAnchor: [12, 41], 
             }),
           }).addTo(map);
 
@@ -926,13 +895,10 @@ const MapComponent = ({
   //  search marker
   useEffect(() => {
     if (map && selectedPlace && !isTyping) {
-      // 將地圖視圖中心移動到選中地點
       // map.setView(new L.LatLng(selectedPlace.coordinates.lat, selectedPlace.coordinates.lng), 13);
-      // 如果有與 selectedPlace 相關的 marker，打開它的彈出窗口
       const relevantMarker = markers.find(marker => marker.options.id === selectedPlace.id);
 
       if (relevantMarker) {
-        // 如果找到了相關聯的標記，則移動地圖視圖並打開其彈出窗口
         map.setView([selectedPlace.coordinates.lat, selectedPlace.coordinates.lng]);
         relevantMarker.openPopup();
       }
@@ -949,8 +915,8 @@ const MapComponent = ({
   const confirmEraseRouting = () => {
 
     if (isFreeMode) {
-      freeModeMarkers.forEach(marker => marker.remove()); // 移除所有自由模式的標記
-      setFreeModeMarkers([]); // 清空標記數組
+      freeModeMarkers.forEach(marker => marker.remove());  
+      setFreeModeMarkers([]); 
     }
     setRouteWaypoints([]);
     setShowDeleteConfirm(false);
@@ -963,13 +929,12 @@ const MapComponent = ({
   const pauseRouting = () => {
     setIsRoutingPaused(prev => !prev);
     if (isFreeMode && !isRoutingPaused) {
-      setFreeModeMarkers([]); // 清空自由模式的標記數組
+      setFreeModeMarkers([]);
     } 
   };
 
   useEffect(() => {
     if (!isRoutingMode) {
-      // 清理路徑
       if (routingControl) {
         routingControl.setWaypoints([]);
       }
@@ -978,7 +943,6 @@ const MapComponent = ({
       }
       setRouteWaypoints([]);
   
-      // 移除開始和結束標記
       if (startMarker) {
         startMarker.remove();
         setStartMarker(null);
@@ -988,8 +952,6 @@ const MapComponent = ({
         setEndMarker(null);
       }
       setIsRoutingPaused(false);
-  
-      // 如果有其他與路徑模式相關的狀態或設置，也在這裡重設
     }
   }, [isRoutingMode, routingControl, startMarker, endMarker, onRouteCalculated]);
 
@@ -1002,12 +964,11 @@ const MapComponent = ({
   }, [freeModeMarkers, routingControl]);
 
 
-// 模式切換函數
-const toggleMode = () => {
-  setIsRoutingMode(prev => !prev);
+// const toggleMode = () => {
+  // setIsRoutingMode(prev => !prev);
   // setIsFreeMode(prev => !prev);
-  clearMarkersAndRoute(); // 切換模式時清除自由模式的標記和路徑
-};
+  // clearMarkersAndRoute();
+// };
 
   // useEffect(() => {
   //   if (!isFreeMode && !isRoutingMode) {
@@ -1020,7 +981,7 @@ const toggleMode = () => {
       {isLoading && 
       <AlertModal
         isOpen={isLoading}
-        message= "Loading"
+        message= "Loading..."
         isALoadingAlert={true}
       />
       }
@@ -1036,7 +997,7 @@ const toggleMode = () => {
         >
 
           <i className='fa fa-location'></i>
-          <div className="text-sm hidden md:block"> 取得定位 </div>
+          <div className="text-sm hidden md:block"> {t('open-map-position')} </div>
           {/* <LazyLoadImage effect="blur" src="/images/map-cursor.png" alt="Fetch-Location" className="h-7 w-7" width="30" height="30" /> */}
         </button>
         { (isRoutingMode || isFreeMode) && (
@@ -1046,14 +1007,14 @@ const toggleMode = () => {
               className="flex-column absolute top-16 left-0 z-10 m-3 border-b bg-white text-black py-2 px-2.5 rounded hover:bg-green-300 shadow"
               onClick={pauseRouting}>
                 {isRoutingPaused ? <i className="fas fa-play"></i> : <i className="fas fa-pause"></i> }
-                <div className="text-sm hidden lg:block">{isRoutingPaused ? "繼續路線" : "暫停路線"}</div>
+                <div className="text-sm hidden lg:block">{isRoutingPaused ? t('route-continue') : t('route-pause')}</div>
             </button>
             <button 
               title="stop-routing"
               className="flex-column absolute md:top-32 top-28 left-0 z-10 m-3 border-b bg-white text-black py-2 px-2 rounded hover:bg-green-300 shadow"
               onClick={()=>setShowDeleteConfirm(true)}>
                 <i className="fas fa-trash"></i>
-                <div className="hidden lg:block text-sm">清除路線</div>
+                <div className="hidden lg:block text-sm">{t('route-erase')}</div>
             </button>
             {/* <button
               title="toggle-mode"
@@ -1079,7 +1040,7 @@ const toggleMode = () => {
           isOpen={showDeleteConfirm}
           onClose={() => setShowDeleteConfirm(false)}
           onConfirm={confirmEraseRouting}
-          message="您確定要清除路線嗎？"
+          message={t('route-alert-erase')}
           showConfirmButton={true}
         />
     </div>

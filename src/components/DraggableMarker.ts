@@ -14,7 +14,6 @@ const DraggableMarker = ({ place, map }) => {
   useEffect(() => {
     const marker = L.marker(place.coordinates).addTo(map);
     
-    // 附加拖動事件處理程序
     drag(marker.getElement());
 
     return () => {
@@ -22,7 +21,7 @@ const DraggableMarker = ({ place, map }) => {
     };
   }, [map, place, drag]);
 
-  return null; // 因為這是一個邏輯組件，不需要渲染任何 JSX
+  return null; 
 };
 
 export default DraggableMarker;

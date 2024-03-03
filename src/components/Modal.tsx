@@ -9,7 +9,6 @@ interface ModalProps {
 
 const Modal: FC<ModalProps> = ({ children, onClose }) => {
   useEffect(() => {
-    // 防止滾動
     document.body.style.overflow = 'hidden';
     return () => {
       document.body.style.overflow = 'unset';

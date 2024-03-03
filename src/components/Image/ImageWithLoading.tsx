@@ -11,7 +11,7 @@ const withLoadingIndicator = (WrappedImage: typeof Image) => {
       <div className="relative" style={{ width, height }}>
         {isLoading && (
           <div className="absolute top-0 left-0 right-0 bottom-0 flex justify-center items-center bg-gray-200">
-            加載中...
+            Loading...
           </div>
         )}
         <WrappedImage
@@ -35,7 +35,6 @@ const ImageWithLoading = withLoadingIndicator(Image);
 const MyComponent: FC = () => (
   <div>
     <ImageWithLoading src="/path/to/image.jpg" alt="Example Image" width={300} height={200} />
-    {/* 其他圖片... */}
   </div>
 );
 

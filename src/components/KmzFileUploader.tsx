@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'next-i18next';
 
 export const KmzFileUploader = ({ onFileSelected, onUploadClick, isProcessing  }) => {
 
   const [fileSelected, setFileSelected] = useState(false);
+  const { t } = useTranslation('common'); 
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
@@ -26,7 +28,7 @@ export const KmzFileUploader = ({ onFileSelected, onUploadClick, isProcessing  }
       <button className={`border-2 p-3 ml-4 rounded-full  text-sm font-bold ${!fileSelected ?'bg-gray-200 hover:bg-gray-300' :'hover:bg-yellow-300'} `} 
               onClick={onUploadClick} 
               disabled={!fileSelected || isProcessing}>
-      {isProcessing ? ('處理中...' ) : (<div className={`text-blue-600 ${!fileSelected ? 'text-gray-500' :''}`}><i className="fas fa-file-import" ></i> 匯入 KMZ/GeoJson </div>)}
+      {isProcessing ? (t('kmz-processing')) : (<div className={`text-blue-600 ${!fileSelected ? 'text-gray-500' :''}`}><i className="fas fa-file-import" ></i> {t('kmz-json-import')}</div>)}
     </button>
   </div>
   );

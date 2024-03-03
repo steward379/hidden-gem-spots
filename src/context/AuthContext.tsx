@@ -38,8 +38,8 @@ const AuthContext = createContext<{
   updateUserProfile: (updatedData: Partial<IUser>) => Promise<void>;
   showLoginAlert : boolean;
   setShowLoginAlert: (show: boolean) => void;
-  hasNavigated: boolean; // 新增狀態
-  setHasNavigated: (hasNavigated: boolean) => void; // 新增設置函數
+  hasNavigated: boolean; 
+  setHasNavigated: (hasNavigated: boolean) => void; 
 }>({
   user: null,
   loading: true,
@@ -194,7 +194,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   //     }
 
   //     setLoading(false);
-  //         // 網站通知
+
   //     setLoaded(true);
   //   });
     
@@ -216,7 +216,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       setLoginMethod(LoginMethod.Email);
     } catch (error) {
-      console.error("Email 登入失敗", error);
+      console.error("Email Login failed", error);
     }
   };
 
@@ -284,12 +284,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
       router.push('/'); 
     } catch (error) {
-      console.error("登出失敗", error);
+      console.error("Logout failed", error);
     }
   };
 
   useEffect(() => {
-    setLoading(true); // 開始進行登入流程時設置為 true
+    setLoading(true);
 
     const signInWithClerk = async () => {
       const token = await getToken({ template: "integration_firebase" });
@@ -316,7 +316,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               : firebaseUser.email;
         const name = clerkUser && clerkUser.firstName 
             ? clerkUser.firstName 
-            : (firebaseUser.displayName || '第三方會員');
+            : (firebaseUser.displayName || 'Third-party user');
             
         if (!docSnap.exists()) {
           userData = {
@@ -347,9 +347,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         const currentPath = router.pathname;
         if (restrictedPaths.includes(currentPath) && !hasNavigated) {
-          setShowLoginAlert(true); // 設置顯示警告視窗
-          setHasNavigated(true); // 設置已經導航過
-          router.push("/home"); // 直接導航到 /home
+          setShowLoginAlert(true); 
+          setHasNavigated(true)
+          router.push("/home"); 
         }
   
       }
@@ -362,10 +362,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => unsubscribeAuth();
   }, [router, clerkUser, getToken, hasNavigated]);
 
-   // 監聽路由變化並重置 hasNavigated 狀態
    useEffect(() => {
     const handleRouteChange = () => {
-      setHasNavigated(false); // 在路徑更改時重置導航標記
+      setHasNavigated(false);
     };
 
     router.events.on('routeChangeStart', handleRouteChange);

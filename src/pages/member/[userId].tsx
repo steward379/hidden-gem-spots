@@ -1,24 +1,20 @@
-// SSR
-// member/[userId].tsx
+// SSR - member/[userId].tsx
 import { useEffect, useState, useRef  } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/blur.css';
-// auth
 import { useAuth } from '@/src/context/AuthContext';
-// firebase
 import { getAuth, updateProfile } from 'firebase/auth';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { doc,  getDoc, updateDoc, arrayUnion, arrayRemove, collection, query, where, getDocs   } from 'firebase/firestore';
 import firebaseServices from '@/src/utils/firebase'; 
-// notifications hook
 import useAuthListeners  from '@/src/hooks/useAuthListeners';
-// components
 import DropImagePreview from '@/src/components/DropImagePreview';
 import LoadingIndicator from '@/src/components/LoadingIndicator';
 
 import RainbowButtonModule from '@/src/styles/rainbowButton.module.css';
+import { useTranslation } from 'next-i18next';
 
 const { db, storage } = firebaseServices; 
 
@@ -33,12 +29,9 @@ export async function getServerSideProps(context) {
 
   if (memberSnap.exists()) {
     const memberData = memberSnap.data();
-
-    // 檢查是否有日期對象並轉換為 ISO 字符串
-   // 檢查並轉換日期對象
-   if (memberData.lastNotificationCheck && memberData.lastNotificationCheck.toDate) {
-    memberData.lastNotificationCheck = memberData.lastNotificationCheck.toDate().toISOString();
-  }
+    if (memberData.lastNotificationCheck && memberData.lastNotificationCheck.toDate) {
+      memberData.lastNotificationCheck = memberData.lastNotificationCheck.toDate().toISOString();
+    }
         
     return {
       props: {
@@ -58,7 +51,7 @@ export async function getServerSideProps(context) {
 } 
 
 const MemberPage = ({  initialMemberData }) => {
-
+  const { t } = useTranslation('common');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   // const [newEmail, setNewEmail] = useState('');
@@ -78,7 +71,7 @@ const MemberPage = ({  initialMemberData }) => {
   //   }
   // };
 
-  // Algolia 搜尋
+  // Algolia
 
   const handleSearch = async () => {
     try {
@@ -93,7 +86,7 @@ const MemberPage = ({  initialMemberData }) => {
   
       setSearchResults(results);
     } catch (error) {
-      console.error("搜索錯誤:", error);
+      console.error("search error:", error);
     }
   };
 
@@ -120,12 +113,8 @@ const MemberPage = ({  initialMemberData }) => {
 
   const { user, logout, loading } = useAuth();
   const { updateUserProfile } = useAuth();
-
-  // edit profile
   const [isEditing, setIsEditing] = useState(false);
-  // name 
   const [tempName, setTempName] = useState('');
-  // avatar
   const [tempAvatar, setTempAvatar] = useState(null);
 
   const [userDetails, setUserDetails] = useState({});
@@ -135,13 +124,12 @@ const MemberPage = ({  initialMemberData }) => {
 
   const handleNewNotification = (message) => {
     setNotifications((prevNotifications) => {
-      // 檢查新通知是否已經在列表中
       if (prevNotifications.includes(message)) {
         return prevNotifications;
       }
       return [...prevNotifications, message];
     });
-    return {}; // 避免型別錯誤
+    return {}; 
   };
 
   // useAuthListeners(handleNewNotification);
@@ -185,7 +173,7 @@ const MemberPage = ({  initialMemberData }) => {
       });
     } else {
       // alert('找不到會員資料');
-      console.log('找不到會員資料');
+      console.log('member data not found');
     } 
   };
 
@@ -282,7 +270,6 @@ const MemberPage = ({  initialMemberData }) => {
     }
   }, [userId]);
 
-  // 檢查是否為當前用戶
   const isCurrentUser = user && user.uid === userId; 
 
   const isFollowing = (targetUserId) => {
@@ -347,7 +334,6 @@ const MemberPage = ({  initialMemberData }) => {
   const renderFollowList = (list, title) => {
 
     if (!Array.isArray(list)) {
-      // 可以在這裡顯示一個適當的消息，例如 "沒有追蹤者" 或 "沒有追蹤中的用戶"
       return <div>No {title}</div>;
     }
     return (
@@ -375,7 +361,7 @@ const MemberPage = ({  initialMemberData }) => {
 
   return (
     <div className="container mx-auto p-4 flex-column min-h-screen"> 
-      <h1 className="w-full text-2xl font-bold mb-5 ">會員中心</h1>
+      <h1 className="w-full text-2xl font-bold mb-5 ">{t('member-ceneter')}</h1>
       <div className="lg:flex flex-col md:flex-row space-y-6 md:space-y-0">
         <div className="flex-2 md:mb-6 lg:mb-0 w-full bg-white border-lg rounded-3xl p-7">
           <div className="flex flex-col justify-between space-y-3">
@@ -386,32 +372,30 @@ const MemberPage = ({  initialMemberData }) => {
                     src={memberData.avatar ? memberData.avatar : '/images/marker-icon.png' } width="100" height="100" />
               </div>
               <h3 className="text-lg font-medium px-2">
-                  {user && user.uid === userId ? <span>歡迎，</span> : <span>你正在造訪：</span>} 
+                  {user && user.uid === userId ? <span>{t('welcome')}</span> : <span>{t('welcome-visit')}</span>} 
                   {memberData.name}
               </h3>
             </div>
             <div>
               <Link href={`/user-maps/${userId}`} className="flex items-center">
-                {/* @ts-ignore */}
                 <button title="rainbow-map" className={`${RainbowButtonModule.rainbowButton} mt-2 mb-3`} >
                      <button className="bg-red-500 rounded-full text-white font-bold py-2 px-10 text-sm hover:bg-blue-600 my-2">
-                                查看地圖
+                        {t('member-map')}
                     </button>
                 </button>
               </Link>
-              {/* lemmin codepen */}
             </div>
             <div>
             { user && user.uid !== userId && memberData.id &&
               <button className={` ${isCurrentlyFollowing  ? 'bg-gray-300' : 'bg-green-300'} transition-all button  text-black rounded-lg p-2`}
                       onClick={() => isFollowing(memberData.id) ? unFollowUser(memberData.id) : followUser(memberData.id)}>
-                {isCurrentlyFollowing  ? '取消追蹤' : '追蹤'}
+                {isCurrentlyFollowing  ? t('cancel-follow') : t('follow')}
               </button>
             }
             </div>
             {isCurrentUser && (
               <div className="space-y-4">
-                <h4 className="text-md font-medium">您的帳號信箱</h4>
+                <h4 className="text-md font-medium">{t('member-owned-email')}</h4>
                 <div className="flex items-center flex-grow-0 flex-wrap">
                   <p className="border rounded-3xl border-orange-500 p-3 max-w-sm break-words">
                     {user.email}
@@ -420,13 +404,13 @@ const MemberPage = ({  initialMemberData }) => {
                 <div>
                   <button className={`${!isEditing  ? 'bg-green-300 text-teal-800' : 'bg-gray-300 text-amber-700'}  font-medium py-2 px-4 rounded w-32`}
                           onClick={toggleEditing}>
-                  {!isEditing  ? '編輯個人檔案' : '取消編輯' }
+                  {!isEditing  ? t('edit-profile'): t('cancel-edit-profile') }
                   </button>
                 </div>
                 {isEditing && (
                 <>
                 <div className="mb-4"> 
-                  <label className="block mb-2">更改圖片</label>
+                  <label className="block mb-2">{t('change-photo')}</label>
                   {/* <ImageUploader onImageUpload={handleAvatarChange} /> */}
                   <div className="mb-4"> 
                     {/* <DropzoneImage onFileUploaded={handleAvatarChange} />
@@ -437,7 +421,7 @@ const MemberPage = ({  initialMemberData }) => {
                   </div>
                 </div>
                 <div className="mb-4">
-                  <label className="block mb-2">更改名稱</label>
+                  <label className="block mb-2">{t('change-username')}</label>
                   <input
                     title="name-change"
                     className="p-2 border border-gray-300 rounded text-black"
@@ -447,12 +431,12 @@ const MemberPage = ({  initialMemberData }) => {
                   />
                 </div>
                 <button className="bg-blue-500 text-white py-2 px-4 rounded" 
-                        onClick={handleSaveChanges}>保存變更</button>
+                        onClick={handleSaveChanges}>{t('save-profile-edit')}</button>
               </>
                 )}
                 <div className="mb-4">
                   <button className="bg-red-500 text-white py-2 px-4 rounded" 
-                      onClick={() => getAuth().signOut()}>登出</button>
+                      onClick={() => getAuth().signOut()}>{t('logout')}</button>
                 </div>
               </div>
               
@@ -461,10 +445,10 @@ const MemberPage = ({  initialMemberData }) => {
         </div>
         <div className="flex-2 lg:flex lg:space-x-6 w-full md:flex">
           <div className="flex-1 w-full md:w-1/2 lg:ml-5 ml-0 mb-6 md:mb-0 lg:mb-0 bg-teal-50 rounded-3xl p-6">
-            {renderFollowList(memberData.following, '已跟隨')}
+            {renderFollowList(memberData.following, t('already-follow'))}
           </div>
           <div className="flex-1 w-full md:w-1/2 lg:ml-5 md:ml-5 ml-0  md:mb-0 lg:mb-0 bg-sky-50 rounded-3xl p-6 ">
-            {renderFollowList(memberData.followers, '追蹤')}
+            {renderFollowList(memberData.followers, t('followed-by'))}
           </div>
         </div>
 
@@ -473,7 +457,7 @@ const MemberPage = ({  initialMemberData }) => {
       <div className="mt-4">
         <input
           type="text"
-          placeholder="搜尋使用者"
+          placeholder={t('search-user')}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="border border-gray-300 p-2 rounded"
@@ -482,7 +466,7 @@ const MemberPage = ({  initialMemberData }) => {
           onClick={handleSearch}
           className="bg-blue-500 text-white px-4 py-2 ml-2 rounded"
         >
-          搜尋
+          {t('search')}
         </button>
       </div>
 

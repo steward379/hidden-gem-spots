@@ -1,17 +1,18 @@
-//pages/user-maps/[userId].tsx
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { collection, query, getDocs, doc, getDoc, deleteDoc } from 'firebase/firestore';
 import firebaseServices from '../../utils/firebase';
 const { db } = firebaseServices;
 import { useAuth } from '../../context/AuthContext';
-import Image from 'next/image';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/blur.css';
 import Link from 'next/link';
 import AlertModal from '@/src/components/AlertModal';
+import { useTranslation } from 'next-i18next';
 
 const UserMapsPage = () => {
+  const { t } = useTranslation('common'); 
+
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -93,7 +94,7 @@ const UserMapsPage = () => {
         if (mapHostSnapshot.exists()) {
           setMapMaker(mapHostSnapshot.data());
         }
-        // 獲取所有地圖，篩選出用戶喜愛的地圖
+  
         const likedMapsQuery = query(collection(db, `users/${userId}/likedMaps`));
         const likedMapsSnapshot = await getDocs(likedMapsQuery);
         // setLikedMaps(likedMapsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
@@ -108,21 +109,15 @@ const UserMapsPage = () => {
   }, [userId, user?.uid]);
 
   const deleteMapAndPlaces = async (mapId) => {
-    // 建立對地圖下所有地點的引用
+
     const placesRef = collection(db, `publishedMaps/${userId}/maps/${mapId}/places`);
-    
-    // 獲取所有地點的資料
     const placesSnapshot = await getDocs(placesRef);
   
-    // 刪除每一個地點
     const deletePlacesPromises = placesSnapshot.docs.map((doc) => {
       return deleteDoc(doc.ref);
     });
   
-    // 等待所有地點刪除完成
     await Promise.all(deletePlacesPromises);
-  
-    // 刪除地圖本身
     await deleteDoc(doc(db, `publishedMaps/${userId}/maps`, mapId));
   };
 
@@ -138,12 +133,10 @@ const UserMapsPage = () => {
 
       try {
         await deleteMapAndPlaces(selectedMapId);
-        showAlert("刪除成功");
-
+        showAlert(t('userId-delete-map-success'));
+        
         const updatedMaps = maps.filter(map => map.id !== selectedMapId);
         setMaps(updatedMaps);
-  
-        // 如果刪除的地圖在喜愛列表中，從喜愛列表中移除
         const updatedLikedMaps = likedMaps.filter(map => map.id !== selectedMapId);
         setLikedMaps(updatedLikedMaps);
 
@@ -155,12 +148,12 @@ const UserMapsPage = () => {
         setTotalDuplicates(duplicatesCount);
         setTotalPlaceLikes(placesLikesCount);
 
-        setShowDeleteConfirm(false); // 隱藏刪除確認對話框
-        setSelectedMapId(null); // 清除選中的地圖 ID
+        setShowDeleteConfirm(false); 
+        setSelectedMapId(null); 
 
       } catch (error) {
-        console.error("刪除失敗: ", error);
-        showAlert("刪除過程中出現錯誤");
+        console.error("Delete failed: ", error);
+        showAlert(t('userId-mapId-delete-failed-alert'));
       }
     }
   };
@@ -179,7 +172,8 @@ const UserMapsPage = () => {
           <div className=" flex p-0 w-30 hover:bg-amber-500 bg-red-400 rounded-full cursor-pointer transition-btn mr-3 mb-7 lg:mb-0" >
             <Link href={`/member/${userId}`} className="flex items-center m-2">
                 <div className="p-4 ml-4">
-                  <h2 className="text-2xl font-normal lg:mb-0 text-stone-200 pt-3">{isCurrentUser ? '你的地圖' : `${mapMaker?.name}的地圖`}</h2>
+                  <h2 className="text-2xl font-normal lg:mb-0 text-stone-200 pt-3">
+                    {isCurrentUser ? t('userId-title-owner') : `${mapMaker?.name} ${t('userId-title-others')} `}</h2>
                 </div>
             { mapMaker?.avatar &&
               <LazyLoadImage effect="blur"
@@ -193,26 +187,26 @@ const UserMapsPage = () => {
             </Link>
           </div>
           <div className="p-4 ml-4 ">
-            <h3 className="text-lg font-semibold text-rose-100">地圖受喜愛</h3>
+            <h3 className="text-lg font-semibold text-rose-100">{t('userId-map-total-likes')}</h3>
             <p className="text-3xl font-bold text-rose-100">{totalLikes}</p> 
           </div>
           <div className="p-4 ml-4">
-            <h3 className="text-lg font-semibold text-rose-100">景點受喜愛</h3>
+            <h3 className="text-lg font-semibold text-rose-100">{t('userId-spots-total-likes')}</h3>
             <p className="text-3xl font-bold text-rose-100">{totalPlaceLikes}</p> 
           </div>
           <div className="p-4 ml-4">
-            <h3 className="text-lg font-semibold text-green-100">景點受複製</h3>
+            <h3 className="text-lg font-semibold text-green-100">{t('userId-spots-total-duplicates')}</h3>
             <p className="text-3xl font-bold text-green-100">{totalDuplicates}</p> 
           </div>
           
         </div>
-        <div className="bg-blue-500 text-white py-2 px-4 mb-5 lg:mb-0 rounded-full">
+        <div className="bg-blue-500 text-white py-2 px-4 mb-5 lg:mb-0 rounded-full flex justify-center items-center">
           <Link href={`/map`}>
-            <button className="p-3 mt-2 lg:w-20 w-full text-xl rounded-full hover:bg-sky-500 mb-2 lg:mb-0">
-              管理<br/>地圖
+            <button  className="text-center lg:w-20 w-full text-xl rounded-full hover:bg-sky-500 mb-2 lg:mb-0">
+              {t('userId-manage-maps')}
             </button>
           </Link>
-          </div>
+        </div>
       </div>
     );
   };  
@@ -255,9 +249,8 @@ const UserMapsPage = () => {
       
       {/* {isCurrentUser && (  */}
       <div className="mt-6">
-            {/* 喜愛的地圖 */}
         <div className="mt-6">
-          <h3 className="text-2xl font-bold mb-5 text-rose-500"> 🔥 喜愛的地圖</h3>
+          <h3 className="text-2xl font-bold mb-5 text-rose-500"> {t('userId-likes-maps')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 ">
             {likedMaps.map(map => (
               <div key={map.id}
@@ -288,7 +281,7 @@ const UserMapsPage = () => {
         isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
         onConfirm={confirmDelete}
-        message="您確定要刪除此張地圖嗎？"
+        message={t('userId-delete-map-confirm')}
         showConfirmButton={true}
       />
       <AlertModal

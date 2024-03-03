@@ -59,7 +59,7 @@ const useAuthListeners = (
       for (const followedUserId of user.following) {
         const followedUserDoc = await getDoc(doc(db, 'users', followedUserId));
         const followedUserData = followedUserDoc.data();
-        const followedUserName = followedUserData?.name || '編號'+ followedUserId; // 使用用戶名稱，如果找不到則使用 userId
+        const followedUserName = followedUserData?.name || 'No.'+ followedUserId;
 
         const mapsSnapshot = await getDocs(collection(db, 'publishedMaps', followedUserId, 'maps'));
         mapsSnapshot.forEach(doc => {
@@ -94,7 +94,6 @@ const useAuthListeners = (
       }
     };
     performCheck(); 
-    // 5 分鐘檢查一次
     const intervalId = setInterval(() => {
       if (isOnline()) {
       checkForNewFollowers();

@@ -1,69 +1,43 @@
-// pages/publish-map.tsx
 import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import Router from 'next/router';
-import Image from 'next/image';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/blur.css';
 import RainbowButtonModule from '@/src/styles/rainbowButton.module.css';
-
-
 import QuillEditor from '@/src/components/QuillEditor';
-// import SlateEditor from '@/src/components/SlateEditor';
-// import { Editor } from '@tinymce/tinymce-react';
-
-
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-// react modules
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-// redux
 import { useSelector } from 'react-redux';
-// components
 import PublishArea from '../components/PublishArea'; 
 import DropzoneImage from '../components/DropzoneImage';
 import AlertModal from '../components/AlertModal';
-// auth
-// @ts-ignore
 import { useAuth } from '../context/AuthContext';
-// css
 import 'react-quill/dist/quill.snow.css'; 
-// firebase
 import { collection, query, onSnapshot, addDoc, doc, setDoc } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import firebaseServices from '../utils/firebase';
 const { db, storage } = firebaseServices;
-// types
-// import { Place } from '../types/Place';
-// redux
 import { selectPlacesRedux } from '../store/slices/placesSlice'
 import { categoryMapping } from '../constants'
+import { categoryMappingEN } from '../constants';
 import { formatCoordinates, decimalToDms } from '../utils/decimalCoordinates';
-
-
+import { useTranslation } from 'next-i18next';
 
 const MapComponentWithNoSSR = dynamic(
     () => import('../components/MapComponent'),
     { ssr: false }
 );
 
-// const ReactQuill = dynamic(() => import('react-quill'), {
-//     ssr: false,
-//     loading: () => <p>Loading...</p>,
-// });
-
-
-// const ReactQuill = dynamic(() => import('react-quill'), {
-//     ssr: false,
-//     loading: () => <p>Loading...</p>,
-// });
-
 const PublishMapPage = () => {
+  const { t, i18n } = useTranslation('common'); 
 
-  
+  function getCategoryText(categoryKey, language) {
+    const categoryMappingNow = language === 'en-US' ? categoryMappingEN : categoryMapping;
+    return categoryMappingNow[categoryKey]?.text || 'Unknown 不明';
+  }
 
-  
   const [activeTab, setActiveTab] = useState('places'); 
 
   const { user } = useAuth();
@@ -83,19 +57,14 @@ const PublishMapPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   const [areAllPlacesAdded, setAreAllPlacesAdded] = useState(false);
-
-  // content 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [coverImage, setCoverImage] = useState('');
   const [publishDate, setPublishDate] = useState('');
   const [articleTags, setArticleTags] = useState('');
-  //show source code
-  const [showSourceCode, setShowSourceCode] = useState(false);
-  // images 
-  const [coverImageFile, setCoverImageFile] = useState(null); // 用於上傳的檔案對象
-  const [coverImagePreview, setCoverImagePreview] = useState(''); // 用於顯示預覽圖片的 URL
-  // alert&confirm
+  // const [showSourceCode, setShowSourceCode] = useState(false);
+  const [coverImageFile, setCoverImageFile] = useState(null); 
+  const [coverImagePreview, setCoverImagePreview] = useState(''); 
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
   const [showPublishConfirm, setShowPublishConfirm] = useState(false);
@@ -107,59 +76,72 @@ const PublishMapPage = () => {
 
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [hideRoutingMode, setHideRoutingMode] = useState(false);
+  // const [hideRoutingMode, setHideRoutingMode] = useState(false);
 
   const [isTyping, setIsTyping] = useState(false);
+  const [itemsPerPage, setItemsPerPage] = useState(7); 
+  const [currentGroupIndex, setCurrentGroupIndex] = useState(0);
+  const pagesPerGroup = 5;
 
-  const showIsRoutingMode = () => {
-    setHideRoutingMode(false);
-  };
-  const hideIsRoutingMode = () => {
-    setHideRoutingMode(true);
-  };
+  // const showIsRoutingMode = () => {
+  //   setHideRoutingMode(false);
+  // };
+  // const hideIsRoutingMode = () => {
+  //   setHideRoutingMode(true);
+  // };
 
-  const toggleCollapse = () => {
-    setIsCollapsed(!isCollapsed);
-  };
+  // const toggleCollapse = () => {
+  //   setIsCollapsed(!isCollapsed);
+  // };
 
-  const [itemsPerPage, setItemsPerPage] = useState(5); //每頁顯示幾筆資料
   const filteredPlaces = places.filter(place =>
     place.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
     (selectedCategory === '' || place.category === selectedCategory)
   );
 
   const activePlaces = searchTerm || selectedCategory ? filteredPlaces : places;
-  // 計算總頁數
   const totalPages = Math.ceil(activePlaces.length / itemsPerPage);
+  const totalGroups = Math.ceil(totalPages / pagesPerGroup);
 
   const paginatedPlaces = activePlaces.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  // 處理翻頁
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
   };
+
+  const handleNextGroup = () => {
+    const newGroupIndex = currentGroupIndex + 1;
+    setCurrentGroupIndex(newGroupIndex);
+    const newPage = newGroupIndex * pagesPerGroup + 1; 
+    setCurrentPage(newPage);
+  };
+  
+  const handlePrevGroup = () => {
+    if (currentGroupIndex > 0) {
+      const newGroupIndex = currentGroupIndex - 1;
+      setCurrentGroupIndex(newGroupIndex);
+      const newPage = newGroupIndex * pagesPerGroup + 1; 
+      setCurrentPage(newPage);
+    }
+  };
+  
   
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentPlaces = filteredPlaces.slice(indexOfFirstItem, indexOfLastItem);
 
-  const handleMarkerClick = (place) => {
-    // if ( selectedPlace == null||!selectedPlace || selectedPlace.id !== place.id) {
-      setSelectedPlace(place);
-    // }  
-    // if ( selectedPlace == null||!selectedPlace || selectedPlace.id !== place.id) {
-      setSelectedPlace(place);
-    // }  
-  };
+  // const currentPlaces = filteredPlaces.slice(indexOfFirstItem, indexOfLastItem);
 
-
-  const showAlert = (message) => {
-    setAlertMessage(message);
-    setIsAlertOpen(true);
-  };
+  // const handleMarkerClick = (place) => {
+  //   // if ( selectedPlace == null||!selectedPlace || selectedPlace.id !== place.id) {
+  //     setSelectedPlace(place);
+  //   // }  
+  //   // if ( selectedPlace == null||!selectedPlace || selectedPlace.id !== place.id) {
+  //     setSelectedPlace(place);
+  //   // }  
+  // };
 
   useEffect(() => {
     if (!user) return;
@@ -181,11 +163,17 @@ const PublishMapPage = () => {
   //   }
   // };
 
-  const handleContentChange = (content) => {
-    setContent(content);
+  // const handleContentChange = (content) => {
+  //   setContent(content);
+  // };
+
+  const showAlert = (message) => {
+    setAlertMessage(message);
+    setIsAlertOpen(true);
   };
+
   const handleAddAll = () => {
-    setConfirmMessage('您確定要新增全部景點嗎？');
+    setConfirmMessage(t('publish-confirm-add-all'));
     setConfirmFunction(()=>confirmAddAll);
     setShowPublishConfirm(true);
   };
@@ -195,7 +183,7 @@ const PublishMapPage = () => {
     setShowPublishConfirm(false);
   }
   const handleClearAll = () => {
-    setConfirmMessage('您確定要清空景點嗎？');
+    setConfirmMessage(t('publish-cancel-add-all'));
     setConfirmFunction(()=>confirmClearAll);
     setShowPublishConfirm(true);
   };
@@ -205,7 +193,8 @@ const PublishMapPage = () => {
     setShowPublishConfirm(false);
   }
   const handleCancelPublish = () => {
-    setConfirmMessage('您確定要取消發佈嗎？文章將清空');
+    setConfirmMessage(t('publish-cancel-confirm'));
+  
     setConfirmFunction(()=>confirmHandleCancelPublish);
     setShowPublishConfirm(true);
   };
@@ -215,22 +204,19 @@ const PublishMapPage = () => {
     Router.push('/map/');
   };
 
-
   const handleConfirmPublish = async () => {
     if (!title.trim() || !content.trim() || publishedPlaces.length === 0 ) {
-      showAlert('請確保已正確填寫標題跟內容，並且至少有一個發佈景點加入發佈區。');
+      showAlert(t('publish-confirm-error'));
+
       return;
     }
-    setConfirmMessage('您確定要發佈此地圖嗎？');
+    setConfirmMessage(t('publish-confirm-map'));
     setConfirmFunction(()=>confirmPublish);
     setShowPublishConfirm(true);
   };
 
   const confirmPublish = async () => {
     try {
-      // const userId = user.uid;
-      // const mapsRef = collection(db, `publishedMaps/${userId}/maps`);
-      // const docRef = await addDoc(mapsRef, mapToPublish);
       let uploadedImageUrl = coverImage;
       if (coverImageFile) {
         uploadedImageUrl = await handleUploadCoverImage();
@@ -272,22 +258,20 @@ const PublishMapPage = () => {
           duplicates: 0,
           duplicatedBy: []
         };
-        // console.log(placeData);
         await setDoc(placeRef, placeData);
         newPublishedPlaces.push({ ...place, id: placeRef.id });
       }
       setPublishedPlaces(newPublishedPlaces);
       setIsPublishing(false);
-      showAlert('地圖已成功發布！');
+      showAlert(t('publish-map-success-msg'));
       Router.push(`/publishedMaps/${user.uid}/maps/${mapRef.id}`);    
     } catch (error) {
-      console.error('發布地圖出錯：', error);
-      showAlert('發布地圖時發生錯誤。');
+      console.error('error while publishing the map', error);
+      showAlert(t('publish-map-client-error-msg'));
       return;
     }
   };
   const handleAddToPublish = (place) => {
-    // 假設 placeId 是一個對象而不僅僅是 ID
     if (!publishedPlaces.some(p => p.id === place.id)) {
       setPublishedPlaces(prevPlaces => [...prevPlaces, place]);
     }
@@ -325,14 +309,13 @@ const PublishMapPage = () => {
     return new Promise((resolve, reject) => {
       uploadTask.on('state_changed',
         (snapshot) => {
-          // 可以用 snapshot.bytesTransferred 和 snapshot.totalBytes 更新上傳進度
         },
         (error) => {
           reject(error);
         },
         () => {
           getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-            resolve(downloadURL as string); // 當上傳完成後，解析圖片的 URL
+            resolve(downloadURL as string);
           });
         }
       );
@@ -350,8 +333,8 @@ const PublishMapPage = () => {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="flex flex-col h-screen-without-navbar md:flex-row text-black bg-gray-200">
-        <div className="lg:w-3/7 md:w-1/2 w-full lg:m-10 md:m-5 m-0 border">
+      <div className="publish-body flex flex-col h-screen-without-navbar md:flex-row text-black bg-gray-200">
+        <div className="map-component lg:w-3/7 md:w-1/2 w-full lg:m-10 md:m-5 m-0 border">
           <MapComponentWithNoSSR
             places={places}
             isPublishing={isPublishing}
@@ -366,89 +349,83 @@ const PublishMapPage = () => {
           />
         </div>
 
-        <div className="relative md:overflow-y-auto overflow-hidden 
+        <div className="content-component relative md:overflow-y-auto overflow-hidden 
           lg:w-4/7 md:w-1/2 w-full lg:mb-10 lg:mt-10 md:mt-5 mt-7 lg:mr-10 md:mr-5 
-         bg-white shadow rounded ">
-          <div className="sticky top-0 bg-white shadow-lg z-10 flex items-center space-x-3 px-3 py-2 overflow-hidden ">
+        bg-white shadow rounded ">
+          <div className="content-nav sticky top-0 bg-white shadow-lg z-10 flex items-center space-x-3 px-3 py-2 overflow-hidden ">
 
-            <button
-              className="p-2 rounded-3xl  flex-column justify-center items-center border-2 border-dashed border-gray-300 cursor-pointer hover:border-gray-500 hover:bg-gray-200"
-              onClick={handleCancelPublish}>
-              <i className="fas fa-circle-arrow-left"></i>
-              <span className="ml-2 hidden lg:inline-block text-sm">取消發佈</span>
-            </button>
+            <div className="cancel-publish-btn p-2 rounded-3xl flex-column justify-center items-center 
+                              border-2 border-dashed border-gray-300 cursor-pointer hover:border-gray-500 hover:bg-gray-200"
+                    onClick={handleCancelPublish}>
+              <i className="cancel-publish-icon fas fa-circle-arrow-left"></i>
+              <span className="cancel-publish-text ml-2 hidden lg:inline-block text-sm">
+                {t('publish-cancel')}
+              </span>
+            </div>
 
-            <div className="flex">
-             <button title="rainbow-route-btn" className="flex items-center space-x-1">
-                <button title="route-mode"
-                        className={`${RainbowButtonModule.rainbowButton} justify-center items-center relative`}
+            <div className="content-route-div flex">
+              <div title="rainbow-route-btn" className="content-route-btn flex items-center space-x-1">
+                <div title="route-mode"
+                        className={`${RainbowButtonModule.rainbowButton} content-route-rainbow-btn justify-center items-center relative`}
                         style={{
                           // @ts-ignore
                           '--button-width': '45px',
                           '--button-height': '50px',
                           '--button-border-radius': '100px',
                         }}> 
-                  <button
+                  <div
                       className=" bg-white p-3 text-sm
                             font-medium hover:bg-black hover:text-green-500 rounded-full"
                       onClick={() => setIsRoutingMode(!isRoutingMode)}>
-                    <div>
-                    {isRoutingMode ?  <i className="fas fa-door-open"></i> :  <i className="fas fa-route"></i>}   
+                    <div className="route-btn-icon">
+                      {isRoutingMode ?  <i className="fas fa-door-open"></i> :  <i className="fas fa-route"></i>}   
                     </div>
-                  </button>
-                </button>
-                <div className="hidden lg:inline text-sm font-medium">
-                        {isRoutingMode ? "停止路徑" : "規劃路徑"}
+                  </div>
                 </div>
-              </button>
-          </div>
+                <div className="route-btn-text hidden lg:inline text-sm font-medium">
+                    {isRoutingMode ? t('map-route-stop') : t('map-route-machine')}
+                </div>
+              </div>
+            </div>
 
-      
-            
-            {/* <div className="tab-buttons flex">
-              <button className={`border ml-2 p-1 px-1.5 py-2 mr-2 rounded-full text-sm ${activeTab=='places' && 'bg-yellow-200 text-base' }`} onClick={() => setActiveTab('places')}> <span className="hidden lg:block">景點</span> <i className="fa-solid lg:hidden fa-mountain-sun"></i></button>
-              <button className={`border p-1  px-2 py-2 mr-2 rounded-full text-sm ${activeTab=='content' && 'bg-green-300 text-base' }`} onClick={() => setActiveTab('content')}><span className="hidden lg:block">文章</span> <i className="fa-solid fa-pencil lg:hidden "></i></button>
-            </div> */}
-
-            <div className="flex items-center justify-center">
+            <div className="toggle-content flex items-center justify-center">
               <label htmlFor="toggle-tab" className="flex items-center cursor-pointer">
-                <div className="relative">
+                <div className="toggle-tab-div relative">
                   <input type="checkbox" id="toggle-tab" className="sr-only"
-                           onChange={() => setActiveTab(activeTab === 'places' ? 'content' : 'places')}
-                        checked={activeTab === 'content'} />
-                  <div className={`flex items-center justify-${activeTab === 'content' ? 'start' : 'end'} w-16 h-9 rounded-full transition-colors ${activeTab === 'content' ? 'bg-yellow-500' : 'bg-blue-300'}`}>
+                          onChange={() => setActiveTab(activeTab === 'places' ? 'content' : 'places')}
+                          checked={activeTab === 'content'} />
+                  <div className={`toggle-content-icon flex items-center justify-${activeTab === 'content' ? 'start' : 'end'} w-16 h-9
+                  rounded-full transition-colors ${activeTab === 'content' ? 'bg-yellow-500' : 'bg-blue-300'}`}>
                     <i className={`fas ${activeTab === 'content' ? 'fa-mountain-sun text-stone-500 pl-2' : 'fa-pencil text-gray-900 pr-2.5'} `} ></i>
                   </div>
                   <div className={`dot absolute left-1 top-1 bg-white h-7 w-7 rounded-full transition transform ${activeTab === 'content' ? 'translate-x-full' : ''}`}>
                   </div>
                 </div>
-                <div className="ml-2 text-gray-700 font-medium text-sm hidden lg:flex">
-                  {activeTab === 'places' ? '文章' : '景點'}
+                <div className="toggle-content-text ml-2 text-gray-700 font-medium text-sm hidden lg:flex">
+                  {activeTab === 'places' ? t('publish-map-post') : t('map-spot')}
                 </div>
               </label>
             </div>
 
-            {/* <div className="show-hide-list flex w-full lg:w-auto lg:flex-row md:flex-col mb-4 controls"> */}
-              <div className=" flex items-center justify-start">
-                <label htmlFor="toggle" className="flex items-center cursor-pointer">
-                  <div className="relative">
-                    <input type="checkbox" id="toggle" className="sr-only"
-                      onChange={() => setShowPlacesList(!showPlacesList)} checked={showPlacesList} />
-                    <div className={`flex items-center w-16 h-9 rounded-full transition-colors ${showPlacesList ? 'bg-green-500' : 'bg-gray-400'}`}>
-                      <i className={`fas ${showPlacesList ? 'fa-eye-slash ml-2 text-stone-500 ' : 'fa-eye ml-9 text-gray-900'} text-center`} ></i>
-                    </div>
-                    <div className={`dot absolute left-1 top-1 bg-white h-7 w-7 rounded-full transition transform ${showPlacesList ? 'translate-x-full' : ''}`}>
-                    </div>
+            <div className="show-list flex items-center justify-start">
+              <label htmlFor="toggle-spot-list" className="flex items-center cursor-pointer">
+                <div className="toggle-show-tab-div relative">
+                  <input type="checkbox" id="toggle-spot-list" className="sr-only"
+                    onChange={() => setShowPlacesList(!showPlacesList)} checked={showPlacesList} />
+                  <div className={`toggle-spot-list-icon flex items-center w-16 h-9 rounded-full transition-colors ${showPlacesList ? 'bg-green-500' : 'bg-gray-400'}`}>
+                    <i className={`fas ${showPlacesList ? 'fa-eye-slash ml-2 text-stone-500 ' : 'fa-eye ml-9 text-gray-900'} text-center`} ></i>
                   </div>
-                  <div className="ml-2 text-gray-700 font-medium text-sm hidden lg:flex">
-                    <i className="fas fa-list-ul"></i>
-                    {showPlacesList ? '' : ''}
+                  <div className={`dot absolute left-1 top-1 bg-white h-7 w-7 rounded-full transition transform ${showPlacesList ? 'translate-x-full' : ''}`}>
                   </div>
-                </label>
-              </div>
+                </div>
+                <div className="toggle-spot-list-text ml-2 text-gray-700 font-medium text-sm hidden lg:flex">
+                  <i className="fas fa-list-ul"></i>
+                  {showPlacesList ? '' : ''}
+                </div>
+              </label>
             </div>
-          {/* </div> */}
-
+          </div>
+          
           <div className="container lg:px-6 md:px-4 px-3 py-3">
           {activeTab === 'places' && (
           <div>
@@ -459,33 +436,40 @@ const PublishMapPage = () => {
                 <div className="cursor-pointer">
                   <i className="fas fa-chevron-down"></i>
                   <i className="fas fa-question-circle ml-1"></i>
-                  <span className="text-sm hidden lg:inline lg:ml-2 font-medium">提示</span>
+                  <span className="text-sm hidden lg:inline lg:ml-2 font-medium">{t('map-hint')}</span>
                 </div>
               </button>
               <div className={`transition-all duration-500 ease-in-out pl-2 pt-2 mb-1 mt-3 ${isCollapsed ?
                 'max-h-0' : 'max-h-36'} overflow-hidden`}>
-                <h1 className="mb-2 text-xl font-bold text-gray-800"> {user?.name}即將發佈地圖</h1>
+                <h1 className="mb-2 text-xl font-bold text-gray-800"> {user?.name} {t('publish-now-title')}</h1>
                 <div className="text-gray-600 mb-2">
-                  新增你想發佈的景點群。你也可開啟拖曳模式，點擊查看後產生 <i className="fas fa-star"></i> 後稍微拖曳就能加入發佈地點。
-                  並輸入本地圖的標題、內容、上傳封面照片(可選)。
+                  {t('publish-hint-text-1')} <i className="fas fa-star"></i> {t('publish-hint-text-2')} 
                 </div>
               </div>
             </div>
-            <div className="inline-block ml-4 mb-4">
-              <button title="route-mode"
+            <div className="flex justify-start align-items m-4">
+              <div title="route-mode"
                 className={`justify-center items-center relative`}>
-                <button
-                  className={`px-4 py-2 text-sm
-                            font-medium hover:bg-black  hover:text-green-500 ${isDragModeEnabled ? 'bg-gray-200' : 'bg-yellow-200'}  
+                <div
+                  className={`px-4 py-2 text-sm text-center
+                            font-medium hover:bg-black  hover:text-green-500
+                            ${isDragModeEnabled ? 'bg-gray-200' : 'bg-yellow-200'}  
                             rounded-full mr-2`}
                   onClick={() => setIsDragModeEnabled(!isDragModeEnabled)}>
                   <div>
                     {isDragModeEnabled ? <i className="fa-regular fa-star"></i> : <i className="fa-solid fa-star"></i>}
                   </div>
                   <div className="hidden lg:inline">
-                    {isDragModeEnabled ? "停用拖曳" : "啟用拖曳"}
+                    {isDragModeEnabled ? t('publish-stop-drag') : t('publish-drag')}
                   </div>
-                </button>
+                </div>
+              </div>
+              <button
+                className=" text-green-500 font-bold px-4 rounded border border-green-500 hover:bg-green-600
+                            hover:text-white focus:outline-none focus:ring-2 focus:ring-green-800 cursor-pointer"
+                onClick={() => setActiveTab('content')}
+              >
+                {t('publish-switch-to-content-button')}
               </button>
             </div>
 
@@ -494,15 +478,16 @@ const PublishMapPage = () => {
                 className="py-2 w-1/2 rounded-xl m-2 flex justify-center items-center border-2 bg-green-100 hover:bg-green-300 
                             hover:border-gray-500 cursor-pointer"
                 onClick={areAllPlacesAdded ? () => { } : handleAddAll}>
-                <i className="fas fa-plus-square text-green-500"></i>
-                <div>全部新增</div>
+                <i className="fas fa-plus-square text-green-500 mr-2"></i>
+                <div> {t('publish-add-all')}</div>
               </button>
               <button
-                className="py-2 w-1/2 rounded-xl m-2 flex justify-center items-center border-2 bg-gray-100 hover:bg-red-300 hover:border-gray-500 cursor-pointer"
+                className="py-2 w-1/2 rounded-xl m-2 flex justify-center items-center border-2 bg-gray-100 
+                          hover:bg-red-300 hover:border-gray-500 cursor-pointer"
                 onClick={handleClearAll}
               >
-                <i className="fas fa-trash text-gray-400"></i>
-                <div>全部清除</div>
+                <i className="fas fa-trash text-gray-400 mr-2"></i>
+                <div> {t('publish-delete-all')}</div>
               </button>
             </div>
             <div className="px-2 mb-6">
@@ -526,7 +511,7 @@ const PublishMapPage = () => {
                           onChange={(e) => setSearchTerm(e.target.value)}
                           onFocus={() => setIsTyping(true)}
                           onBlur={() => setIsTyping(false)}
-                          placeholder="搜尋景點名稱或標籤"
+                          placeholder={t('map-search-name-tag')}
                           className="p-2 w-full border border-gray-300 rounded-md text-black focus:ring-blue-500 focus:border-blue-500"
                         />
                       </div>
@@ -545,21 +530,24 @@ const PublishMapPage = () => {
                         value={selectedCategory}
                         onChange={(e) => setSelectedCategory(e.target.value)}
                         className="p-2 w-full border border-gray-300 rounded-md text-black focus:ring-blue-500 focus:border-blue-500">
-                        <option value="">搜尋類別</option>
+                        <option value="">{t('map-search-cat')}</option>
                         {Object.entries(categoryMapping).map(([key, { text }]) => (
                           <option key={key} value={key}>{text}</option>
                         ))}
                       </select>
                     </div>
                   </div>
-                  <h2 className="text-lg font-semibold mb-2"> {searchTerm || selectedCategory ? '搜尋後景點列表' : '景點總表'}</h2>
+                  <h2 className="text-lg font-semibold mb-2 text-center"> 
+                    {searchTerm || selectedCategory ? t('map-search-list') : t('map-all-attractions')}
+                  </h2>
                   {filteredPlaces.length == 0 ? (
-                    <p className="text-center">找不到符合條件的景點</p>
+                    <p className="text-center">{t('map-search-not-found')}</p>
                   ) : (
                     <>
                       <ul>
                         {paginatedPlaces.map(place => (
-                          <li key={place.id} className="cursor-pointer place-item flex justify-between items-center p-2 border border-gray-300 rounded m-2 hover:bg-green-100"
+                          <li key={place.id} className="cursor-pointer place-item flex justify-between 
+                          items-center p-2 border border-gray-300 rounded m-2 hover:bg-green-100"
                             onClick={() => handleSelectPlace(place)}>
                             <span className="text-gray-600 cursor-pointer" > {place.name}</span>
                             <button
@@ -571,20 +559,41 @@ const PublishMapPage = () => {
                           </li>
                         ))}
                       </ul>
-                      <div className="pagination-controls">
+
+                      <div className="pagination-controls text-center mt-4">
                         <>
-                          {Array.from({ length: totalPages }, (_, i) => (
+                          {currentGroupIndex > 0 && (
                             <button
-                              key={i}
-                              onClick={() => handlePageChange(i + 1)}
-                              className={`mx-1 px-3 py-1  rounded-3xl ml-2
-                                      ${currentPage === i + 1
-                                  ? 'bg-sky-500 text-white'
-                                  : 'bg-white text-black border-gray-300'}`}
-                            >
-                              {i + 1}
+                              onClick={handlePrevGroup}
+                              className="pagination-prev mx-1 px-3 py-1 rounded-3xl bg-sky-300 text-black border-gray-300">
+                              {t("publish-map-last-group-page")}
                             </button>
-                          ))}
+                          )}
+
+                          {Array.from({
+                            length: Math.min(pagesPerGroup, totalPages - currentGroupIndex * pagesPerGroup)
+                          }, (_, i) => {
+                            const pageIndex = currentGroupIndex * pagesPerGroup + i + 1;
+                            return (
+                              <button
+                                key={pageIndex}
+                                onClick={() => handlePageChange(pageIndex)}
+                                className={`mx-1 px-3 py-1 rounded-3xl ml-2 ${
+                                  currentPage === pageIndex ? 'bg-sky-500 text-white' : 'bg-white text-black border-gray-300'
+                                }`}
+                              >
+                                {pageIndex}
+                              </button>
+                            );
+                          })}
+
+                          {currentGroupIndex < totalGroups - 1 && (
+                            <button
+                              onClick={handleNextGroup}
+                              className="pagination-next mx-1 px-3 py-1 rounded-3xl bg-sky-300 text-black border-gray-300">
+                              {t("publish-map-next-group-page")}
+                            </button>
+                          )}
                         </>
                       </div>
                     </>
@@ -610,9 +619,8 @@ const PublishMapPage = () => {
                     </div>
                   )}
                   <div className={`${categoryMapping[selectedPlace.category]?.color || 'bg-gray-200'} p-2 rounded mb-4 w-24`}>
-                    {categoryMapping[selectedPlace.category]?.text || '不明'}
+                    {getCategoryText(selectedPlace.category, i18n.language) || t('unknown')}
                   </div>
-
                   <div className="mt-5">
                     {selectedPlace.images?.map((url, index) => (
                       <div key={index} className="image-preview mb-2 relative w-[200px] h-[200px] overflow-hidden"  >
@@ -627,28 +635,31 @@ const PublishMapPage = () => {
                       </div>
                     ))}
                     {selectedPlace.createdTime &&
-                      <div className=""> 發佈時間：{new Date(selectedPlace?.createdTime).toLocaleString("zh-TW", { hour12: true })}</div>
+                      <div className=""> {t('map-publish-time')}{new Date(selectedPlace?.createdTime).toLocaleString("zh-TW", { hour12: true })}</div>
                     }
                     {selectedPlace?.updatedTime && selectedPlace?.updatedTime != "" &&
-                      <div className=""> 更新時間：{new Date(selectedPlace?.updatedTime).toLocaleString("zh-TW", { hour12: true })} </div>
+                      <div className=""> {t('map-update-time')}{new Date(selectedPlace?.updatedTime).toLocaleString("zh-TW", { hour12: true })} </div>
                     }
                     <div className="mb-3">{formatCoordinates(selectedPlace.coordinates.lat, selectedPlace.coordinates.lng)}</div>
                   </div>
                   <div className="flex">
                     <Link href={`https://www.google.com/maps/place/?q=place_name:${selectedPlace.name}`} target="_blank" passHref>
-                      <button className="flex items-center mr-3 bg-blue-100 text-black px-3 py-2  rounded hover:bg-blue-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-300">
+                      <button className="flex items-center mr-3 bg-blue-100 text-black px-3 py-2  rounded hover:bg-blue-400 
+                      hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-300">
                         <i className="fab fa-google mr-1"></i>
                         <i className="fa-solid fa-magnifying-glass mr-1"></i>
                         <i className="fas fa-external-link mr-1.5"></i>
-                        <div className="hidden lg:flex"> 名稱</div>
+                        <div className="hidden lg:flex"> {t('map-spot-title')}</div>
                       </button>
                     </Link>
-                    <Link href={`https://www.google.com/maps/place/${decimalToDms(selectedPlace.coordinates.lat, selectedPlace.coordinates.lng)}`} target="_blank" passHref>
-                      <button className="flex items-center mr-3 bg-blue-100 text-black p-2 rounded hover:bg-blue-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-300">
+                    <Link href={`https://www.google.com/maps/place/${decimalToDms(selectedPlace.coordinates.lat, selectedPlace.coordinates.lng)}`} 
+                          target="_blank" passHref>
+                      <button className="flex items-center mr-3 bg-blue-100 text-black p-2 rounded hover:bg-blue-400 
+                      hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-300">
                         <i className="fab fa-google mr-1"></i>
                         <i className="fa-solid fa-globe mr-1.5"></i>
                         <i className="fas fa-external-link mr-1.5"></i>
-                        <span className="hidden lg:flex"> 經緯</span>
+                        <span className="hidden lg:flex"> {t('map-spot-coordinates')} </span>
                       </button>
                     </Link>
                   </div>
@@ -658,20 +669,36 @@ const PublishMapPage = () => {
           </div>
           )}
             {activeTab === 'content' && (
-              <div className="mt-10 border-2 shadow-lg rounded-2xl p-3 " >
-                <h2 className="text-xl font-bold mb-6"> 地圖附文發佈 </h2>
+              
+              <div className="publish-content mt-10 border-2 shadow-lg rounded-2xl p-3 " >
+                
+                <h1 className="publish-map-post-slogan text-xl font-bold mb-6">
+                  {t('publish-map-post-slogan')}
+                </h1>
+                <button
+                  className="publish-switch-places bg-amber-600 text-white font-bold py-2 px-4 rounded hover:bg-amber-800 focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer mb-5"
+                  onClick={() => setActiveTab('places')}
+                >
+                  {t('publish-switch-to-places-button')}
+                </button>
 
-                <div className="font-medium text-lg mb-3"> 標題 </div>
+                <h2 className="publish-map-title font-medium text-lg mb-3">
+                  {t('publish-map-post-title')}
+                </h2>
+
                 <input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   onFocus={() => setIsTyping(true)}
                   onBlur={() => setIsTyping(false)}
-                  placeholder="地圖標題"
+                  placeholder= {t("publish-map-post-title")}
                   className=" mb-5 p-2 w-full border rounded-xl text-black focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                 />
-                <div className="font-medium text-lg mb-3"> 內容 </div>
+
+                <h3 className="publish-map-content font-medium text-lg mb-3"> 
+                  {t('publish-map-post-content')}
+                </h3>
 
                 <QuillEditor 
                   content={content} 
@@ -679,37 +706,13 @@ const PublishMapPage = () => {
                   onFocus={() => setIsTyping(true)}
                   onBlur={() => setIsTyping(false)} />
 
-
-                {/* <div className="bg-white text-black  rounded-xl border-2">
-          
-                  <ReactQuill theme="snow" value={content} onChange={handleContentChange} />
-           
-                </div>
-                
-                <button
-                  className={`mb-5 mt-5 p-3 flex justify-center items-center rounded-lg 
-              cursor-pointer ${showSourceCode ? 'hover:bg-red-100 bg-gray-200' : 'hover:bg-green-200 bg-green-100'}
-              focus:outline-none focus:ring-2 focus:ring-blue-300`}
-                  onClick={() => setShowSourceCode(!showSourceCode)}
-                >
-                  <i className={`fas ${showSourceCode ? 'fa-eye-slash' : 'fa-eye'} mr-2`}></i>
-                  <div>{showSourceCode ? "隱藏原始碼" : "顯示原始碼"}</div>
-                </button>
-
-                {showSourceCode && (
-                  <textarea
-                    title="地圖內容原始碼"
-                    value={content}
-                    // readOnly // 如果不希望用戶在這裡編輯，可以設為只讀
-                    className="mb-2 p-2 w-full border text-gray-500 rounded-xl"
-                  />
-                )} */}
-
-                <div className="font-medium text-lg mb-3"> 文章標籤 </div>
+                <h3 className="publish-map-tags font-medium text-lg mb-3"> 
+                  {t('publish-map-post-tags')}
+                </h3>
                 
                 <input 
                   type="text" 
-                  placeholder="標籤 (用逗號分隔)" 
+                  placeholder={t('map-spot-tags')}
                   value={articleTags} 
                   onFocus={() => setIsTyping(true)}
                   onBlur={() => setIsTyping(false)}
@@ -717,13 +720,9 @@ const PublishMapPage = () => {
                   className="p-2 w-full mb-2 border  text-black rounded-xl"
                 />
 
-                <div className="font-medium text-lg mb-3"> 代表圖片 </div>
-                {/* {coverImagePreview && (
-                <div>
-                 <LazyLoadImage effect="blur"  src={coverImagePreview} alt="Cover Preview" width="300" height="300" />
-                  <button onClick={() => setCoverImagePreview('')}>移除圖片</button>
-                </div>
-              )} */}
+                <h3 className="publish-map-cover font-medium text-lg mb-3"> 
+                  {t('publish-map-post-cover-photo')}
+                </h3>
 
                 <DropzoneImage onFileUploaded={handleFileUpload} />
                 {coverImagePreview && (
@@ -739,17 +738,18 @@ const PublishMapPage = () => {
                     />
                     <button
                       className="absolute top-0 right-0 bg-red-500 text-white p-2 rounded-full hover:bg-red-700"
-                      onClick={() => setCoverImagePreview('')}
-                    >
-                      移除圖片
+                      onClick={() => setCoverImagePreview('')}>
+                      {t('publish-delete-cover')}
                     </button>
                   </div>
                 )}
                 <button
-                  className="mb-3 mt-5 m-2 bg-green-100 flex justify-center items-center border-2 border-dashed border-gray-300 rounded-lg h-12 w-40 cursor-pointer hover:border-green-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="mb-3 mt-5 m-2 bg-green-100 flex justify-center items-center border-2 border-dashed 
+                           border-gray-300 rounded-lg h-12 w-40 cursor-pointer hover:border-green-500 
+                            focus:outline-none focus:ring-2 focus:ring-blue-500"
                   onClick={handleConfirmPublish}>
                     <i className="fas fa-check mr-2"></i>
-                    <div>確定發布</div>
+                    <span> {t('publish-map-post-publish')} </span>
                 </button>
               </div>
             )}
