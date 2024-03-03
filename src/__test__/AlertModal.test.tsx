@@ -1,7 +1,7 @@
 import React from 'react';
 // import '@testing-library/jest-dom';
 import { render, screen, fireEvent } from '@testing-library/react';
-import AlertModal from '../components/AlertModal'; // 確保這個路徑指向您的 AlertModal 組件
+import AlertModal from '../components/AlertModal'; 
 
 describe('AlertModal Component', () => {
   test('renders when isOpen is true', () => {
@@ -35,6 +35,4 @@ describe('AlertModal Component', () => {
     fireEvent.click(closeButton);
     expect(mockOnClose).toHaveBeenCalled();
   });
-
-  // 根據需要可以繼續添加更多測試案例
 });

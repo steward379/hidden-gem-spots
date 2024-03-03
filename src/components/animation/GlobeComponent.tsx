@@ -110,7 +110,7 @@ const GlobeComponent = ({disableHover = false}) => {
     //         float r, g, b;
     
     //         if (s == 0.0) {
-    //             r = g = b = l; // 灰階色調
+    //             r = g = b = l; 
     //         } else {
     //             float q = l < 0.5 ? l * (1.0 + s) : l + s - l * s;
     //             float p = 2.0 * l - q;
@@ -143,12 +143,12 @@ const GlobeComponent = ({disableHover = false}) => {
     // const rainbowMaterial = new THREE.ShaderMaterial({
     //   vertexShader: rainbowShader.vertexShader,
     //   fragmentShader: rainbowShader.fragmentShader,
-    //   side: THREE.BackSide, // 背面渲染
+    //   side: THREE.BackSide,
     //   transparent: true
     // });
 
     // const rainbowGlow = new THREE.Mesh(sphereGeom, rainbowMaterial);
-    // rainbowGlow.scale.set(1.05, 1.05, 1.05); // 設置稍微比地球大一點的大小
+    // rainbowGlow.scale.set(1.05, 1.05, 1.05);
     // scene.add(rainbowGlow);
 
     // update
@@ -171,7 +171,6 @@ const GlobeComponent = ({disableHover = false}) => {
     return () => {
       globeContainerRef.current?.removeChild(renderer.domElement);
       // window.removeEventListener('resize', resizeRenderer);
-        // 釋放幾何體、材質和紋理等資源
       sphereGeom.dispose();
       sphereMat.dispose();
     };

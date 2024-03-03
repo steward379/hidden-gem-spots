@@ -39,10 +39,8 @@ export default function Home() {
     const { notifications } = useMapNotification();
   
     const [maps, setMaps] = useState([]);
-    // switch option
     const [currentTab, setCurrentTab] = useState('latest'); 
-    
-    // switch map data
+
     const [unsubscribeFunction, setUnsubscribeFunction] = useState(null);
 
     useEffect(() => {
@@ -73,12 +71,10 @@ export default function Home() {
                 const fetchedMaps = querySnapshot.docs.map(doc => ({
                     ...doc.data(),
                     id: doc.id,
-                    userId: doc.ref.parent.parent.id, // 獲取用戶 ID
-                    // 計算熱門度
+                    userId: doc.ref.parent.parent.id,
                     popularity: doc.data().likes + doc.data().placesLikes + doc.data().duplicates
                 }));
         
-                // 按熱門度排序，取前100個
                 const sortedMaps = fetchedMaps.sort((a, b) => b.popularity - a.popularity).slice(0, 100);
                 setMaps(sortedMaps);
             };

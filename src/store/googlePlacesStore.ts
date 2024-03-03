@@ -3,7 +3,7 @@ import { create } from 'zustand';
 
 interface GooglePlacesState {
   googlePlace: any;
-  setGooglePlace: (place: any) => void; // 暫時先用 any
+  setGooglePlace: (place: any) => void;
   clearGooglePlace: () => void;
 }
 

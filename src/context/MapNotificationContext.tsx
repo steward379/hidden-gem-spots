@@ -2,8 +2,8 @@
 import React, { createContext, useContext, useState } from 'react';
 
 const MapNotificationContext = createContext({
-    notifications: [], // 空通知列表作為預設值
-    addNotification: (notification) => {}// 空函數作為預設值
+    notifications: [],
+    addNotification: (notification) => {}
 });
 
 export const useMapNotification = () => useContext(MapNotificationContext);
