@@ -43,7 +43,6 @@ export const mapSlice = createSlice({
     setMapDataRedux: (state, action: PayloadAction<MapState['mapDataRedux']>) => {
       state.mapDataRedux = action.payload;
     },
-    // 其他 reducers...
   },
 });
 
