@@ -49,7 +49,7 @@ Firestore
 
 * Index
 
-## Map
+## Map 
 
 `/map component `provides you a leafet map allow you to create, edit, delete places related to the marker.
 it also provides numberous plug-ins such as mini-map, search console and routing machine.
@@ -74,19 +74,29 @@ By using redux toolkit/zustand, I can easily manage the states of data.
 
 Since Clerk provide us with an intergration kit that saves any user data to the firebase firestore, there are muiltiple ways of logins and signups in my projects. Whether it's by Email or google provided by Firebase Auth, or it's clerk, useContext provides a solution to overall login states management.
 
+## i18N 
+
+I use i18N for users to browse my projects in either English or Mandarin (Taiwan). The module is **i18n-Next.**
+
 ## OnBoarding Process (Private Personal Map)
+
+    ![1709396036153](image/README/1709396036153.png)
 
 ![1705785886777](image/README/1705785886777.png)
 
 ## Browsing Map Posts (Public)
 
+![1709396020974](image/README/1709396020974.png)
+
 ![1705785907150](image/README/1705785907150.png)
 
 ### See the slides for a complete pitch here:
 
-[https://www.slideshare.net/slideshows/hidden-gem-traveling-attractions-platform/265599252]()
+[Slide Here](https://www.slideshare.net/slideshows/hiddengem-attraction-recording-platform-slide/266594257)
 
-Getting Started with Next
+<iframe src="https://www.slideshare.net/slideshow/embed_code/key/E6YY8rWoZaJAnr?hostedIn=slideshare&page=upload" width="476" height="400" frameborder="0" marginwidth="0" marginheight="0" scrolling="no"></iframe>
+
+## Getting Started with Next
 
 `npm install `  or use `yarn`  to install packages first.
 
