@@ -338,7 +338,7 @@ const MemberPage = ({  initialMemberData }) => {
     }
     return (
       <div>
-        <h3 className="text-lg font-semibold"><span> {list.length} 個 </span> {title} </h3>
+        <h3 className="text-lg font-semibold"><span> {list.length} 個 {t('member-qualifier')} </span> {title} </h3>
         <div className="flex flex-wrap">
           {list.map((userId) => (
             userDetails[userId] && (
@@ -372,7 +372,7 @@ const MemberPage = ({  initialMemberData }) => {
                     src={memberData.avatar ? memberData.avatar : '/images/marker-icon.png' } width="100" height="100" />
               </div>
               <h3 className="text-lg font-medium px-2">
-                  {user && user.uid === userId ? <span>{t('welcome')}</span> : <span>{t('welcome-visit')}</span>} 
+                  {user && user.uid === userId ? <span>{t('welcome')} </span> : <span>{t('welcome-visit')} </span>} 
                   {memberData.name}
               </h3>
             </div>

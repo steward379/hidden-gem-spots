@@ -200,13 +200,13 @@
     "member-center":"Member Center",
     "welcome":"Welcome,",
     "welcome-visit":"You are visiting：",
-    "member-map":"View Maps Board",
+    "member-map":"View Maps",
     "follow": "Follow",
     "cancel-follow":"UnFollow",
     "member-owned-email":"Your Email:",
     "change-photo":"Change Profile",
     "change-username":"Change Username",
-    "save-profile-edit":"Save Profile",
+    "save-profile-edit":"Save",
     "logout":"Logout",
     "already-follow":"Following",
     "followed-by":"Followed By",
@@ -224,6 +224,9 @@
     "test-api-title":"Google Places API Test Page",
     "fetch-places":"Fetch nearby places",
     "fetch-no-results":"No Results Found",
+    "member-qualifier": "",
+    "edit-profile":"Edit Profile",
+    "cancel-edit-profile":"Cancel",
 
 
     "":""
