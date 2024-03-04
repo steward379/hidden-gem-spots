@@ -338,7 +338,7 @@ const MemberPage = ({  initialMemberData }) => {
     }
     return (
       <div>
-        <h3 className="text-lg font-semibold"><span> {list.length} 個 {t('member-qualifier')} </span> {title} </h3>
+        <h3 className="text-lg font-semibold"><span> {list.length} {t('member-qualifier')} </span> {title} </h3>
         <div className="flex flex-wrap">
           {list.map((userId) => (
             userDetails[userId] && (
