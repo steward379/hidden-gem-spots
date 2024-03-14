@@ -1,4 +1,3 @@
-// pages/500.tsx
 import Link from 'next/link';
 import React from 'react';
 import { useTranslation } from 'next-i18next';
@@ -13,9 +12,9 @@ const Custom500: React.FC = () => {
                 <p className="text-xl text-gray-600 mt-4">{t('server-error')}</p>
                 <p className="text-gray-500 mt-2">{t('server-error-sorry')}</p>
                 <Link href="/">
-                    <a className="mt-6 inline-block bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">
+                    <div className="mt-6 inline-block bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">
                         {t('back-to-index')}
-                    </a>
+                    </div>
                 </Link>
             </div>
         </div>

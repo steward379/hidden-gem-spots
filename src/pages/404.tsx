@@ -1,4 +1,3 @@
-// pages/404.tsx
 import Link from 'next/link';
 import React from 'react';
 import { useTranslation } from 'next-i18next';
@@ -23,4 +22,3 @@ const Custom404: React.FC = () => {
 }
 
 export default Custom404;
-
