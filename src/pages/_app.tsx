@@ -54,7 +54,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
             <GlobeProvider>
               <Head>
                   <title>Hidden Gem Spot 旅圓</title>
-                  <meta name="description" content="Hidden Gem 旅圓，讓你記錄每一趟生活冒險。" />
+                  <meta name="description" content="Hidden Gem is a platform leads you to create and find attractions 旅圓，讓你記錄每一趟生活冒險。" />
                   <meta property="og:title" content="Hidden Gem 旅圓" />
                   <meta property="og:description" content="Travel, Note & Discover the hidden gems around you."/>
                   <meta property="og:url" content="https://hidden-gem.xyz/" />

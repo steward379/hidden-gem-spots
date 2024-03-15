@@ -49,7 +49,7 @@ Firestore
 
 * Index
 
-## Map 
+## Map
 
 `/map component `provides you a leafet map allow you to create, edit, delete places related to the marker.
 it also provides numberous plug-ins such as mini-map, search console and routing machine.
@@ -74,7 +74,7 @@ By using redux toolkit/zustand, I can easily manage the states of data.
 
 Since Clerk provide us with an intergration kit that saves any user data to the firebase firestore, there are muiltiple ways of logins and signups in my projects. Whether it's by Email or google provided by Firebase Auth, or it's clerk, useContext provides a solution to overall login states management.
 
-## i18N 
+## i18N
 
 I use i18N for users to browse my projects in either English or Mandarin (Taiwan). The module is **i18n-Next.**
 
@@ -89,6 +89,22 @@ I use i18N for users to browse my projects in either English or Mandarin (Taiwan
 ![1709396020974](image/README/1709396020974.png)
 
 ![1705785907150](image/README/1705785907150.png)
+
+### Server Components
+
+Since I used `Page Router` for me to support some old versions `Next.js` projects, and make me easier to create new pages, It's unevitable all pages are
+
+`React Client Components` by default, that causes poor efficiency and SEO. In order to solve these issues, I have made the following efforts:
+
+🌟 Change Landing Page to `SSG`, which is `Static Site Generation` to optimize SEO.
+
+🌟 Change `Explore` Page to `SSR`, which is `Server Side Rendering` to optimize SEO. Also, the page is to retrieve map data from FireStore (NoSQL DB), server side rendering might be suitable in such situations.
+
+🌟 Change `Member` Page to `SSR`. We don't need to update 'Member Data, followers and following to often, which will cause burdens to the servers.
+
+🌟 While we need to add the line `'use Clenet'` in `App Router`, `Page Router` is easier to build highly interative pages in my applications using a variety of hooks.
+
+⚠️ **Further Optimization:** For better efficientcy, RSC (React Server Components) might be a way to squeeze JS bundle size, lags caused by request Waterfall. It later become a serious issue in my app when the project turns bigger. By monitoring `LightHouse`, I realize it's  better to use `RSC` to improve its efficiency. 
 
 ### See the slides for a complete pitch here:
 
