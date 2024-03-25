@@ -275,7 +275,6 @@ const PublishMapPage = () => {
     if (!publishedPlaces.some(p => p.id === place.id)) {
       setPublishedPlaces(prevPlaces => [...prevPlaces, place]);
     }
-    
   };
   const handleSelectPlace = (place) => {
     if (selectedPlace === null || !selectedPlace || selectedPlace.id !== place.id ) {

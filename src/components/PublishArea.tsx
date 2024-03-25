@@ -41,7 +41,7 @@ const PublishArea = ({ publishedPlaces, onAddToPublish = undefined, onRemoveFrom
       <div ref={drop} className="mt-5 p-2 border border-gray-300 rounded">
         <h3 className="mb-3 text-xl font-semibold text-gray-700"> {t('publish-map-area')}</h3>
         <ul>
-        { publishedPlaces === '[]' ? 
+        { publishedPlaces.length > 0 ? 
           <>
           {publishedPlaces.map(place => (
             <li key={place.id} className="cursor-pointer place-item flex justify-between hover:bg-green-100 items-center p-2 border border-gray-300 rounded m-2" 
