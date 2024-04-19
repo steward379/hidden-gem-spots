@@ -12,11 +12,12 @@ The project is deployed on **Vercel**, using **CloudFlare** for DNS services, av
 [https://hidden-gem.xyz]()
 
 You can check out the demo here. It's completely in Mandarin.
-[DEMO Here](https://www.youtube.com/live/kUz354uG-24?si=58wv65uGNTWWxUlw&t=5632)
+
+🎦👨 [DEMO Here](https://www.youtube.com/live/kUz354uG-24?si=58wv65uGNTWWxUlw&t=5632)
 
 I also have a bilingual (English, Traditional Chinese) slide here.
 
-[Slide Here](https://www.slideshare.net/slideshows/hiddengem-attraction-recording-platform-slide/266594257)
+💻 💬 [Slide Here](https://www.slideshare.net/slideshows/hiddengem-attraction-recording-platform-slide/266594257)
 
 **Database**: Utilizes Firebase Firestore for NoSQL DB and Firebase Storage for static database operations.
 **Authentication**: Employs Firebase Auth (Email, Google) and is integrated with Clerk for third-party authentication, supporting both traditional web applications and blockchain-based logins via MetaMask.
