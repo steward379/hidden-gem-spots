@@ -11,6 +11,13 @@ Users can compile their personal attractions and publish them to the public as a
 The project is deployed on **Vercel**, using **CloudFlare** for DNS services, available at
 [https://hidden-gem.xyz]()
 
+You can check out the demo here. It's completely in Mandarin.
+[DEMO Here](https://www.youtube.com/live/kUz354uG-24?si=58wv65uGNTWWxUlw&t=5632)
+
+I also have a bilingual (English, Traditional Chinese) slide here.
+
+[Slide Here](https://www.slideshare.net/slideshows/hiddengem-attraction-recording-platform-slide/266594257)
+
 **Database**: Utilizes Firebase Firestore for NoSQL DB and Firebase Storage for static database operations.
 **Authentication**: Employs Firebase Auth (Email, Google) and is integrated with Clerk for third-party authentication, supporting both traditional web applications and blockchain-based logins via MetaMask.
 
@@ -93,8 +100,6 @@ Since I used `Page Router` to support some older versions of Next.js projects an
 ### See the slides for a complete pitch here:
 
 [Slide Here](https://www.slideshare.net/slideshows/hiddengem-attraction-recording-platform-slide/266594257)
-
-<iframe src="https://www.slideshare.net/slideshow/embed_code/key/E6YY8rWoZaJAnr?hostedIn=slideshare&page=upload" width="476" height="400" frameborder="0" marginwidth="0" marginheight="0" scrolling="no"></iframe>
 
 ## Getting Started with Next
 
