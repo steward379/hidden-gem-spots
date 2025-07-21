@@ -116,7 +116,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 You can start editing the pages by modifying everything under `src/pages `
  The page auto-updates as you edit the file since it's a Next App
 
-# About Next.js 
+# About Next.js:
 
 To learn more about Next.js, take a look at the following resources:
 
