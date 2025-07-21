@@ -89,7 +89,6 @@ const PublishedMapDetail = () => {
 
     const [likedPlaces, setLikedPlaces] = useState([]);
     const [showLikedPlacesList, setShowLikedPlacesList] = useState(false);
-    // const [alreadyMapLiked, setAlreadyMapLiked] = useState(false);
     const [isMapLiked, setIsMapLiked] = useState(false);
 
     const [totalDuplicates, setTotalDuplicates] = useState(0);
@@ -139,8 +138,6 @@ const PublishedMapDetail = () => {
 
     const renderPagination = (currentPage, setPage, totalCount, isLiked = false) => {
         const totalPages = Math.ceil(totalCount / itemsPerPage);
-        // let startPage = Math.floor((currentPage - 1) / maxPageButtons) * maxPageButtons + 1;
-        // const pageNumbers = Array.from({ length: Math.min(maxPageButtons, totalPages - startPage + 1) }, (_, i) => i + startPage);
         const totalGroups = Math.ceil(totalPages / pagesPerGroup);
         const currentGroupIndex = Math.floor((currentPage - 1) / pagesPerGroup);
 
@@ -643,11 +640,11 @@ const PublishedMapDetail = () => {
             </div>
 
             <div className="relative lg:overflow-auto md:overflow-auto lg:w-1/3 md:w-1/2 w-full lg:mb-10
-                            lg:mt-10 md:mt-5 mt-7 lg:mr-10 md:mr-5  bg-white shadow rounded">
+                            lg:mt-10 md:mt-5 mt-7 lg:mr-10 md:mr-5 bg-white shadow rounded">
                 <div className="sticky top-0 bg-white shadow-lg z-10 flex items-center py-2 pl-3 space-x-3">
                     <div className="flex items-center justify-center space-x-3 py-2">
                         <button
-                            className={`rounded-full  ${showMapContent ? 'bg-gray-200' : 'bg-red-100'} p-3 `}
+                            className={`rounded-full ${showMapContent ? 'bg-gray-200' : 'bg-red-100'} p-3 transition-colors duration-300`}
                             onClick={() => {
                                 setShowMapContent(!showMapContent);
                             }}
@@ -685,8 +682,8 @@ const PublishedMapDetail = () => {
                                         '--button-border-radius': '100px',
                                         }}> 
                                 <button
-                                    className=" bg-white p-3 text-sm
-                                            font-medium hover:bg-black hover:text-green-500 rounded-full"
+                                    className="bg-white p-3 text-sm
+                                            font-medium hover:bg-black hover:text-green-500 rounded-full transition-colors duration-300"
                                     onClick={() => setIsRoutingMode(!isRoutingMode)}>
                                     <div>
                                     {isRoutingMode ?  <i className="fas fa-door-open"></i> :  <i className="fas fa-route"></i>}   
@@ -699,124 +696,171 @@ const PublishedMapDetail = () => {
                             </button>
                         </div>
                         
-                        <div className="place-list flex items-center justify-center mb-5 mt-5">
-                            <label htmlFor="toggle-place" className="flex items-center cursor-pointer">
-                            <div className="relative">
-                                {/*  */}
-                                <input type="checkbox" id="toggle-place" className="sr-only" onChange={() => {setShowPlacesList(!showPlacesList);setShowLikedPlacesList(false);}} checked={showPlacesList} />
-                                <div className={`flex items-center w-16 h-9 rounded-full transition-colors ${showPlacesList ? 'bg-green-500' : 'bg-gray-400'}`}>
-                                <i className={`fas ${showPlacesList ? 'fa-eye-slash ml-2 text-stone-500 ' : 'fa-eye ml-9 text-gray-900'} text-center`} ></i>
-                                </div>
-                                <div className={`dot absolute left-1 top-1 bg-white h-7 w-7 rounded-full transition transform ${showPlacesList ? 'translate-x-full' : ''}`}>
-                                </div>
-                            </div>
-                            <div className="ml-2 text-gray-700 font-medium text-sm hidden lg:flex">
-                                <i className="fas fa-list-ul"></i>
-                            </div>
-                            </label>
+                        <div className="search-toggle-container">
+                            <button
+                                className={`p-2 rounded-full transition-colors duration-300 ${
+                                    showPlacesList ? 'bg-green-500 text-white' : 'bg-gray-300 hover:bg-gray-400'
+                                }`}
+                                onClick={() => {
+                                    setShowPlacesList(!showPlacesList);
+                                    setShowLikedPlacesList(false);
+                                }}
+                                title={t('map-search-list')}
+                            >
+                                <i className={`fas ${showPlacesList ? 'fa-times mr-2 ' : ''}`}></i>
+                                <i className={`fas ${showPlacesList ? 'fa-search' : 'fa-search'}`}></i>
+                                {/* <span className="hidden lg:inline ml-2">{t('map-search-list')}</span> */}
+                            </button>
                         </div>
                             
-                        <div className="place-list flex items-center justify-center mb-5 mt-5">
-                            <label htmlFor="toggle-like-place" className="flex items-center cursor-pointer">
-                            <div className="relative">
-                                {/*  */}
-                                <input type="checkbox" id="toggle-like-place" className="sr-only" onChange={() => {setShowLikedPlacesList(!showLikedPlacesList);setShowPlacesList(false);}} checked={showPlacesList} />
-                                <div className={`flex items-center w-16 h-9 rounded-full transition-colors ${showLikedPlacesList ? 'bg-green-500' : 'bg-gray-400'}`}>
-                                <i className={`${showLikedPlacesList ? 'fa-regular fa-heart ml-2 text-gray-700' : 'fa-solid fa-heart ml-9 text-gray-900'} text-center`} ></i>
-                                </div>
-                                <div className={`dot absolute left-1 top-1 bg-white h-7 w-7 rounded-full transition transform ${showLikedPlacesList ? 'translate-x-full' : ''}`}>
-                                </div>
-                            </div>
-                            <div className="ml-2 text-gray-700 font-medium text-sm hidden lg:flex">
-                                <i className="fas fa-list-ul"></i>
-                            </div>
-                            </label>
+                        {/* 收藏按钮 */}
+                        <div className="like-toggle-container">
+                            <button
+                                className={`p-2 rounded-full transition-colors duration-300 ${
+                                    showLikedPlacesList ? 'bg-red-500 text-white' : 'bg-gray-300 hover:bg-gray-400'
+                                }`}
+                                onClick={() => {
+                                    setShowLikedPlacesList(!showLikedPlacesList);
+                                    setShowPlacesList(false);
+                                }}
+                                title={t('map-liked-search-list')}
+                            >
+                                <i className={`fas mr-2 ${showLikedPlacesList ? 'fa-times' : 'fa-search'}`}></i>
+                                <i className={`fas ${showLikedPlacesList ? 'fa-heart' : 'fa-heart'}`}></i>
+                                {/* <span className="hidden lg:inline ml-2">{t('map-liked-search-list')}</span> */}
+                            </button>
                         </div>
                     </div>
                 </div>
                 <div className="container lg:px-6 md:px-4 px-3 py-3">
 
-                {(showPlacesList || showLikedPlacesList) && (
-                        <div className="places-list mt-4">
-                            <div className="search-and-filter mb-4">
-                                <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-2 mb-4">
-                                    <div className="flex-1">
-                                        <input
-                                            type="text"
-                                            value={searchTerm}
-                                            onChange={(e) =>
-                                                setSearchTerm(e.target.value)
-                                            }
-                                            placeholder={t('map-search-name-tag')}
-                                            className="p-2 w-full border border-gray-300 rounded-md text-black focus:ring-blue-500 focus:border-blue-500"
-                                        />
-                                    </div>
-                                    <div>
-                                        <select title="category-select"
-                                                value={selectedCategory}
-                                                onChange={(e) => setSelectedCategory(e.target.value)}
-                                                className="p-2 w-full border border-gray-300 rounded-md text-black focus:ring-blue-500 
-                                                        focus:border-blue-500">
-                                            <option value="">{t('map-search-cat')}</option>
-                                            {Object.entries(categoryMapping).map(
-                                                ([key, { text }]) => (
-                                                    <option key={key} value={key}>
-                                                        {getCategoryText(key, i18n.language)}
-                                                    </option>
-                                                )
-                                            )}
-                                        </select>
-                                    </div>
-                                </div>
-                                {searchTerm || selectedCategory ? (
+                {/* 搜索面板 - 带滑动过渡效果 */}
+                <div className={`places-list transition-all duration-300 ease-in-out ${
+                    (showPlacesList || showLikedPlacesList) 
+                    ? 'opacity-100 max-h-screen mt-4': 'opacity-0 max-h-0 overflow-hidden'
+                }`}>
+                    <div className="search-and-filter mb-4">
+                        <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-2 mb-4">
+                            <div className="flex-1">
+                                <input
+                                    type="text"
+                                    value={searchTerm}
+                                    onChange={(e) =>
+                                        setSearchTerm(e.target.value)
+                                    }
+                                    placeholder={t('map-search-name-tag')}
+                                    className="p-2 w-full border border-gray-300 rounded-md text-black focus:ring-blue-500 focus:border-blue-500"
+                                />
+                            </div>
+                            <div>
+                                <select title="category-select"
+                                        value={selectedCategory}
+                                        onChange={(e) => setSelectedCategory(e.target.value)}
+                                        className="p-2 w-full border border-gray-300 rounded-md text-black focus:ring-blue-500 
+                                                focus:border-blue-500">
+                                    <option value="">{t('map-search-cat')}</option>
+                                    {Object.entries(categoryMapping).map(
+                                        ([key, { text }]) => (
+                                            <option key={key} value={key}>
+                                                {getCategoryText(key, i18n.language)}
+                                            </option>
+                                        )
+                                    )}
+                                </select>
+                            </div>
+                        </div>
+                        {searchTerm || selectedCategory ? (
+                            <>
+                                <h2 className="text-lg font-semibold mb-2">
+                                    {showPlacesList
+                                        ? t('map-search-list')
+                                        : t('map-liked-search-list')}
+                                </h2>
+                                {(showPlacesList &&
+                                    filteredPlaces.length === 0) ||
+                                    (showLikedPlacesList &&
+                                        filteredLikesPlaces.length === 0) ? (
+                                    <p className="text-center">
+                                        {t('map-search-not-found')}
+                                    </p>
+                                ) : (
+                                    <>
+                                        {(showPlacesList
+                                            ? filteredPlaces
+                                            : filteredLikesPlaces
+                                        ).map((place) => (
+                                            <div
+                                                key={place.id}
+                                                className="hover:bg-yellow-50 place-item flex justify-between items-center p-2 border border-gray-300 rounded m-2 cursor-pointer"
+                                                onClick={() =>
+                                                    handleMarkerClick(place)
+                                                }
+                                            >
+                                                {place.name}
+                                            </div>
+                                        ))}
+                                    </>
+                                )}
+                            </>
+                        ) : (
+                            <>
+                                {showPlacesList && (
                                     <>
                                         <h2 className="text-lg font-semibold mb-2">
-                                            {showPlacesList
-                                                ? t('map-search-list')
-                                                : t('map-liked-search-list')}
+                                            {t('map-search-list')}
                                         </h2>
-                                        {(showPlacesList &&
-                                            filteredPlaces.length === 0) ||
-                                            (showLikedPlacesList &&
-                                                filteredLikesPlaces.length === 0) ? (
+
+                                        {currentPlaces.length === 0 ? (
+                                            <p className="text-center">{t('map-search-not-found')}</p>
+                                        ) : (
+                                            currentPlaces.map(
+                                            (place) => (
+                                                <div
+                                                    key={place.id}
+                                                    className="hover:bg-green-100 place-item flex justify-between items-center p-2 border border-gray-300 rounded m-2 cursor-pointer"
+                                                    onClick={() =>
+                                                        handleMarkerClick(
+                                                            place
+                                                        )
+                                                    }
+                                                >
+                                                    {place.name}
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handlePlaceLikeClick(
+                                                                place.id
+                                                            );
+                                                        }}
+                                                    >
+                                                        {place.isLiked ? (
+                                                            <i className="fa-solid fa-heart text-red-500"></i>
+                                                        ) : (
+                                                            <i className="fa-regular fa-heart "></i>
+                                                        )}
+                                                    </button>
+                                                </div>
+                                            ))
+                                        )}
+                                        {renderPagination(currentPage, setCurrentPage, filteredPlaces.length)}
+                                    </>
+                                )}
+                                {showLikedPlacesList && (
+                                    <div className="liked-places-list mt-4 mb-4">
+                                        <h2 className="text-lg font-semibold mb-2">
+                                            {t('map-liked-search-list')}
+                                        </h2>
+                                        {currentLikedPlaces.length === 0 ? (
                                             <p className="text-center">
-                                                {t('map-search-not-found')}
+                                                {t('map-liked-no-spots')}
                                             </p>
                                         ) : (
                                             <>
-                                                {(showPlacesList
-                                                    ? filteredPlaces
-                                                    : filteredLikesPlaces
-                                                ).map((place) => (
-                                                    <div
-                                                        key={place.id}
-                                                        className="hover:bg-yellow-50 place-item flex justify-between items-center p-2 border border-gray-300 rounded m-2 cursor-pointer"
-                                                        onClick={() =>
-                                                            handleMarkerClick(place)
-                                                        }
-                                                    >
-                                                        {place.name}
-                                                    </div>
-                                                ))}
-                                            </>
-                                        )}
-                                    </>
-                                ) : (
-                                    <>
-                                        {showPlacesList && (
-                                            <>
-                                                <h2 className="text-lg font-semibold mb-2">
-                                                    {t('map-search-list')}
-                                                </h2>
-
-                                                {currentPlaces.length === 0 ? (
-                                                    <p className="text-center">{t('map-search-not-found')}</p>
-                                                ) : (
-                                                    currentPlaces.map(
+                                                {currentLikedPlaces.map(
                                                     (place) => (
                                                         <div
                                                             key={place.id}
-                                                            className="hover:bg-green-100 place-item flex justify-between items-center p-2 border border-gray-300 rounded m-2 cursor-pointer"
+                                                            className="hover:bg-yellow-50 place-item flex justify-between items-center p-2 border border-gray-300 rounded m-2 cursor-pointer"
                                                             onClick={() =>
                                                                 handleMarkerClick(
                                                                     place
@@ -824,326 +868,276 @@ const PublishedMapDetail = () => {
                                                             }
                                                         >
                                                             {place.name}
-                                                            <button
-                                                                onClick={() =>
-                                                                    handlePlaceLikeClick(
-                                                                        place.id
-                                                                    )
-                                                                }
-                                                            >
-                                                                {place.isLiked ? (
-                                                                    <i className="fa-solid fa-heart text-red-500"></i>
-                                                                ) : (
-                                                                    <i className="fa-regular fa-heart "></i>
-                                                                )}
-                                                            </button>
                                                         </div>
-                                                    ))
+                                                    )
                                                 )}
-                                                {renderPagination(currentPage, setCurrentPage, filteredPlaces.length)}
+                                                {renderPagination(likedCurrentPage, setLikedCurrentPage, filteredLikesPlaces.length, true)}
                                             </>
                                         )}
-                                        {showLikedPlacesList && (
-                                            <div className="liked-places-list mt-4 mb-4">
-                                                <h2 className="text-lg font-semibold mb-2">
-                                                    {t('map-liked-search-list')}
-                                                </h2>
-                                                {currentLikedPlaces.length === 0 ? (
-                                                    <p className="text-center">
-                                                        {t('map-liked-no-spots')}
-                                                    </p>
-                                                ) : (
-                                                    <>
-                                                        {currentLikedPlaces.map(
-                                                            (place) => (
-                                                                <div
-                                                                    key={place.id}
-                                                                    className="hover:bg-yellow-50 place-item flex justify-between items-center p-2 border border-gray-300 rounded m-2 cursor-pointer"
-                                                                    onClick={() =>
-                                                                        handleMarkerClick(
-                                                                            place
-                                                                        )
-                                                                    }
-                                                                >
-                                                                    {place.name}
-                                                                </div>
-                                                            )
-                                                        )}
-                                                        {renderPagination(likedCurrentPage, setLikedCurrentPage, filteredLikesPlaces.length, true)}
-                                                    </>
-                                                )}
-                                            </div>
-                                        )}
-                                    </>
+                                    </div>
                                 )}
-                            </div>
-                        </div>
-                    )}
-                    
-                    <h1 className="text-2xl font-bold  ">
-                        <i className="fas fa-map-location-dot mr-2"></i>
-                        {mapData.title}
-                    </h1>
+                            </>
+                        )}
+                    </div>
+                </div>
+                
+                <h1 className="text-2xl font-bold  ">
+                    <i className="fas fa-map-location-dot mr-2"></i>
+                    {mapData.title}
+                </h1>
 
-                    <div className="flex items-center mb-4">
-                        <div className="flex items-center mr-2">
-                            <button
-                                title="favorite-button-map text-2xl"
-                                className="m-2 mr-1.5"
-                                onClick={handleLikeClick}
-                            >
-                                {isMapLiked ? (
-                                    <i className="fas fa-heart text-red-500"></i>
-                                ) : (
-                                    <i className="far fa-heart"></i>
-                                )}
-                            </button>
-                            <span className="">
-                                {mapData.likes == 0 ? (
-                                    <>
-                                        <span className="hidden lg:flex text-sm">
-                                            {" "}{t('mapId-no-likes')}{" "}
-                                        </span>
-                                        <span className="md:hidden lg:hidden flex">
-                                            {" "}0{" "}
-                                        </span>
-                                    </>
-                                ) : (
-                                    <div>{mapData.likes}</div>
-                                )}
-                            </span>
-                        </div>
-                        
-                        <div className="border-2 p-1 rounded-3xl">
-                            <span className="text-sm ml-2"> {t('mapId-total')} </span>
-                            <span className="ml-1 text-sm">
-                                {totalDuplicates} {t('mapId-total-copy')}
-                                <i className="fas fa-copy ml-1 mr-1 text-black"></i>
-                            </span>
-                            <span className="ml-1 text-sm">
-                                {totalPlacesLikes} {t('mapId-total-likes')}
-                                <i className="fas fa-heart ml-1 mr-1 text-black"></i>
-                            </span>
-                        </div>
+                <div className="flex items-center mb-4">
+                    <div className="flex items-center mr-2">
+                        <button
+                            title="favorite-button-map text-2xl"
+                            className="m-2 mr-1.5"
+                            onClick={handleLikeClick}
+                        >
+                            {isMapLiked ? (
+                                <i className="fas fa-heart text-red-500"></i>
+                            ) : (
+                                <i className="far fa-heart"></i>
+                            )}
+                        </button>
+                        <span className="">
+                            {mapData.likes == 0 ? (
+                                <>
+                                    <span className="hidden lg:flex text-sm">
+                                        {" "}{t('mapId-no-likes')}{" "}
+                                    </span>
+                                    <span className="md:hidden lg:hidden flex">
+                                        {" "}0{" "}
+                                    </span>
+                                </>
+                            ) : (
+                                <div>{mapData.likes}</div>
+                            )}
+                        </span>
                     </div>
                     
-                    {showMapContent && (
-                        <div className="relative border shadow p-3 rounded-3xl">
-                            <div className="flex-column items-center mb-4">
-                                <h1 className="text-2xl font-bold mb-3 mt-9">
-                                    {mapData.title}
-                                </h1>
-                                <div className="mr-2 flex">
-                                    {mapData.authorAvatar && (
-                                        <Link href={`/member/${mapData.userId}/`}>
-                                            <LazyLoadImage effect="blur"
-                                                src={mapData.authorAvatar}
-                                                alt="Author Avatar"
-                                                className="rounded-full w-12 h-12 mr-3"
-                                                width={50}
-                                                height={50}
-                                            />
-                                        </Link>
-                                    )}
-                                    <p className="mt-3 text-lg font-semibold">
-                                        {mapData.authorName}
-                                    </p>
-                                </div>
-                            </div>
-                            <p className="mb-4 text-sm">
-                                {new Date(mapData.publishDate).toLocaleString(
-                                    "zh-TW",
-                                    { hour12: true }
+                    <div className="border-2 p-1 rounded-3xl">
+                        <span className="text-sm ml-2"> {t('mapId-total')} </span>
+                        <span className="ml-1 text-sm">
+                            {totalDuplicates} {t('mapId-total-copy')}
+                            <i className="fas fa-copy ml-1 mr-1 text-black"></i>
+                        </span>
+                        <span className="ml-1 text-sm">
+                            {totalPlacesLikes} {t('mapId-total-likes')}
+                            <i className="fas fa-heart ml-1 mr-1 text-black"></i>
+                        </span>
+                    </div>
+                </div>
+                
+                {showMapContent && (
+                    <div className="relative border shadow p-3 rounded-3xl">
+                        <div className="flex-column items-center mb-4">
+                            <h1 className="text-2xl font-bold mb-3 mt-9">
+                                {mapData.title}
+                            </h1>
+                            <div className="mr-2 flex">
+                                {mapData.authorAvatar && (
+                                    <Link href={`/member/${mapData.userId}/`}>
+                                        <LazyLoadImage effect="blur"
+                                            src={mapData.authorAvatar}
+                                            alt="Author Avatar"
+                                            className="rounded-full w-12 h-12 mr-3"
+                                            width={50}
+                                            height={50}
+                                        />
+                                    </Link>
                                 )}
-                            </p>
-                            {mapData.coverImage && (
-                                <div className="w-full relative h-[300px] overflow-hidden">
-                                <LazyLoadImage effect="blur"
-                                        src={mapData.coverImage}
-                                        alt="Cover Image"
-                                        width={400}
-                                        height={250}
-                                        className="object-cover"
-                                        layout="responsive" 
-                                    />
-                                </div>
+                                <p className="mt-3 text-lg font-semibold">
+                                    {mapData.authorName}
+                                </p>
+                            </div>
+                        </div>
+                        <p className="mb-4 text-sm">
+                            {new Date(mapData.publishDate).toLocaleString(
+                                "zh-TW",
+                                { hour12: true }
                             )}
-                            <div className="bg-white text-black mt-4">
-                                <ReactQuill
-                                    value={mapData.content}
-                                    readOnly={true}
-                                    theme="snow"
-                                    modules={quillModules}
+                        </p>
+                        {mapData.coverImage && (
+                            <div className="w-full relative h-[300px] overflow-hidden">
+                            <LazyLoadImage effect="blur"
+                                    src={mapData.coverImage}
+                                    alt="Cover Image"
+                                    width={400}
+                                    height={250}
+                                    className="object-cover"
+                                    layout="responsive" 
                                 />
                             </div>
-                            {mapData.tags && mapData.tags.length > 0 && (
-                                <div className="tags flex flex-wrap gap-2 mt-4">
-                                    {mapData.tags.map((tag, index) => (
-                                    <span key={index} className="text-xs bg-blue-200 px-2 py-1 rounded-full">
-                                        {tag}
-                                    </span>
+                        )}
+                        <div className="bg-white text-black mt-4">
+                            <ReactQuill
+                                value={mapData.content}
+                                readOnly={true}
+                                theme="snow"
+                                modules={quillModules}
+                            />
+                        </div>
+                        {mapData.tags && mapData.tags.length > 0 && (
+                            <div className="tags flex flex-wrap gap-2 mt-4">
+                                {mapData.tags.map((tag, index) => (
+                                <span key={index} className="text-xs bg-blue-200 px-2 py-1 rounded-full">
+                                    {tag}
+                                </span>
+                                ))}
+                            </div>
+                        )}
+                        {mapData.updatedDate && (
+                            <p className="text-sm mb-4">
+                                {t('mapId-last-update-time')}{new Date(mapData.updatedDate).toLocaleString("zh-TW", { hour12: true })}
+                            </p>
+                        )}
+                        {isMapCreator && (
+                            <Link href={`/edit-map/${user.uid}/${mapId}`}>
+                                <button
+                                    title="edit-map-content"
+                                    className=" h-12 w-12 absolute bg-sky-100 right-0 top-0 rounded-full mb-5 mt-5 m-2 flex-column justify-center 
+                                    items-center border-2 border-dashed border-gray-300 cursor-pointer hover:border-gray-500 hover:bg-green-300" >
+                                    <i className="fa fa-edit"></i>
+                                </button>
+                            </Link>
+                        )}
+                    </div>
+                )}
+                {selectedPlace && (
+                    <div className={`relative selected-place-detail mt-4 border rounded-3xl shadow p-5 transition-all duration-300 
+                                    ${detailsExpanded ? "max-h-full" : "max-h-20"}`} >
+                        <p  className="absolute right-0 top-0 cursor-pointer p-5"
+                            onClick={handleMarkerClose} >
+                            <i className="fas fa-times"></i>
+                        </p>
+                        <button
+                            title="toggle-details"
+                            onClick={toggleDetails}
+                            className="absolute right-10 top-0 p-5" >
+                            <i className={`fas ${detailsExpanded ? "fa-chevron-up" : "fa-chevron-down"}`}></i>
+                        </button>
+                        <h3 className="text-xl font-bold ">
+                            {selectedPlace.name}
+                        </h3>
+                        {detailsExpanded && (
+                            <>
+                                <p className="text-gray-700 mt-2">
+                                    {selectedPlace.description}
+                                </p>
+                                <div className={`${categoryMapping[selectedPlace.category]?.color || 'bg-gray-200'} p-2 rounded mb-4 w-24`}>
+                                    {getCategoryText(selectedPlace.category, i18n.language) || t('unknown')}
+                                </div>
+                                {selectedPlace.tags &&
+                                    selectedPlace.tags.filter(
+                                        (tag) => tag.trim().length > 0
+                                    ).length > 0 && (
+                                        <div className="flex flex-wrap gap-2 mt-2">
+                                            {selectedPlace.tags.map((tag) => (
+                                                <span key={tag}
+                                                    className="text-xs bg-blue-200 px-2 py-1 rounded-full">
+                                                    {tag}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
+                                <div className="mt-4">
+                                    {selectedPlace.images.map((url, index) => (
+                                        <div key={index}
+                                            className="image-preview mb-2 relative w-[200px] h-[200px] overflow-hidden">
+                                            <LazyLoadImage effect="blur"
+                                                src={url}
+                                                alt={`${selectedPlace.name} image ${index}`}
+                                                width={200}
+                                                height={200}
+                                                className="object-cover"
+                                                layout="responsive" />
+                                        </div>
                                     ))}
                                 </div>
-                            )}
-                            {mapData.updatedDate && (
-                                <p className="text-sm mb-4">
-                                    {t('mapId-last-update-time')}{new Date(mapData.updatedDate).toLocaleString("zh-TW", { hour12: true })}
-                                </p>
-                            )}
-                            {isMapCreator && (
-                                <Link href={`/edit-map/${user.uid}/${mapId}`}>
-                                    <button
-                                        title="edit-map-content"
-                                        className=" h-12 w-12 absolute bg-sky-100 right-0 top-0 rounded-full mb-5 mt-5 m-2 flex-column justify-center 
-                                        items-center border-2 border-dashed border-gray-300 cursor-pointer hover:border-gray-500 hover:bg-green-300" >
-                                        <i className="fa fa-edit"></i>
-                                    </button>
-                                </Link>
-                            )}
-                        </div>
-                    )}
-                    {selectedPlace && (
-                        <div className={`relative selected-place-detail mt-4 border rounded-3xl shadow p-5 transition-all duration-300 
-                                        ${detailsExpanded ? "max-h-full" : "max-h-20"}`} >
-                            <p  className="absolute right-0 top-0 cursor-pointer p-5"
-                                onClick={handleMarkerClose} >
-                                <i className="fas fa-times"></i>
-                            </p>
-                            <button
-                                title="toggle-details"
-                                onClick={toggleDetails}
-                                className="absolute right-10 top-0 p-5" >
-                                <i className={`fas ${detailsExpanded ? "fa-chevron-up" : "fa-chevron-down"}`}></i>
-                            </button>
-                            <h3 className="text-xl font-bold ">
-                                {selectedPlace.name}
-                            </h3>
-                            {detailsExpanded && (
-                                <>
-                                    <p className="text-gray-700 mt-2">
-                                        {selectedPlace.description}
+                                {selectedPlace?.createdTime && (
+                                    <p className="text-sm">
+                                        {t('mapId-first-publish-time')}:{" "}
+                                        {new Date(
+                                            selectedPlace.createdTime
+                                        ).toLocaleString("zh-TW", {
+                                            hour12: true,
+                                        })}
                                     </p>
-                                    {/* <div className={`text-sm ${categoryMapping[selectedPlace.category]
-                                            ?.color || "bg-gray-200" } p-1 rounded mt-2`} >
-                                        {categoryMapping[selectedPlace.category]
-                                            ?.text || t('unknown')}
-                                    </div> */}
-
-                                     <div className={`${categoryMapping[selectedPlace.category]?.color || 'bg-gray-200'} p-2 rounded mb-4 w-24`}>
-                                        {/* {categoryMapping[selectedPlace.category]?.text || t('unknown')} */}
-                                        {getCategoryText(selectedPlace.category, i18n.language) || t('unknown')}
-                                    </div>
-                                    {selectedPlace.tags &&
-                                        selectedPlace.tags.filter(
-                                            (tag) => tag.trim().length > 0
-                                        ).length > 0 && (
-                                            <div className="flex flex-wrap gap-2 mt-2">
-                                                {selectedPlace.tags.map((tag) => (
-                                                    <span key={tag}
-                                                        className="text-xs bg-blue-200 px-2 py-1 rounded-full">
-                                                        {tag}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        )}
-                                    <div className="mt-4">
-                                        {selectedPlace.images.map((url, index) => (
-                                            <div key={index}
-                                                className="image-preview mb-2 relative w-[200px] h-[200px] overflow-hidden">
-                                                <LazyLoadImage effect="blur"
-                                                    src={url}
-                                                    alt={`${selectedPlace.name} image ${index}`}
-                                                    width={200}
-                                                    height={200}
-                                                    className="object-cover"
-                                                    layout="responsive" />
-                                            </div>
-                                        ))}
-                                    </div>
-                                    {selectedPlace?.createdTime && (
-                                        <p className="text-sm">
-                                            {t('mapId-first-publish-time')}:{" "}
-                                            {new Date(
-                                                selectedPlace.createdTime
-                                            ).toLocaleString("zh-TW", {
-                                                hour12: true,
-                                            })}
-                                        </p>
-                                    )}
-                                    {selectedPlace?.updatedTime && (
-                                        <p className="text-sm">
-                                            {t('mapId-last-update-time')}{" "}
-                                            {new Date(
-                                                selectedPlace.updatedTime
-                                            ).toLocaleString("zh-TW", {
-                                                hour12: true,
-                                            })}
-                                        </p>
-                                    )}
-                                    <div className="flex">
-                                        <Link href={`https://www.google.com/maps/place/?q=place_name:${selectedPlace.name}`}
-                                            target="_blank"
-                                            passHref >
-                                            <button className="flex items-center mr-3 bg-blue-100 text-black p-2 rounded hover:bg-blue-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-300">
-                                                <i className="fab fa-google mr-1"></i>
-                                                <i className="fa-solid fa-magnifying-glass mr-1.5"></i>
-                                                <span className="hidden lg:flex">
-                                                    {" "}{t('map-spot-title')}
-                                                </span>
-                                            </button>
-                                        </Link>
-                                        <Link
-                                            href={`https://www.google.com/maps/place/${decimalToDms(
-                                                selectedPlace.coordinates.lat,
-                                                selectedPlace.coordinates.lng
-                                            )}`}
-                                            target="_blank"
-                                            passHref
-                                        >
-                                            <button className="flex items-center mr-3 bg-blue-100 text-black p-2 rounded hover:bg-blue-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-300">
-                                                <i className="fab fa-google mr-1"></i>
-                                                <i className="fa-solid fa-globe mr-1.5"></i>
-                                                <span className="hidden lg:flex">
-                                                    {" "}{t("map-spot-coordinates")}
-                                                </span>
-                                            </button>
-                                        </Link>
-                                        <button className="flex items-center mr-3 bg-blue-100 text-black p-2 rounded hover:bg-blue-400 hover:text-white
-                                                            focus:outline-none focus:ring-2 focus:ring-blue-300" 
-                                            onClick={() => handleGooglePlacesToggle(selectedPlace)} >
-                                    <i className="fa-solid fa-directions mr-1.5"></i>                           
-                                    {showGooglePlaces ?
-                                        <span className="hidden lg:flex"> 
-                                            {t('mapId-hide-spots')}
-                                        </span> :
-                                        <span className="hidden lg:flex"> 
-                                            {t('mapId-show-spots')}
-                                        </span> 
-                                    }
-                                    </button>
-                                    </div>
-                                </>
-                            )}
-                        </div>
-                    )}
-                    {showGooglePlaces && (
-                        <GooglePlaces
-                            latitude={googlePlacesCoords.lat}
-                            longitude={googlePlacesCoords.lng}
-                            isFetchingAPI={showGooglePlaces}
-                            onSelectPlace={()=>{}}
-                            placeName={selectedPlace?.name}
-                        />
-                    )}
-                </div>
+                                )}
+                                {selectedPlace?.updatedTime && (
+                                    <p className="text-sm">
+                                        {t('mapId-last-update-time')}{" "}
+                                        {new Date(
+                                            selectedPlace.updatedTime
+                                        ).toLocaleString("zh-TW", {
+                                            hour12: true,
+                                        })}
+                                    </p>
+                                )}
+                                <div className="flex">
+                                    <Link href={`https://www.google.com/maps/place/?q=place_name:${selectedPlace.name}`}
+                                        target="_blank"
+                                        passHref >
+                                        <button className="flex items-center mr-3 bg-blue-100 text-black p-2 rounded hover:bg-blue-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-300">
+                                            <i className="fab fa-google mr-1"></i>
+                                            <i className="fa-solid fa-magnifying-glass mr-1.5"></i>
+                                            <span className="hidden lg:flex">
+                                                {" "}{t('map-spot-title')}
+                                            </span>
+                                        </button>
+                                    </Link>
+                                    <Link
+                                        href={`https://www.google.com/maps/place/${decimalToDms(
+                                            selectedPlace.coordinates.lat,
+                                            selectedPlace.coordinates.lng
+                                        )}`}
+                                        target="_blank"
+                                        passHref
+                                    >
+                                        <button className="flex items-center mr-3 bg-blue-100 text-black p-2 rounded hover:bg-blue-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-300">
+                                            <i className="fab fa-google mr-1"></i>
+                                            <i className="fa-solid fa-globe mr-1.5"></i>
+                                            <span className="hidden lg:flex">
+                                                {" "}{t("map-spot-coordinates")}
+                                            </span>
+                                        </button>
+                                    </Link>
+                                    <button className="flex items-center mr-3 bg-blue-100 text-black p-2 rounded hover:bg-blue-400 hover:text-white
+                                                        focus:outline-none focus:ring-2 focus:ring-blue-300" 
+                                        onClick={() => handleGooglePlacesToggle(selectedPlace)} >
+                                <i className="fa-solid fa-directions mr-1.5"></i>                           
+                                {showGooglePlaces ?
+                                    <span className="hidden lg:flex"> 
+                                        {t('mapId-hide-spots')}
+                                    </span> :
+                                    <span className="hidden lg:flex"> 
+                                        {t('mapId-show-spots')}
+                                    </span> 
+                                }
+                                </button>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                )}
+                {showGooglePlaces && (
+                    <GooglePlaces
+                        latitude={googlePlacesCoords.lat}
+                        longitude={googlePlacesCoords.lng}
+                        isFetchingAPI={showGooglePlaces}
+                        onSelectPlace={()=>{}}
+                        placeName={selectedPlace?.name}
+                    />
+                )}
             </div>
-            <AlertModal
-                isOpen={isAlertOpen}
-                onClose={() => setIsAlertOpen(false)}
-                message={alertMessage}
-            />
         </div>
-    );
+        <AlertModal
+            isOpen={isAlertOpen}
+            onClose={() => setIsAlertOpen(false)}
+            message={alertMessage}
+        />
+    </div>
+);
 };
 
 export default PublishedMapDetail;

@@ -488,7 +488,7 @@ const PublishMapPage = () => {
                 <div className="flex justify-start align-items m-4">
                     <button
                       className="publish-switch-places bg-amber-600 text-white font-bold py-2 px-4 rounded hover:bg-amber-800 focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer mb-5"
-                      onClick={() => setActiveTab('places')}
+                      onClick={() => setActiveTab('content')}
                     >
                       {t('publish-switch-to-content-button')}
                     </button>
